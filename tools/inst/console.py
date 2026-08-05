@@ -28,19 +28,21 @@ def _run_control(args: list[str]) -> int:
 
 def _print_menu() -> None:
     print()
-    print("ImoCalc Console UI")
+    print("Template Project Console UI")
     print("1) Doctor check")
     print("2) Install dependencies")
     print("3) Run services")
     print("4) Stop services")
     print("5) Test all suites")
     print("6) Test one suite")
-    print("7) Exit")
+    print("7) Show build map")
+    print("8) Show Tauri map")
+    print("9) Exit")
 
 
 def _prompt_suite() -> str | None:
-    value = input("Suite (schema/api/e2e/all): ").strip().lower()
-    if value not in {"schema", "api", "e2e", "all"}:
+    value = input("Suite (schema/api/frontend/e2e/tools/all): ").strip().lower()
+    if value not in {"schema", "api", "frontend", "e2e", "tools", "all"}:
         logger.warn("Invalid suite value")
         return None
     return value
@@ -68,6 +70,10 @@ def main() -> int:
             if suite:
                 _run_control(["test", "--suite", suite])
         elif choice == "7":
+            _run_control(["build"])
+        elif choice == "8":
+            _run_control(["tauri"])
+        elif choice == "9":
             logger.ok("Console UI closed")
             return 0
         else:

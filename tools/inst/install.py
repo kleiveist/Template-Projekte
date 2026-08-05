@@ -71,8 +71,16 @@ def _ensure_backend_venv_with_uv(backend_dir: Path) -> subprocess.CompletedProce
     return _run(["uv", "venv", str(backend_dir / ".venv")], cwd=ROOT)
 
 
+def _venv_python(venv_dir: Path) -> Path:
+    candidates = [venv_dir / "Scripts" / "python.exe", venv_dir / "bin" / "python"]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0] if sys.platform == "win32" else candidates[1]
+
+
 def _install_backend_with_uv(backend_dir: Path) -> subprocess.CompletedProcess[str]:
-    python_bin = backend_dir / ".venv" / "bin" / "python"
+    python_bin = _venv_python(backend_dir / ".venv")
     return _run(["uv", "pip", "install", "--python", str(python_bin), "-r", str(backend_dir / "requirements.txt")], cwd=ROOT)
 
 
@@ -127,6 +135,7 @@ def _inspect_backend_venv(py: Path, venv_dir: Path) -> tuple[bool, str]:
     probe = (
         "import importlib.util, json, site, sys; "
         "payload={'runtime': f'{sys.version_info.major}.{sys.version_info.minor}', "
+        "'prefix': sys.prefix, "
         "'site_packages': site.getsitepackages(), "
         "'has_pip': importlib.util.find_spec('pip') is not None}; "
         "print(json.dumps(payload))"
@@ -155,12 +164,15 @@ def _inspect_backend_venv(py: Path, venv_dir: Path) -> tuple[bool, str]:
             f"runtime={runtime}"
         )
 
-    expected_token = f"python{runtime}"
-    if not any(expected_token in path for path in site_packages):
+    runtime_prefix = Path(str(state.get("prefix", ""))).resolve()
+    if runtime_prefix != venv_dir.resolve():
         return False, (
-            "venv site-packages mismatch: "
-            f"runtime={runtime}, site_packages={site_packages or ['(none)']}"
+            "venv prefix mismatch: "
+            f"expected={venv_dir.resolve()}, runtime={runtime_prefix}"
         )
+
+    if not site_packages:
+        return False, "venv probe did not return a site-packages directory"
 
     if not has_pip:
         return False, "pip is missing in backend virtualenv"
@@ -228,7 +240,7 @@ def _install_backend_with_pip(backend_dir: Path) -> tuple[bool, str]:
         if not created:
             return False, create_msg
 
-    py = venv_dir / "bin" / "python"
+    py = _venv_python(venv_dir)
     if not py.exists():
         return False, f"venv python not found at {py}"
 
@@ -282,7 +294,7 @@ def _install_backend() -> StepResult:
     logger.info("uv not found; using pip/venv fallback for backend installation")
     pip_ok, pip_msg = _install_backend_with_pip(backend_dir)
     if pip_ok:
-        return StepResult("backend", "WARN", "uv not found; used pip/venv fallback")
+        return StepResult("backend", "OK", "installed dependencies with the supported pip/venv fallback (uv is optional)")
     return StepResult("backend", "FAIL", f"backend install failed without uv: {pip_msg}")
 
 
@@ -304,6 +316,24 @@ def _install_playwright() -> StepResult:
 
     details = _tail((completed.stdout or "") + "\n" + (completed.stderr or ""))
     return StepResult("playwright", "FAIL", f"playwright install failed after {elapsed:.1f}s: {details}")
+
+
+def _playwright_configured() -> bool:
+    frontend_dir = ROOT / "frontend"
+    if (frontend_dir / "tests" / "e2e").exists():
+        return True
+    if any(frontend_dir.glob("playwright.config.*")):
+        return True
+    package_json = frontend_dir / "package.json"
+    try:
+        payload = json.loads(package_json.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    dependencies = {
+        **payload.get("dependencies", {}),
+        **payload.get("devDependencies", {}),
+    }
+    return "@playwright/test" in dependencies or "playwright" in dependencies
 
 
 def _print_summary(results: list[StepResult]) -> str:
@@ -334,6 +364,8 @@ def main(args: argparse.Namespace) -> int:
 
     if args.skip_playwright:
         results.append(StepResult("playwright", "OK", "skipped by flag"))
+    elif not _playwright_configured():
+        results.append(StepResult("playwright", "OK", "not configured; optional browser install skipped"))
     else:
         # Only attempt playwright setup if frontend install did not fail hard.
         frontend_failed = any(item.name == "frontend" and item.status == "FAIL" for item in results)

@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import json
 import shutil
 import socket
 import subprocess
+import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime
@@ -51,6 +53,34 @@ def _check_binary(name: str, help_text: str, version_cmd: list[str]) -> CheckRes
     if not ok:
         return CheckResult(name=name, status="WARN", message=f"found at {binary}, version check failed: {version}")
     return CheckResult(name=name, status="OK", message=f"{binary} ({version})")
+
+
+def _check_optional_binary(name: str, help_text: str, version_cmd: list[str]) -> CheckResult:
+    binary = shutil.which(name)
+    if binary is None:
+        return CheckResult(name=name, status="OK", message=f"not found; optional. Install {help_text} if desired.")
+    ok, version = _command_version(version_cmd)
+    if not ok:
+        return CheckResult(name=name, status="WARN", message=f"found at {binary}, version check failed: {version}")
+    return CheckResult(name=name, status="OK", message=f"{binary} ({version})")
+
+
+def _check_current_python() -> CheckResult:
+    ok, version = _command_version([sys.executable, "--version"])
+    if not ok:
+        return CheckResult("python", "FAIL", f"current interpreter is not executable: {version}")
+    return CheckResult("python", "OK", f"{sys.executable} ({version})")
+
+
+def _backend_python() -> Path:
+    candidates = [
+        ROOT / "backend" / ".venv" / "Scripts" / "python.exe",
+        ROOT / "backend" / ".venv" / "bin" / "python",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0] if sys.platform == "win32" else candidates[1]
 
 
 def _port_is_occupied(port: int) -> bool:
@@ -112,7 +142,7 @@ def _check_project_structure() -> list[CheckResult]:
 
 
 def _check_backend_runtime() -> CheckResult:
-    backend_python = ROOT / "backend" / ".venv" / "bin" / "python"
+    backend_python = _backend_python()
     if not backend_python.exists():
         return CheckResult(
             name="backend-runtime",
@@ -145,6 +175,8 @@ def _check_playwright_browser() -> CheckResult:
     frontend_dir = ROOT / "frontend"
     if not (frontend_dir / "package.json").exists():
         return CheckResult(name="playwright", status="WARN", message="frontend/package.json missing; check skipped")
+    if not _playwright_configured():
+        return CheckResult(name="playwright", status="OK", message="not configured; optional check skipped")
 
     npx = shutil.which("npx")
     if npx is None:
@@ -178,13 +210,28 @@ def _check_playwright_browser() -> CheckResult:
     )
 
 
+def _playwright_configured() -> bool:
+    frontend_dir = ROOT / "frontend"
+    if (frontend_dir / "tests" / "e2e").exists() or any(frontend_dir.glob("playwright.config.*")):
+        return True
+    try:
+        payload = json.loads((frontend_dir / "package.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    dependencies = {
+        **payload.get("dependencies", {}),
+        **payload.get("devDependencies", {}),
+    }
+    return "@playwright/test" in dependencies or "playwright" in dependencies
+
+
 def run_checks() -> tuple[list[CheckResult], str]:
     checks: list[CheckResult] = [
-        _check_binary("python3", "Python 3", ["python3", "--version"]),
+        _check_current_python(),
         _check_binary("node", "Node.js (includes npm)", ["node", "--version"]),
         _check_binary("npm", "npm", ["npm", "--version"]),
         _check_binary("npx", "npm (includes npx)", ["npx", "--version"]),
-        _check_binary("uv", "uv", ["uv", "--version"]),
+        _check_optional_binary("uv", "uv for faster Python installs", ["uv", "--version"]),
         _check_port(5173),
         _check_port(8000),
     ]

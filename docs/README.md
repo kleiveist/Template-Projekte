@@ -74,3 +74,7 @@ Ein Dokument wird `Deprecated`, sobald es nicht mehr die bevorzugte Lösung besc
 5. Befehle, Links und Beispiele prüfen.
 6. Owner und Review-Datum setzen.
 7. Mit dem Code gemeinsam reviewen und einchecken.
+
+## Aktive Referenzen
+
+- [Tooling-Anleitung](tools/tooling.md): Einstieg, Befehlslandkarte und Fehlerbehebung für die Projekt-CLI.

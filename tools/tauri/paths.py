@@ -1,10 +1,9 @@
 from __future__ import annotations
 
+import json
 import os
+import re
 from pathlib import Path
-
-APP_NAME = "BlobFin"
-APP_ID = "de.kleiveist.blobfin"
 
 ROOT = Path(__file__).resolve().parents[2]
 FRONTEND_DIR = ROOT / "frontend"
@@ -15,6 +14,29 @@ FRONTEND_PACKAGE_JSON = FRONTEND_DIR / "package.json"
 FRONTEND_PACKAGE_LOCK = FRONTEND_DIR / "package-lock.json"
 FRONTEND_PNPM_LOCK = FRONTEND_DIR / "pnpm-lock.yaml"
 TAURI_CONFIG = TAURI_DIR / "tauri.conf.json"
+
+
+def _app_identity() -> tuple[str, str]:
+    fallback = ("Template Project", "com.example.templateproject")
+    try:
+        payload = json.loads(TAURI_CONFIG.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return fallback
+    name = payload.get("productName")
+    identifier = payload.get("identifier")
+    return (
+        name if isinstance(name, str) and name.strip() else fallback[0],
+        identifier if isinstance(identifier, str) and identifier.strip() else fallback[1],
+    )
+
+
+def _slug(value: str) -> str:
+    normalized = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+    return normalized or "template-project"
+
+
+APP_NAME, APP_ID = _app_identity()
+APP_SLUG = _slug(APP_NAME)
 
 
 def local_tauri_binary() -> Path:

@@ -40,9 +40,10 @@ def test_bare_tauri_command_prints_help(capsys) -> None:
 
     assert code == 0
     output = capsys.readouterr().out
-    assert "Manage Tauri desktop tooling" in output
-    assert "--doctor" in output
-    assert "--install" in output
+    assert "Tauri-specific diagnostics" in output
+    assert "Tauri command map" in output
+    assert "doctor" in output
+    assert "install" in output
 
 
 def test_tauri_command_aliases_are_normalized() -> None:
@@ -314,9 +315,9 @@ def test_tauri_build_artifacts_print_with_icons(monkeypatch, tmp_path) -> None:
     dist_dir = root / ".dist" / "desktop"
     bundle_dir.mkdir(parents=True)
     dist_dir.mkdir(parents=True)
-    (bundle_dir / "BlobFin_0.1.0_amd64.deb").write_bytes(b"deb")
-    (bundle_dir / "BlobFin-0.1.0-1.x86_64.rpm").write_bytes(b"rpm")
-    (dist_dir / "BlobFin-windows-portable.zip").write_bytes(b"zip")
+    (bundle_dir / "Template Project_0.1.0_amd64.deb").write_bytes(b"deb")
+    (bundle_dir / "Template Project-0.1.0-1.x86_64.rpm").write_bytes(b"rpm")
+    (dist_dir / "Template Project-windows-portable.zip").write_bytes(b"zip")
 
     monkeypatch.setattr(paths, "ROOT", root)
     monkeypatch.setattr(paths, "DIST_DIR", dist_dir)
@@ -326,9 +327,9 @@ def test_tauri_build_artifacts_print_with_icons(monkeypatch, tmp_path) -> None:
 
     output = "\n".join(messages)
     assert "📁 Build artifacts:" in messages
-    assert "📦 src-tauri/target/release/bundle/BlobFin_0.1.0_amd64.deb" in output
-    assert "📦 src-tauri/target/release/bundle/BlobFin-0.1.0-1.x86_64.rpm" in output
-    assert "🗜️ .dist/desktop/BlobFin-windows-portable.zip" in output
+    assert "📦 src-tauri/target/release/bundle/Template Project_0.1.0_amd64.deb" in output
+    assert "📦 src-tauri/target/release/bundle/Template Project-0.1.0-1.x86_64.rpm" in output
+    assert "🗜️ .dist/desktop/Template Project-windows-portable.zip" in output
 
 
 def test_windows_portable_output_path_repairs_owner_directory_permissions(tmp_path) -> None:
@@ -337,7 +338,7 @@ def test_windows_portable_output_path_repairs_owner_directory_permissions(tmp_pa
     dist_dir.chmod(stat.S_IWUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
 
     try:
-        assert windows_portable._ensure_portable_output_path(dist_dir / "BlobFin-windows-portable.zip") is True
+        assert windows_portable._ensure_portable_output_path(dist_dir / "Template Project-windows-portable.zip") is True
         mode = dist_dir.stat().st_mode
         assert mode & stat.S_IRUSR
         assert mode & stat.S_IWUSR
@@ -398,7 +399,7 @@ def test_tauri_linux_build_uses_appimage_fallback_when_before_build_succeeded_th
     fallback: list[bool] = []
     output = """
        Running beforeBuildCommand `cd ../frontend && npm run build`
-       Bundling BlobFin_0.1.0_amd64.AppImage
+       Bundling Template Project_0.1.0_amd64.AppImage
        failed to bundle project `failed to run linuxdeploy`
     """
 
@@ -421,10 +422,10 @@ def test_tauri_linux_build_uses_appimage_fallback_when_before_build_succeeded_th
 def test_tauri_appimage_linuxdeploy_detection_accepts_user_failure_tail() -> None:
     output = """
        - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-       Compiling blobfin v0.1.0 (/home/kleif/Projects/BlobFin/src-tauri)
+       Compiling project-template v0.1.0 (/home/kleif/Projects/Template Project/src-tauri)
        Finished `release` profile [optimized] target(s) in 25.29s
-       Built application at: /home/kleif/Projects/BlobFin/src-tauri/target/release/BlobFin
-       Bundling BlobFin_0.1.0_amd64.AppImage
+       Built application at: /home/kleif/Projects/Template Project/src-tauri/target/release/Template Project
+       Bundling Template Project_0.1.0_amd64.AppImage
        failed to bundle project `failed to run linuxdeploy`
        Error failed to bundle project `failed to run linuxdeploy`
     """
@@ -440,7 +441,7 @@ def test_tauri_linux_build_accepts_fresh_appimage_when_linuxdeploy_returns_failu
        - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
        Running beforeBuildCommand `cd ../frontend && npm run build`
        Finished `release` profile [optimized] target(s) in 25.29s
-       Bundling BlobFin_0.1.0_amd64.AppImage
+       Bundling Template Project_0.1.0_amd64.AppImage
        failed to bundle project `failed to run linuxdeploy`
        Error failed to bundle project `failed to run linuxdeploy`
     """
@@ -451,7 +452,7 @@ def test_tauri_linux_build_accepts_fresh_appimage_when_linuxdeploy_returns_failu
     monkeypatch.setattr(
         appimage,
         "_fresh_appimage_from_snapshot",
-        lambda snapshot: paths.ROOT / "src-tauri/target/release/bundle/appimage/BlobFin_0.1.0_amd64.AppImage",
+        lambda snapshot: paths.ROOT / "src-tauri/target/release/bundle/appimage/Template Project_0.1.0_amd64.AppImage",
     )
     monkeypatch.setattr(
         common,
@@ -544,7 +545,7 @@ def test_tauri_build_appimage_shortcut_installs_fresh_appimage_when_linuxdeploy_
     fallback: list[bool] = []
     installed: list[bool] = []
     output = """
-       Bundling BlobFin_0.1.0_amd64.AppImage
+       Bundling Template Project_0.1.0_amd64.AppImage
        failed to bundle project `failed to run linuxdeploy`
        Error failed to bundle project `failed to run linuxdeploy`
     """
@@ -556,7 +557,7 @@ def test_tauri_build_appimage_shortcut_installs_fresh_appimage_when_linuxdeploy_
     monkeypatch.setattr(
         appimage,
         "_fresh_appimage_from_snapshot",
-        lambda snapshot: paths.ROOT / "src-tauri/target/release/bundle/appimage/BlobFin_0.1.0_amd64.AppImage",
+        lambda snapshot: paths.ROOT / "src-tauri/target/release/bundle/appimage/Template Project_0.1.0_amd64.AppImage",
     )
     monkeypatch.setattr(
         common,
@@ -633,7 +634,7 @@ def test_tauri_install_appimage_packages_existing_appdir_when_final_file_is_miss
     home = tmp_path / "home"
     tauri_dir = root / "src-tauri"
     appimage_dir = tauri_dir / "target" / "release" / "bundle" / "appimage"
-    appdir = appimage_dir / "BlobFin.AppDir"
+    appdir = appimage_dir / "Template Project.AppDir"
     icon_dir = tauri_dir / "icons"
     appdir.mkdir(parents=True)
     icon_dir.mkdir(parents=True)
@@ -642,7 +643,7 @@ def test_tauri_install_appimage_packages_existing_appdir_when_final_file_is_miss
 
     def fake_package_existing_appdir(dry_run: bool = False) -> int:
         packaged.append(dry_run)
-        (appimage_dir / "BlobFin_0.1.0_amd64.AppImage").write_bytes(b"appimage")
+        (appimage_dir / "Template Project_0.1.0_amd64.AppImage").write_bytes(b"appimage")
         return 0
 
     monkeypatch.setattr(paths, "ROOT", root)
@@ -654,7 +655,7 @@ def test_tauri_install_appimage_packages_existing_appdir_when_final_file_is_miss
 
     assert code == 0
     assert packaged == [False]
-    assert (home / "Applications" / "BlobFin.AppImage").read_bytes() == b"appimage"
+    assert (home / "Applications" / "Template Project.AppImage").read_bytes() == b"appimage"
 
 
 def test_tauri_build_appimage_dry_run_does_not_install(monkeypatch) -> None:
@@ -757,7 +758,7 @@ def test_tauri_appimage_install_copies_artifact_icon_and_desktop_entry(monkeypat
     icon_dir = tauri_dir / "icons"
     appimage_dir.mkdir(parents=True)
     icon_dir.mkdir(parents=True)
-    source_appimage = appimage_dir / "BlobFin_0.1.0_amd64.AppImage"
+    source_appimage = appimage_dir / "Template Project_0.1.0_amd64.AppImage"
     source_icon = icon_dir / "icon.png"
     source_appimage.write_bytes(b"appimage")
     source_icon.write_bytes(b"png")
@@ -768,27 +769,27 @@ def test_tauri_appimage_install_copies_artifact_icon_and_desktop_entry(monkeypat
 
     code = appimage.install_latest()
 
-    installed_appimage = home / "Applications" / "BlobFin.AppImage"
-    installed_icon = home / ".local" / "share" / "icons" / "blobfin.png"
-    desktop_entry = home / ".local" / "share" / "applications" / "blobfin.desktop"
+    installed_appimage = home / "Applications" / "Template Project.AppImage"
+    installed_icon = home / ".local" / "share" / "icons" / "template-project.png"
+    desktop_entry = home / ".local" / "share" / "applications" / "template-project.desktop"
     assert code == 0
     assert installed_appimage.read_bytes() == b"appimage"
     assert installed_appimage.stat().st_mode & 0o111
     assert installed_icon.read_bytes() == b"png"
-    assert "Name=BlobFin" in desktop_entry.read_text(encoding="utf-8")
+    assert "Name=Template Project" in desktop_entry.read_text(encoding="utf-8")
 
 
 def test_tauri_appimage_repair_icon_matches_desktop_icon_name(tmp_path, monkeypatch) -> None:
-    appdir = tmp_path / "BlobFin.AppDir"
+    appdir = tmp_path / "Template Project.AppDir"
     appdir.mkdir()
-    (appdir / "BlobFin.desktop").write_text("Name=BlobFin\nIcon=blobfin\n", encoding="utf-8")
-    (appdir / "BlobFin.png").write_bytes(b"png")
+    (appdir / "Template Project.desktop").write_text("Name=Template Project\nIcon=project-template\n", encoding="utf-8")
+    (appdir / "Template Project.png").write_bytes(b"png")
 
-    monkeypatch.setattr(paths, "APP_NAME", "BlobFin")
+    monkeypatch.setattr(paths, "APP_NAME", "Template Project")
 
     appimage._repair_appdir_icon(appdir)
 
-    assert (appdir / "blobfin.png").read_bytes() == b"png"
+    assert (appdir / "project-template.png").read_bytes() == b"png"
 
 
 def test_tauri_build_fails_when_frontend_dependencies_are_missing(monkeypatch) -> None:

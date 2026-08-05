@@ -7,77 +7,146 @@ from tools.tauri import build, copy, doctor, install, run, test
 from tools.tauri.build import installappimage
 
 
+class TauriHelpFormatter(argparse.RawDescriptionHelpFormatter):
+    def __init__(self, prog: str) -> None:
+        super().__init__(prog, max_help_position=30, width=100)
+
+
+def configure_build_parser(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--target",
+        default="linux",
+        metavar="{linux,windows,windows-portable,windows-cross-linux,macos}",
+        help="platform strategy (default: linux)",
+    )
+    parser.add_argument("--runner", help=argparse.SUPPRESS)
+    parser.add_argument("--no-bundle", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--dry-run", action="store_true", help="show the build plan without changing files")
+    parser.add_argument("--no-clean", action="store_true", help="keep previous Tauri build output")
+    parser.add_argument(
+        "--bundles",
+        help="Linux bundle list, for example deb,rpm or appimage (default: deb,rpm,appimage)",
+    )
+    parser.add_argument(
+        "--appimage",
+        action="store_true",
+        help="build and locally install only the Linux AppImage",
+    )
+    parser.add_argument(
+        "--skip-appimage-preflight",
+        action="store_true",
+        help="skip AppImage host-tool checks (the build may still fail)",
+    )
+
+
 def configure_parser(parser: argparse.ArgumentParser) -> None:
     parser.set_defaults(tauri_parser=parser)
-    tauri_subparsers = parser.add_subparsers(dest="tauri_command", required=False)
+    parser.epilog = """
+recommended return-to-project workflow:
+  python tools/control.py tauri doctor
+  python tools/control.py tauri install --dry-run
+  python tools/control.py tauri run --foreground
+  python tools/control.py tauri build --dry-run
 
-    doctor_parser = tauri_subparsers.add_parser("doctor", help="Run Tauri diagnostics")
-    doctor_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON")
-    doctor_parser.add_argument("--watch", action="store_true", help="Run checks continuously")
-    doctor_parser.add_argument("--interval", type=int, default=5, help="Seconds between checks in watch mode")
+Use '<command> --help' before an unfamiliar or destructive operation.
+""".strip()
+    tauri_subparsers = parser.add_subparsers(
+        dest="tauri_command",
+        title="Tauri command map",
+        metavar="<command>",
+    )
 
-    install_parser = tauri_subparsers.add_parser("install", help="Install Tauri desktop dependencies")
-    install_parser.add_argument("--dry-run", action="store_true", help="Print actions without running installers")
-    install_parser.add_argument("--skip-system-deps", action="store_true", help="Skip OS package installation")
-    install_parser.add_argument("--skip-rust", action="store_true", help="Skip Rust toolchain preparation")
-    install_parser.add_argument("--skip-node", action="store_true", help="Skip Node/npm checks")
-    install_parser.add_argument("--skip-frontend", action="store_true", help="Skip frontend dependency installation")
+    doctor_parser = tauri_subparsers.add_parser(
+        "doctor",
+        help="inspect desktop prerequisites",
+        description="Check Rust, the Tauri CLI, platform libraries, ports and scaffold files.",
+        formatter_class=TauriHelpFormatter,
+    )
+    doctor_parser.add_argument("--json", action="store_true", help="print machine-readable JSON")
+    doctor_parser.add_argument("--watch", action="store_true", help="repeat checks until interrupted")
+    doctor_parser.add_argument("--interval", type=int, default=5, help="seconds between checks (default: 5)")
+    doctor_parser.epilog = "examples:\n  python tools/control.py tauri doctor\n  python tools/control.py tauri doctor --json"
+
+    install_parser = tauri_subparsers.add_parser(
+        "install",
+        help="prepare desktop dependencies",
+        description="Install or verify OS packages, Rust, Node.js and frontend dependencies.",
+        formatter_class=TauriHelpFormatter,
+    )
+    install_parser.add_argument("--dry-run", action="store_true", help="show actions without running installers")
+    install_parser.add_argument("--skip-system-deps", action="store_true", help="skip operating-system packages")
+    install_parser.add_argument("--skip-rust", action="store_true", help="skip Rust toolchain preparation")
+    install_parser.add_argument("--skip-node", action="store_true", help="skip Node.js/npm checks")
+    install_parser.add_argument("--skip-frontend", action="store_true", help="skip frontend dependency installation")
+    install_parser.epilog = (
+        "examples:\n"
+        "  python tools/control.py tauri install --dry-run\n"
+        "  python tools/control.py tauri install --skip-system-deps"
+    )
 
     install_appimage_parser = tauri_subparsers.add_parser(
         "install-appimage",
-        help="Install the latest built AppImage locally",
+        help="install the latest built AppImage locally",
+        description="Copy the newest AppImage, icon and desktop entry into the current user's environment.",
+        formatter_class=TauriHelpFormatter,
     )
-    install_appimage_parser.add_argument("--dry-run", action="store_true", help="Print install actions without writing files")
+    install_appimage_parser.add_argument("--dry-run", action="store_true", help="show target files without writing them")
+    install_appimage_parser.epilog = "example:\n  python tools/control.py tauri install-appimage --dry-run"
 
-    run_parser = tauri_subparsers.add_parser("run", help="Start Tauri dev mode")
-    run_parser.add_argument("--detach", action="store_true", help="Run in background and follow logs (default)")
-    run_parser.add_argument("--foreground", action="store_true", help="Run in the current terminal")
-    run_parser.add_argument("--no-follow", action="store_true", help="Return immediately after background start")
-    run_parser.add_argument("--frontend-port", type=int, default=5173, help="Frontend dev server port")
-
-    build_parser = tauri_subparsers.add_parser("build", help="Build Tauri desktop artifacts")
-    build_parser.add_argument(
-        "--target",
-        default="linux",
-        help="Desktop build target. Use windows-portable for a portable Windows ZIP.",
+    run_parser = tauri_subparsers.add_parser(
+        "run",
+        help="start Tauri development mode",
+        description="Start Tauri in the background by default and follow its log. Ctrl+C stops it.",
+        formatter_class=TauriHelpFormatter,
     )
-    build_parser.add_argument("--runner", help=argparse.SUPPRESS)
-    build_parser.add_argument("--no-bundle", action="store_true", help=argparse.SUPPRESS)
-    build_parser.add_argument("--dry-run", action="store_true", help="Print build command without running it")
-    build_parser.add_argument("--no-clean", action="store_true", help="Do not clean previous Tauri build output")
-    build_parser.add_argument(
-        "--bundles",
-        help="Bundle types for Linux builds, e.g. deb,rpm or appimage. Default: deb,rpm,appimage",
-    )
-    build_parser.add_argument(
-        "--appimage",
-        action="store_true",
-        help="Build the Linux AppImage and install it into the local desktop environment",
-    )
-    build_parser.add_argument(
-        "--skip-appimage-preflight",
-        action="store_true",
-        help="Skip AppImage host-tool checks before running linuxdeploy",
+    run_parser.add_argument("--detach", action="store_true", help="compatibility flag; background is already the default")
+    run_parser.add_argument("--foreground", action="store_true", help="run directly in the current terminal")
+    run_parser.add_argument("--no-follow", action="store_true", help="return after background start without following logs")
+    run_parser.add_argument("--frontend-port", type=int, default=5173, help="Vite port (default: 5173)")
+    run_parser.epilog = (
+        "examples:\n"
+        "  python tools/control.py tauri run --foreground\n"
+        "  python tools/control.py tauri run --no-follow"
     )
 
-    test_parser = tauri_subparsers.add_parser("test", help="Run Tauri tooling checks")
-    test_parser.add_argument("--doctor", action="store_true", help="Include doctor checks")
-    test_parser.add_argument("--build-dry-run", action="store_true", help="Include build dry-run")
-    test_parser.add_argument("--all", action="store_true", help="Run all Tauri checks")
+    build_parser = tauri_subparsers.add_parser(
+        "build",
+        help="build desktop artifacts",
+        description="Create native Tauri packages for the selected platform strategy.",
+        formatter_class=TauriHelpFormatter,
+    )
+    configure_build_parser(build_parser)
+    build_parser.epilog = (
+        "examples:\n"
+        "  python tools/control.py tauri build --dry-run\n"
+        "  python tools/control.py tauri build --target linux --bundles deb,rpm\n"
+        "  python tools/control.py tauri build --target windows-portable"
+    )
 
-    copy_parser = tauri_subparsers.add_parser("copy", help="Collect Tauri build artifacts")
-    copy_parser.add_argument("--dry-run", action="store_true", help="Print copy actions without writing files")
-    copy_parser.add_argument("--target-dir", help="Destination directory for copied artifacts")
+    test_parser = tauri_subparsers.add_parser(
+        "test",
+        help="validate the desktop tooling",
+        description="Check the committed Tauri structure and optionally include doctor and build-plan checks.",
+        formatter_class=TauriHelpFormatter,
+    )
+    test_parser.add_argument("--doctor", action="store_true", help="include Tauri environment diagnostics")
+    test_parser.add_argument("--build-dry-run", action="store_true", help="include a Linux build dry-run")
+    test_parser.add_argument("--all", action="store_true", help="include every optional check")
+    test_parser.epilog = "examples:\n  python tools/control.py tauri test\n  python tools/control.py tauri test --all"
 
-    _prefix_subcommand_help_labels(tauri_subparsers)
-
-
-def _prefix_subcommand_help_labels(subparsers: argparse._SubParsersAction) -> None:
-    for choice_action in subparsers._choices_actions:
-        if not choice_action.dest.startswith("--"):
-            choice_action.dest = f"--{choice_action.dest}"
-        if choice_action.metavar and not choice_action.metavar.startswith("--"):
-            choice_action.metavar = f"--{choice_action.metavar}"
+    copy_parser = tauri_subparsers.add_parser(
+        "copy",
+        help="collect desktop build artifacts",
+        description="Copy existing desktop bundles into .dist/desktop or an explicit target directory.",
+        formatter_class=TauriHelpFormatter,
+    )
+    copy_parser.add_argument("--dry-run", action="store_true", help="show copies without writing files")
+    copy_parser.add_argument("--target-dir", help="destination directory (default: .dist/desktop)")
+    copy_parser.epilog = (
+        "examples:\n"
+        "  python tools/control.py tauri copy --dry-run\n"
+        "  python tools/control.py tauri copy --target-dir ./release"
+    )
 
 
 def main(args: argparse.Namespace) -> int:
@@ -101,5 +170,5 @@ def main(args: argparse.Namespace) -> int:
     handler = handlers.get(getattr(args, "tauri_command", None))
     if handler is None:
         logger.fail(f"Unknown Tauri command: {getattr(args, 'tauri_command', None)}")
-        return 1
+        return 2
     return handler(args)

@@ -90,8 +90,14 @@ def _run(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess
 
 def _expand_suites(value: str) -> list[str]:
     if value == "all":
-        return ["schema", "api", "frontend", "e2e"]
+        return ["schema", "api", "frontend", "e2e", "tools"]
     return [value]
+
+
+def _backend_python() -> Path:
+    windows_python = ROOT / "backend" / ".venv" / "Scripts" / "python.exe"
+    unix_python = ROOT / "backend" / ".venv" / "bin" / "python"
+    return windows_python if windows_python.exists() else unix_python
 
 
 def _needs_backend_runtime(selected_suites: list[str]) -> bool:
@@ -99,7 +105,7 @@ def _needs_backend_runtime(selected_suites: list[str]) -> bool:
 
 
 def _probe_backend_runtime() -> tuple[bool, str, list[str] | None]:
-    backend_python = ROOT / "backend" / ".venv" / "bin" / "python"
+    backend_python = _backend_python()
     if not backend_python.exists():
         return False, f"backend venv python missing at {backend_python}", None
 
@@ -263,7 +269,7 @@ def _run_schema_suite() -> SuiteResult:
             detail=detail,
         )
     except ImportError:
-        backend_python = ROOT / "backend" / ".venv" / "bin" / "python"
+        backend_python = _backend_python()
         if not backend_python.exists():
             return SuiteResult(
                 "schema",
@@ -304,7 +310,7 @@ def _run_api_suite() -> SuiteResult:
     if not api_tests.exists():
         return SuiteResult("api", "WARN", "backend/tests/api missing; suite skipped", time.monotonic() - started)
 
-    backend_python = ROOT / "backend" / ".venv" / "bin" / "python"
+    backend_python = _backend_python()
     if not backend_python.exists():
         fallback_python = shutil.which("python3") or shutil.which("python")
         if fallback_python is None:
@@ -350,6 +356,27 @@ def _run_frontend_suite() -> SuiteResult:
         cwd=frontend_dir,
         ok_message="npm test frontend suite passed",
         fail_message="npm test frontend suite failed",
+    )
+
+
+def _run_tools_suite() -> SuiteResult:
+    started = time.monotonic()
+    tests_dir = ROOT / "tools" / "tests"
+    if not tests_dir.exists():
+        return SuiteResult("tools", "WARN", "tools/tests missing; suite skipped", time.monotonic() - started)
+
+    backend_python = _backend_python()
+    python = str(backend_python if backend_python.exists() else Path(sys.executable))
+    command = [python, "-m", "pytest", "-q", str(tests_dir)]
+    completed = _run(command, cwd=ROOT)
+    return _result_from_completed(
+        name="tools",
+        completed=completed,
+        started=started,
+        command=command,
+        cwd=ROOT,
+        ok_message="restored tooling tests passed",
+        fail_message="restored tooling tests failed",
     )
 
 
@@ -399,8 +426,13 @@ def _run_e2e_cleanup(started: float) -> SuiteResult | None:
     )
 
 
+def _e2e_configured() -> bool:
+    frontend_dir = ROOT / "frontend"
+    return (frontend_dir / "tests" / "e2e").exists() or any(frontend_dir.glob("playwright.config.*"))
+
+
 def _start_services_if_needed(selected_suites: list[str], no_start: bool) -> tuple[bool, SuiteResult]:
-    requires_services = "e2e" in selected_suites
+    requires_services = "e2e" in selected_suites and _e2e_configured()
     if not requires_services:
         return False, SuiteResult("service-bootstrap", "SKIP", "not required", 0.0)
     if no_start:
@@ -450,14 +482,15 @@ def _stop_services_if_started(started: bool) -> None:
 
 
 def _print_suite_guide() -> None:
-    logger.info("ImoCalc test suites")
+    logger.info("Template project test suites")
     print("")
     print("Use an explicit suite command:")
-    print("  python tools/control.py --test --suite api      # Backend API only")
-    print("  python tools/control.py --test --suite schema   # Schema validation only")
-    print("  python tools/control.py --test --suite frontend # Frontend unit tests with npm test")
-    print("  python tools/control.py --test --suite e2e      # Frontend E2E with Playwright")
-    print("  python tools/control.py --test --suite all      # Default full test run")
+    print("  python tools/control.py test --suite api      # Backend API only")
+    print("  python tools/control.py test --suite schema   # Schema validation only")
+    print("  python tools/control.py test --suite frontend # Frontend unit tests with npm test")
+    print("  python tools/control.py test --suite e2e      # Frontend E2E with Playwright")
+    print("  python tools/control.py test --suite tools    # Restored tooling tests")
+    print("  python tools/control.py test --suite all      # Complete configured test run")
     print("")
     print("Useful options:")
     print("  --no-start       Do not start frontend/backend automatically for E2E")
@@ -602,6 +635,8 @@ def main(args: argparse.Namespace) -> int:
                     results.append(_run_api_suite())
                 elif suite == "frontend":
                     results.append(_run_frontend_suite())
+                elif suite == "tools":
+                    results.append(_run_tools_suite())
         else:
             for suite in selected_suites:
                 if suite == "schema":
@@ -612,6 +647,8 @@ def main(args: argparse.Namespace) -> int:
                     results.append(_run_frontend_suite())
                 elif suite == "e2e":
                     results.append(_run_e2e_suite())
+                elif suite == "tools":
+                    results.append(_run_tools_suite())
     finally:
         _stop_services_if_started(started_by_runner)
 

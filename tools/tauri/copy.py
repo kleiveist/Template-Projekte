@@ -37,7 +37,7 @@ def main(args: argparse.Namespace) -> int:
 def _target_dir(value: str | None) -> Path:
     if value:
         return Path(value).expanduser().resolve()
-    env_value = os.environ.get("IMOCALC_TAURI_ARTIFACT_DIR")
+    env_value = os.environ.get("TEMPLATE_TAURI_ARTIFACT_DIR")
     if env_value:
         return Path(env_value).expanduser().resolve()
     return paths.DIST_DIR

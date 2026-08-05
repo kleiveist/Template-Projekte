@@ -88,9 +88,9 @@ sequenceDiagram
     API-->>UI: status and service JSON
 ```
 
-`python3 tools/control.py run` starts Vite and Uvicorn as sibling foreground processes. The Vite server performs hot-module replacement. FastAPI serves the `/api` namespace and allows only configured development or desktop origins through CORS.
+`python tools/control.py run` starts Vite and Uvicorn as sibling foreground processes. The Vite server performs hot-module replacement. FastAPI serves the `/api` namespace and allows only configured development or desktop origins through CORS.
 
-`python3 tools/control.py tauri dev` lets Tauri start Vite through `beforeDevCommand`. It does not start FastAPI. When a desktop feature requires the API during development, run the backend separately or use the combined web command before starting Tauri with an adjusted workflow.
+`python tools/control.py tauri run --foreground` lets Tauri start Vite through `beforeDevCommand`. It does not start FastAPI. When a desktop feature requires the API during development, run the backend separately or use the combined web command before starting Tauri with an adjusted workflow.
 
 ## Build and deployment interaction
 
@@ -150,16 +150,17 @@ When starting a product from this template:
 Run all baseline checks from the repository root:
 
 ```sh
-python3 tools/control.py doctor
-python3 tools/control.py test
-python3 tools/control.py build
+python tools/control.py doctor
+python tools/control.py test --suite all
+python tools/control.py build web
 ```
 
 A desktop-capable environment additionally runs:
 
 ```sh
-python3 tools/control.py tauri info
-python3 tools/control.py test --suite desktop
+python tools/control.py tauri doctor
+python tools/control.py tauri test --all
+python tools/control.py build desktop
 ```
 
 ## Related documents
@@ -167,3 +168,4 @@ python3 tools/control.py test --suite desktop
 - [Project README](../../README.md)
 - [Documentation standard](../README.md)
 - [ATP workflow](../atp/README.md)
+- [Tooling guide](../tools/tooling.md)

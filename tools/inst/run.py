@@ -21,6 +21,17 @@ LOG_DIR = RUNTIME_DIR / "logs"
 STATE_FILE = RUNTIME_DIR / "run_state.json"
 
 
+def _venv_python(backend_dir: Path) -> Path:
+    candidates = [
+        backend_dir / ".venv" / "Scripts" / "python.exe",
+        backend_dir / ".venv" / "bin" / "python",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0] if os.name == "nt" else candidates[1]
+
+
 @dataclass(slots=True)
 class ServiceDef:
     name: str
@@ -84,7 +95,7 @@ def _build_service_defs(frontend_port: int, backend_port: int) -> tuple[list[Ser
     if npm is None:
         errors.append("npm not found. Action: install Node.js and npm.")
 
-    backend_python = backend_dir / ".venv" / "bin" / "python"
+    backend_python = _venv_python(backend_dir)
     if not backend_python.exists():
         backend_python = Path(shutil.which("python3") or shutil.which("python") or "")
     if not backend_python.exists():

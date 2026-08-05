@@ -19,9 +19,18 @@ Dieses Repository ist ein schlankes Ausgangsprojekt für Anwendungen mit Vite un
 
 ## Schnellstart
 
+Wenn du das Projekt nach längerer Zeit wieder öffnest, starte ohne Argumente. Die CLI zeigt dann den vollständigen Befehlsplan und verändert noch nichts:
+
 ```sh
-python3 tools/control.py install
-python3 tools/control.py run
+python tools/control.py
+```
+
+Der empfohlene Wiedereinstieg ist:
+
+```sh
+python tools/control.py doctor
+python tools/control.py install
+python tools/control.py run
 ```
 
 Danach sind standardmäßig erreichbar:
@@ -35,16 +44,29 @@ Der kombinierte Entwicklungsstart läuft im Vordergrund. Mit `Ctrl+C` werden bei
 ## Zentrale Befehle
 
 ```sh
-python3 tools/control.py doctor
-python3 tools/control.py install
-python3 tools/control.py run
-python3 tools/control.py test
-python3 tools/control.py build
-python3 tools/control.py tauri dev
-python3 tools/control.py build --desktop
+python tools/control.py doctor
+python tools/control.py install
+python tools/control.py run
+python tools/control.py stop
+python tools/control.py test
+python tools/control.py build
+python tools/control.py tauri
+python tools/control.py console
 ```
 
-Einzelne Testbereiche lassen sich mit `--suite backend`, `--suite frontend` oder `--suite desktop` ausführen.
+`build`, `test` und `tauri` zeigen bei einem Aufruf ohne weitere Auswahl jeweils ihre eigene Hilfekarte. Konkrete Beispiele:
+
+```sh
+python tools/control.py test --suite api
+python tools/control.py test --suite frontend
+python tools/control.py test --suite tools
+python tools/control.py test --suite all --report
+python tools/control.py build web
+python tools/control.py build desktop --dry-run
+python tools/control.py tauri doctor
+```
+
+Jeder Befehl unterstützt zusätzlich `--help`, zum Beispiel `python tools/control.py tauri build --help`. Die vollständige Referenz steht in der [Tooling-Anleitung](docs/tools/tooling.md).
 
 ## Projektstruktur
 
@@ -64,7 +86,7 @@ tools/control.py     Gemeinsamer Projekt-CLI-Einstiegspunkt
 3. `src-tauri/app-icon.svg` austauschen und mit `npm --prefix frontend run tauri -- icon ../src-tauri/app-icon.svg` neue Icons erzeugen.
 4. Produktziel, Verantwortliche und Qualitätskriterien dokumentieren.
 5. Für den ersten Funktionsumfang ein ATP aus `docs/atp/ATP-TEMPLATE.md` anlegen.
-6. `python3 tools/control.py test` ausführen und das erste abgeschlossene ATP einchecken.
+6. `python tools/control.py test --suite all` ausführen und das erste abgeschlossene ATP einchecken.
 
 ## Verbindliche Dokumentation
 
@@ -73,5 +95,6 @@ tools/control.py     Gemeinsamer Projekt-CLI-Einstiegspunkt
 - [Framework architecture](docs/def/architecture.md)
 - [ATP workflow](docs/atp/README.md)
 - [ATP template](docs/atp/ATP-TEMPLATE.md)
+- [Tooling-Anleitung](docs/tools/tooling.md)
 
 Neue oder geänderte Funktionen gelten erst dann als abgeschlossen, wenn Code, Tests und die betroffene Dokumentation gemeinsam aktualisiert wurden.
