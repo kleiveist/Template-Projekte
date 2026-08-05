@@ -1,15 +1,21 @@
-# ATP workflow
+<!-- AUTO-GENERATED:backlink START -->
+[← Back](atp.md)
+<!-- AUTO-GENERATED:backlink END -->
+# ATP Workflow
 
 | Field | Value |
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
 | Last review | 2026-08-05 |
-| Audience | Development, QA and acceptance owners |
+| Audience | Development, QA, and acceptance owners |
+| Related ATP | N/A — defines the ATP process |
 
-In diesem Template steht **ATP** für **Abnahmetestplan/-protokoll** beziehungsweise **Acceptance Test Plan/Protocol**. Eine ATP-Datei beschreibt zuerst die geplante Abnahme und wird bei der Durchführung um tatsächliche Ergebnisse und Nachweise ergänzt.
+## Purpose
 
-## Struktur
+In this template, **ATP** means **Acceptance Test Plan/Protocol**. An ATP file first defines the planned acceptance work. During execution, the same file records actual results, deviations, evidence, and approval.
+
+## Directory structure
 
 ```text
 docs/atp/
@@ -20,48 +26,63 @@ docs/atp/
 └── completed/
 ```
 
-| Ordner | Bedeutung |
+| Directory | Meaning |
 | --- | --- |
-| `planned/` | Testumfang und erwartete Ergebnisse sind definiert, die Ausführung hat noch nicht begonnen. |
-| `active/` | Die Abnahme läuft oder es bestehen offene Abweichungen. |
-| `completed/` | Alle Pflichtschritte wurden ausgeführt; Ergebnis und Freigabe sind dokumentiert. |
+| `planned/` | Scope and expected results are defined, but execution has not started. |
+| `active/` | Acceptance is in progress or unresolved deviations remain. |
+| `completed/` | All mandatory steps were executed and the result was approved. |
 
-## Dateiname und ID
+## File name and ID
 
-Der Dateiname lautet `ATP-<vierstellige-ID>-<kurzer-slug>.md`, zum Beispiel `ATP-0007-user-login.md`. Die ID wird nie wiederverwendet. Beim Statuswechsel wird die Datei verschoben, aber weder ID noch Dateiname werden geändert.
+Use `ATP-<four-digit-ID>-<short-slug>.md`, for example `ATP-0007-user-login.md`. Never reuse an ID. Move the file when its status changes, but do not change its ID or file name.
 
 ## Workflow
 
-1. `ATP-TEMPLATE.md` nach `planned/ATP-<ID>-<slug>.md` kopieren.
-2. Anforderung, Scope, Risiken, Voraussetzungen, Testdaten und erwartete Resultate vor der Implementierungsabnahme festlegen.
-3. Prüfen, dass jeder fachliche Akzeptanzpunkt mindestens einem Testschritt zugeordnet ist.
-4. Zum Start der Ausführung die Datei nach `active/` verschieben.
-5. Ist-Ergebnis, Status und Evidence unmittelbar je Testschritt eintragen.
-6. Abweichungen mit Verantwortlichem und Folgemaßnahme dokumentieren. Ein fehlgeschlagener Pflichtschritt verhindert den Status `completed`.
-7. Nach erfolgreicher Wiederholungsprüfung Ergebnis und Sign-off ergänzen und die Datei nach `completed/` verschieben.
+1. Copy `ATP-TEMPLATE.md` to `planned/ATP-<ID>-<slug>.md`.
+2. Define the requirement, scope, risks, prerequisites, test data, and expected results before implementation acceptance.
+3. Verify that every acceptance criterion maps to at least one test step.
+4. Move the file to `active/` when execution begins.
+5. Record the actual result, status, and evidence immediately for each test step.
+6. Document every deviation with an owner and follow-up action. A failed mandatory step prevents `completed` status.
+7. After successful retesting, record the final result and sign-off, then move the file to `completed/`.
+8. Run `python tools/control.py docs index` after moving the ATP so navigation remains accurate.
 
-## Status pro Testschritt
+## Test-step statuses
 
-Nur diese Werte verwenden:
+Use only these values:
 
-- `NOT RUN`: noch nicht ausgeführt
-- `PASS`: erwartetes Ergebnis vollständig erreicht
-- `FAIL`: erwartetes Ergebnis nicht erreicht
-- `BLOCKED`: Ausführung durch eine dokumentierte Abhängigkeit verhindert
-- `N/A`: nach Review nachweislich nicht anwendbar; Begründung ist Pflicht
+- `NOT RUN`: execution has not started
+- `PASS`: the expected result was fully achieved
+- `FAIL`: the expected result was not achieved
+- `BLOCKED`: a documented dependency prevents execution
+- `N/A`: a reviewer confirmed that the step is not applicable; a reason is mandatory
 
 ## Evidence
 
-Evidence muss durch einen Reviewer auffindbar und nachvollziehbar sein. Geeignet sind relative Pfade zu Testreports oder Screenshots, CI-Run-IDs, reproduzierbare Befehle, relevante Logauszüge und Versionen externer Systeme. Keine geheimen Werte oder personenbezogenen Echtdaten einfügen.
+Evidence must be discoverable and understandable to a reviewer. Suitable evidence includes relative paths to reports or screenshots, CI run IDs, reproducible commands, relevant log excerpts, and external-system versions. Never include secrets, credentials, or real personal data.
 
-## Abschlusskriterien
+## Completion criteria
 
-Ein ATP darf nur nach `completed/`, wenn:
+An ATP may move to `completed/` only when:
 
-- alle Pflichtschritte `PASS` oder begründet `N/A` sind,
-- keine offene Abweichung die Abnahme verhindert,
-- Umgebung sowie getesteter Commit oder Build eindeutig angegeben sind,
-- automatisierte Tests referenziert oder begründete manuelle Prüfungen dokumentiert sind,
-- Gesamturteil und Sign-off ausgefüllt sind.
+- every mandatory step is `PASS` or has a justified `N/A` status;
+- no open deviation blocks acceptance;
+- the environment and tested commit or build are identified;
+- automated checks are referenced, or justified manual checks are documented;
+- the overall result and sign-off are complete; and
+- documentation navigation has been regenerated.
 
-Die Vorlage selbst wird niemals als ausgeführtes ATP verwendet.
+Never use the template file itself as an executed ATP.
+
+## Verification
+
+```sh
+python tools/control.py test --suite all --report
+python tools/control.py docs index --dry-run
+```
+
+## Related documents
+
+- [ATP Template](ATP-TEMPLATE.md)
+- [Documentation Standard](../README.md)
+- [Tooling Guide](../tools/tooling.md)

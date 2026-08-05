@@ -1,3 +1,6 @@
+<!-- AUTO-GENERATED:backlink START -->
+[← Back](def.md)
+<!-- AUTO-GENERATED:backlink END -->
 # Framework architecture
 
 | Field | Value |
@@ -92,6 +95,35 @@ sequenceDiagram
 
 `python tools/control.py tauri run --foreground` lets Tauri start Vite through `beforeDevCommand`. It does not start FastAPI. When a desktop feature requires the API during development, run the backend separately or use the combined web command before starting Tauri with an adjusted workflow.
 
+## Tooling control flow
+
+```mermaid
+flowchart LR
+    Developer[Developer]
+    Console[Interactive console]
+    CLI[tools/control.py]
+    Environment[Doctor and installation]
+    Services[Vite and FastAPI services]
+    Quality[Tests and reports]
+    Releases[Web and Tauri builds]
+    Docs[PyGitIndex wrapper]
+    SystemIndex[System PyGitIndex.py]
+
+    Developer --> CLI
+    Developer --> Console
+    Console -->|delegates reproducible commands| CLI
+    CLI --> Environment
+    CLI --> Services
+    CLI --> Quality
+    CLI --> Releases
+    CLI --> Docs
+    Docs --> SystemIndex
+```
+
+`tools/control.py` is the only public command dispatcher. The interactive console does not duplicate build or test logic; it invokes the same CLI commands in subprocesses and adds descriptions, safe defaults, and confirmations. This keeps interactive actions reproducible in local shells and CI.
+
+The documentation command locates the system `PyGitIndex.py` script and delegates index, README navigation, and backlink generation to it. A narrow post-processing step translates only known non-English empty-state labels inside generated markers. Authored documentation is not automatically rewritten.
+
 ## Build and deployment interaction
 
 ```mermaid
@@ -153,6 +185,7 @@ Run all baseline checks from the repository root:
 python tools/control.py doctor
 python tools/control.py test --suite all
 python tools/control.py build web
+python tools/control.py docs index --dry-run
 ```
 
 A desktop-capable environment additionally runs:

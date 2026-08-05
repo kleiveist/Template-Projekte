@@ -1,31 +1,60 @@
+<!-- AUTO-GENERATED:docs-index START -->
+
+## 📄 Files
+- ⏭️ (no Markdown files in the project root)
+
+# DOCS
+- 📚 [Docs Home](docs/index.md)
+- 📝 [<Document title>](docs/DOCUMENT-TEMPLATE.md)
+
+## 📁 ATP
+- 🗂️ [Overview](docs/atp/atp.md)
+- 📝 [ATP-<ID>: <Acceptance title>](docs/atp/ATP-TEMPLATE.md)
+
+## 📁 DEF
+- 🗂️ [Overview](docs/def/def.md)
+- 📝 [Framework architecture](docs/def/architecture.md)
+
+## 📁 DEV
+- 🗂️ [Overview](docs/dev/dev.md)
+
+## 📁 Tools
+- 🗂️ [Overview](docs/tools/tools.md)
+- 📝 [Tooling Guide](docs/tools/tooling.md)
+
+## 📁 USR
+- 🗂️ [Overview](docs/usr/usr.md)
+
+<!-- AUTO-GENERATED:docs-index END -->
 # Full-Stack Project Template
 
-Dieses Repository ist ein schlankes Ausgangsprojekt für Anwendungen mit Vite und TypeScript, FastAPI sowie Tauri 2.
+This repository is a lean starting point for applications built with Vite and TypeScript, FastAPI, and Tauri 2.
 
-## Enthaltener Stack
+## Included stack
 
-| Bereich | Technologie | Aufgabe |
+| Area | Technology | Responsibility |
 | --- | --- | --- |
-| Web-Frontend | Vite 6, TypeScript 5, Vitest | Browser-Oberfläche und Frontend-Tests |
-| Backend | FastAPI, Uvicorn, Pytest | HTTP-API und API-Tests |
-| Desktop | Tauri 2, Rust | Native Desktop-Shell für das Web-Frontend |
-| Tooling | Python | Gemeinsame Installation, Start, Build und Tests |
+| Web frontend | Vite 6, TypeScript 5, Vitest | Browser user interface and frontend tests |
+| Backend | FastAPI, Uvicorn, Pytest | HTTP API and API tests |
+| Desktop | Tauri 2, Rust | Native desktop shell for the web frontend |
+| Tooling | Python | Shared setup, development, testing, build, and documentation workflows |
 
-## Voraussetzungen
+## Requirements
 
-- Python 3.11 oder neuer
-- Node.js 20 oder neuer mit npm
-- Für Desktop-Builds: Rust Stable und die [plattformspezifischen Tauri-Abhängigkeiten](https://v2.tauri.app/start/prerequisites/)
+- Python 3.11 or newer
+- Node.js 20 or newer with npm
+- Rust Stable and the [platform-specific Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for desktop builds
+- The system `PyGitIndex.py` script for documentation navigation; the project tooling locates it automatically or through `PYGITINDEX_PATH`
 
-## Schnellstart
+## Safe return after a break
 
-Wenn du das Projekt nach längerer Zeit wieder öffnest, starte ohne Argumente. Die CLI zeigt dann den vollständigen Befehlsplan und verändert noch nichts:
+Start without arguments when returning to the project. The command only displays the complete help map and does not modify files:
 
 ```sh
 python tools/control.py
 ```
 
-Der empfohlene Wiedereinstieg ist:
+Then use the recommended sequence:
 
 ```sh
 python tools/control.py doctor
@@ -33,15 +62,15 @@ python tools/control.py install
 python tools/control.py run
 ```
 
-Danach sind standardmäßig erreichbar:
+The default local endpoints are:
 
 - Frontend: `http://127.0.0.1:5173`
 - Backend: `http://127.0.0.1:8000`
-- API-Health-Check: `http://127.0.0.1:8000/api/health`
+- API health check: `http://127.0.0.1:8000/api/health`
 
-Der kombinierte Entwicklungsstart läuft im Vordergrund. Mit `Ctrl+C` werden beide Prozesse beendet.
+The combined development command runs in the foreground. Press `Ctrl+C` to stop both processes.
 
-## Zentrale Befehle
+## Central commands
 
 ```sh
 python tools/control.py doctor
@@ -50,11 +79,14 @@ python tools/control.py run
 python tools/control.py stop
 python tools/control.py test
 python tools/control.py build
+python tools/control.py docs
 python tools/control.py tauri
 python tools/control.py console
 ```
 
-`build`, `test` und `tauri` zeigen bei einem Aufruf ohne weitere Auswahl jeweils ihre eigene Hilfekarte. Konkrete Beispiele:
+`build`, `docs`, `test`, and `tauri` display their own command map when called without a subcommand. Every command also supports `--help`.
+
+Examples:
 
 ```sh
 python tools/control.py test --suite api
@@ -63,38 +95,52 @@ python tools/control.py test --suite tools
 python tools/control.py test --suite all --report
 python tools/control.py build web
 python tools/control.py build desktop --dry-run
+python tools/control.py docs index --dry-run
 python tools/control.py tauri doctor
 ```
 
-Jeder Befehl unterstützt zusätzlich `--help`, zum Beispiel `python tools/control.py tauri build --help`. Die vollständige Referenz steht in der [Tooling-Anleitung](docs/tools/tooling.md).
+## Interactive console
 
-## Projektstruktur
+The guided console is useful when command details are no longer familiar:
 
-```text
-backend/             FastAPI-Anwendung und API-Tests
-docs/                Dokumentationsregeln, Vorlagen, Architektur und ATPs
-frontend/            Vite-/TypeScript-Anwendung und Frontend-Tests
-shared/              Framework-neutrale Verträge, Beispiele und gemeinsame Assets
-src-tauri/           Tauri-Konfiguration, Rust-Einstiegspunkt und App-Icons
-tools/control.py     Gemeinsamer Projekt-CLI-Einstiegspunkt
+```sh
+python tools/control.py console
 ```
 
-## Neues Projekt aus dem Template erstellen
+It provides dedicated menus for environment setup, development services, tests and reports, web and desktop builds, Tauri workflows, and documentation indexing. Potentially disruptive actions require confirmation; diagnostic and dry-run actions are clearly marked.
 
-1. Repository kopieren oder als Git-Template verwenden und eine neue Historie anlegen.
-2. Nach `template-project`, `project-template`, `Template Project` und `com.example.templateproject` suchen und die Werte projektspezifisch ersetzen.
-3. `src-tauri/app-icon.svg` austauschen und mit `npm --prefix frontend run tauri -- icon ../src-tauri/app-icon.svg` neue Icons erzeugen.
-4. Produktziel, Verantwortliche und Qualitätskriterien dokumentieren.
-5. Für den ersten Funktionsumfang ein ATP aus `docs/atp/ATP-TEMPLATE.md` anlegen.
-6. `python tools/control.py test --suite all` ausführen und das erste abgeschlossene ATP einchecken.
+See the [Tooling Guide](docs/tools/tooling.md) for the complete command and console reference.
 
-## Verbindliche Dokumentation
+## Project structure
 
-- [Dokumentationsstandard](docs/README.md)
-- [Allgemeine Dokumentvorlage](docs/DOCUMENT-TEMPLATE.md)
-- [Framework architecture](docs/def/architecture.md)
-- [ATP workflow](docs/atp/README.md)
-- [ATP template](docs/atp/ATP-TEMPLATE.md)
-- [Tooling-Anleitung](docs/tools/tooling.md)
+```text
+backend/             FastAPI application and API tests
+docs/                Documentation rules, templates, architecture, and ATPs
+frontend/            Vite and TypeScript application with frontend tests
+shared/              Framework-neutral contracts, examples, and shared assets
+src-tauri/           Tauri configuration, Rust entry point, and application icons
+tools/control.py     Shared project CLI entry point
+```
 
-Neue oder geänderte Funktionen gelten erst dann als abgeschlossen, wenn Code, Tests und die betroffene Dokumentation gemeinsam aktualisiert wurden.
+## Create a project from this template
+
+1. Copy the repository or use it as a Git template, then start a new history.
+2. Search for `template-project`, `project-template`, `Template Project`, and `com.example.templateproject`; replace them with project-specific values.
+3. Replace `src-tauri/app-icon.svg` and generate platform icons with `npm --prefix frontend run tauri -- icon ../src-tauri/app-icon.svg`.
+4. Document the product objective, ownership, and quality criteria.
+5. Create the first ATP from `docs/atp/ATP-TEMPLATE.md`.
+6. Refresh documentation navigation with `python tools/control.py docs index`.
+7. Run `python tools/control.py test --suite all` and commit the first completed ATP with the implementation.
+
+## Required documentation
+
+English is the only documentation language for this repository and all projects derived from it.
+
+- [Documentation Standard](docs/README.md)
+- [Documentation Template](docs/DOCUMENT-TEMPLATE.md)
+- [Framework Architecture](docs/def/architecture.md)
+- [ATP Workflow](docs/atp/README.md)
+- [ATP Template](docs/atp/ATP-TEMPLATE.md)
+- [Tooling Guide](docs/tools/tooling.md)
+
+A new or changed feature is complete only when its code, tests, acceptance evidence, and affected documentation are updated together.

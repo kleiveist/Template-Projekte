@@ -1,3 +1,6 @@
+<!-- AUTO-GENERATED:backlink START -->
+[← Back](atp.md)
+<!-- AUTO-GENERATED:backlink END -->
 # ATP-<ID>: <Acceptance title>
 
 | Field | Value |

@@ -10,6 +10,7 @@ def test_bare_control_prints_root_help(capsys) -> None:
     assert "Recommended workflow after returning to the project" in output
     assert "command map" in output
     assert "console" in output
+    assert "docs" in output
 
 
 def test_bare_build_prints_target_map_without_building(capsys) -> None:
@@ -28,6 +29,15 @@ def test_bare_test_prints_suite_map_without_running(capsys) -> None:
     assert "Test map" in output
     assert "api" in output
     assert "tools" in output
+
+
+def test_bare_docs_prints_documentation_map(capsys) -> None:
+    assert control.main(["docs"]) == 0
+
+    output = capsys.readouterr().out
+    assert "documentation actions" in output
+    assert "PyGitIndex" in output
+    assert "index" in output
 
 
 def test_legacy_desktop_build_alias_is_normalized() -> None:

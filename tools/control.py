@@ -12,7 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools import logger
-from tools.inst import build, console, doctor, install, run, run_test, stop
+from tools.inst import build, console, docs_index, doctor, install, run, run_test, stop
 from tools.tauri import build as tauri_build
 from tools.tauri import control as tauri_control
 
@@ -66,6 +66,7 @@ Prefer a menu? Start the optional interactive console:
 
 Groups with their own command maps:
   python tools/control.py build
+  python tools/control.py docs
   python tools/control.py tauri
 """
 
@@ -77,6 +78,7 @@ examples:
   python tools/control.py stop
   python tools/control.py test --suite all --report
   python tools/control.py build web
+  python tools/control.py docs index --dry-run
   python tools/control.py tauri
 
 Compatibility:
@@ -165,7 +167,19 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Open a numbered menu that guides you through common project actions.",
         formatter_class=HelpFormatter,
     )
-    _add_examples(console_parser, "example:\n  python tools/control.py console")
+    _add_examples(
+        console_parser,
+        """sections:
+  environment  Doctor and dependency setup
+  services     Foreground/background start and stop
+  tests        Quick, complete, individual and reported test runs
+  builds       Web packages and guided desktop targets
+  Tauri        Diagnostics, setup, development and artifacts
+  docs         PyGitIndex preview and update
+
+example:
+  python tools/control.py console""",
+    )
 
     build_parser = subparsers.add_parser(
         "build",
@@ -208,6 +222,50 @@ def _build_parser() -> argparse.ArgumentParser:
 
 More desktop commands:
   python tools/control.py tauri""",
+    )
+
+    docs_parser = subparsers.add_parser(
+        "docs",
+        help="manage documentation navigation with PyGitIndex",
+        description="Documentation map. A bare 'docs' shows the available maintenance actions.",
+        formatter_class=HelpFormatter,
+    )
+    docs_parser.set_defaults(docs_parser=docs_parser)
+    docs_subparsers = docs_parser.add_subparsers(
+        dest="docs_command",
+        title="documentation actions",
+        metavar="<action>",
+    )
+    docs_index_parser = docs_subparsers.add_parser(
+        "index",
+        help="regenerate indices and backlinks with the system PyGitIndex script",
+        description="Run PyGitIndex and keep its generated navigation labels in English.",
+        formatter_class=HelpFormatter,
+    )
+    docs_index_parser.add_argument("--dry-run", action="store_true", help="preview PyGitIndex without writing files")
+    docs_index_parser.add_argument("--force", action="store_true", help="replace index files instead of updating markers")
+    docs_index_parser.add_argument("--compact", action="store_true", help="list only directory overviews in README")
+    docs_index_parser.add_argument("--no-backlinks", action="store_true", help="do not add or update Markdown backlinks")
+    docs_index_parser.add_argument("--no-readme", action="store_true", help="do not update the README navigation block")
+    docs_index_parser.add_argument(
+        "--script",
+        metavar="PATH",
+        help="explicit PyGitIndex.py path (otherwise use PYGITINDEX_PATH, PATH or known user locations)",
+    )
+    docs_index_parser.add_argument("--docs-dir", default="docs", help="documentation directory (default: docs)")
+    _add_examples(
+        docs_index_parser,
+        """examples:
+  python tools/control.py docs index --dry-run
+  python tools/control.py docs index
+  python tools/control.py docs index --compact
+  python tools/control.py docs index --script /path/to/PyGitIndex.py""",
+    )
+    _add_examples(
+        docs_parser,
+        """examples:
+  python tools/control.py docs index --dry-run
+  python tools/control.py docs index""",
     )
 
     run_parser = subparsers.add_parser(
@@ -314,12 +372,23 @@ def _handle_console(_args: argparse.Namespace) -> int:
     return console.main()
 
 
+def _handle_docs(args: argparse.Namespace) -> int:
+    if getattr(args, "docs_command", None) is None:
+        args.docs_parser.print_help()
+        return 0
+    if args.docs_command == "index":
+        return docs_index.main(args)
+    logger.fail(f"Unknown documentation action: {args.docs_command}")
+    return 2
+
+
 def _handlers() -> dict[str, Handler]:
     return {
         "doctor": doctor.main,
         "install": install.main,
         "console": _handle_console,
         "build": _handle_build,
+        "docs": _handle_docs,
         "run": run.run_command,
         "stop": stop.main,
         "test": _handle_test,

@@ -1,3 +1,6 @@
+<!-- AUTO-GENERATED:backlink START -->
+[← Back](index.md)
+<!-- AUTO-GENERATED:backlink END -->
 # <Document title>
 
 | Field | Value |

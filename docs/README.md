@@ -1,80 +1,122 @@
-# Dokumentationsstandard
+<!-- AUTO-GENERATED:backlink START -->
+[← Back](index.md)
+<!-- AUTO-GENERATED:backlink END -->
+# Documentation Standard
 
-Diese Datei ist die verbindliche Anleitung für alle Dokumente im Repository. Dokumentation wird zusammen mit der zugehörigen Codeänderung erstellt oder aktualisiert; sie ist Teil der Definition of Done.
+| Field | Value |
+| --- | --- |
+| Status | Active |
+| Owner | Project team |
+| Last review | 2026-08-05 |
+| Audience | Contributors, reviewers, and acceptance owners |
+| Related ATP | N/A — repository-wide standard |
 
-## Ordner und Zuständigkeiten
+## Purpose
 
-| Pfad | Inhalt | Zielgruppe |
+This file defines the mandatory rules for every document in the repository. Documentation is created or updated with the related code change and is part of the Definition of Done.
+
+## Directory ownership
+
+| Path | Content | Primary audience |
 | --- | --- | --- |
-| `README.md` | Produktüberblick, Schnellstart und wichtigste Befehle | Alle |
-| `docs/def/` | Stabile Definitionen, Architektur und fachliche Modelle | Entwicklung und Architektur |
-| `docs/dev/` | Anforderungen, Implementierungsnotizen und Migrationspläne | Entwicklung |
-| `docs/usr/` | Aufgabenorientierte Bedienungsanleitungen | Anwender |
-| `docs/tools/` | Betrieb, Build, Release und Werkzeugreferenz | Entwicklung und Betrieb |
-| `docs/tools/tauri/` | Plattformspezifische Desktop-Hinweise | Desktop-Entwicklung |
-| `docs/atp/` | Abnahmetestpläne und -protokolle | Entwicklung, QA und Abnahme |
+| `README.md` | Product overview, quick start, and central commands | Everyone |
+| `docs/def/` | Stable definitions, architecture, and domain models | Development and architecture |
+| `docs/dev/` | Requirements, implementation notes, and migration plans | Development |
+| `docs/usr/` | Task-oriented user guides | Users |
+| `docs/tools/` | Operations, build, release, and tooling reference | Development and operations |
+| `docs/tools/tauri/` | Platform-specific desktop guidance | Desktop development |
+| `docs/atp/` | Acceptance test plans and protocols | Development, QA, and acceptance owners |
 
-Leere Fachordner enthalten nur `.gitkeep`, bis ein echtes Dokument benötigt wird. Beispieldokumente werden nicht als scheinbar gültige Projektdokumentation abgelegt.
+Empty content directories contain only `.gitkeep` until a real document is required. Do not add example documents that could be mistaken for current project documentation.
 
-## Verbindliche Regeln
+## Mandatory rules
 
-1. Ein Dokument beantwortet eine klar benannte Frage und besitzt genau eine primäre Zielgruppe.
-2. Dateinamen verwenden englisches `kebab-case`, zum Beispiel `release-process.md`.
-3. Jede Seite beginnt mit einem eindeutigen H1-Titel und einer Metadatentabelle mit Status, Owner und letztem Review.
-4. Zulässige Statuswerte sind `Draft`, `Active`, `Deprecated` und `Archived`.
-5. Aussagen beschreiben den aktuellen Stand. Geplante Änderungen werden als Plan gekennzeichnet und erhalten einen Verweis auf Anforderung oder ATP.
-6. Befehle müssen kopierbar sein und aus dem angegebenen Arbeitsverzeichnis funktionieren.
-7. Links sind relativ zum aktuellen Dokument. Nach Umbenennungen müssen eingehende und ausgehende Links aktualisiert werden.
-8. Diagramme werden bevorzugt als Mermaid im Markdown gepflegt. Ein Diagramm ergänzt den Text, ersetzt ihn aber nicht.
-9. Geheimnisse, echte personenbezogene Daten, interne Zugangsdaten und lokale absolute Pfade gehören nicht in die Dokumentation.
-10. Architektur- und API-Änderungen aktualisieren im selben Change die betroffenen Tests und ATPs.
+1. All documentation is written in English. This includes the root README, templates, ATPs, generated navigation labels, examples, and operational guides.
+2. A document answers one clearly stated question and has exactly one primary audience.
+3. File names use English `kebab-case`, for example `release-process.md`.
+4. Each authored page starts with an unambiguous H1 title and a metadata table containing status, owner, and last review date.
+5. Allowed status values are `Draft`, `Active`, `Deprecated`, and `Archived`.
+6. Statements describe the current state. Planned changes are explicitly marked as plans and reference a requirement or ATP.
+7. Commands must be copyable and work from the documented working directory.
+8. Links are relative to the current document. Update incoming and outgoing links after moves or renames.
+9. Prefer Mermaid for diagrams. A diagram supplements the written explanation and does not replace it.
+10. Secrets, real personal data, credentials, and local absolute paths do not belong in documentation.
+11. Architecture and API changes update the affected documentation, tests, and ATP in the same change.
 
-## Pflichtaufbau
+PyGitIndex navigation pages and generated blocks are exempt from the metadata-table requirement because they contain navigation only. Do not edit content between `AUTO-GENERATED` markers manually.
 
-Für neue Seiten wird [DOCUMENT-TEMPLATE.md](DOCUMENT-TEMPLATE.md) kopiert. Nicht benötigte optionale Abschnitte dürfen entfernt werden; die folgenden Bestandteile bleiben verpflichtend:
+## Required structure
 
-- Titel
-- Status, Owner und letztes Review
+Copy [DOCUMENT-TEMPLATE.md](DOCUMENT-TEMPLATE.md) for a new authored page. Optional sections may be removed, but these elements remain mandatory:
+
+- Title
+- Status, owner, and last review date
 - Purpose
 - Scope
-- Inhalt oder Vorgehen
+- Details or procedure
 - Verification
 - Related documents
 
-## Schreibstil
+## Writing style
 
-- Kurze, überprüfbare Sätze und konkrete Verben verwenden.
-- Fachbegriffe beim ersten Auftreten erklären und danach konsistent verwenden.
-- Pro Dokument genau eine Sprache verwenden. Technische Architektur wird in diesem Template auf Englisch geführt; Benutzer- und Prozessdokumente dürfen Deutsch sein.
-- Beispiele als Beispiele markieren und Platzhalter in spitze Klammern setzen, etwa `<project-name>`.
-- Keine relativen Zeitangaben wie „bald“ oder „aktuell“ ohne Datum verwenden.
+- Use short, verifiable sentences and concrete verbs.
+- Define a technical term when it first appears and use it consistently afterward.
+- Use English for prose, headings, diagram labels, table labels, examples, and placeholder descriptions.
+- Mark examples as examples and wrap placeholders in angle brackets, such as `<project-name>`.
+- Avoid relative timing such as “soon” or “currently” without an explicit date.
 
-## Code, API und Konfiguration
+## Code, API, and configuration
 
-Codeblöcke erhalten immer eine Sprachangabe. API-Dokumentation nennt mindestens Methode, Pfad, Eingabe, Erfolgsausgabe und Fehlerfälle. Konfigurationswerte dokumentieren Namen, Standardwert, erlaubte Werte, Sicherheitswirkung und ein Beispiel.
+Every code block has a language identifier. API documentation includes at least method, path, input, successful output, and error cases. Configuration documentation identifies the name, default, allowed values, security impact, and an example.
 
-## Review und Pflege
+## Generated navigation
 
-Der Code-Reviewer prüft bei jeder Änderung:
+Use the project wrapper for the system-installed PyGitIndex script:
 
-- Sind Verhalten und Dokumentation konsistent?
-- Funktionieren Befehle und Links?
-- Ist die Änderung über Tests oder ein ATP nachweisbar?
-- Sind ersetzte Aussagen entfernt statt nur ergänzt worden?
-- Muss das Datum `Last review` aktualisiert werden?
+```sh
+python tools/control.py docs index --dry-run
+python tools/control.py docs index
+```
 
-Ein Dokument wird `Deprecated`, sobald es nicht mehr die bevorzugte Lösung beschreibt. Es wird `Archived`, wenn es nur noch historischen Nachweis liefert. Aktive Seiten dürfen nicht auf archivierte Inhalte als einzige Quelle angewiesen sein.
+The wrapper locates `PyGitIndex.py`, regenerates directory indices and backlinks, and normalizes generated navigation labels to English. Set `PYGITINDEX_PATH` or pass `--script <path>` when the script is stored outside a known location.
 
-## Dokumentations-Workflow
+Always review the dry-run before updating navigation. Run the update after adding, moving, renaming, or removing a Markdown file.
 
-1. Zielgruppe und passenden Ordner bestimmen.
-2. [DOCUMENT-TEMPLATE.md](DOCUMENT-TEMPLATE.md) kopieren.
-3. Anforderung, Architekturentscheidung oder ATP verlinken.
-4. Dokument parallel zur Implementierung aktualisieren.
-5. Befehle, Links und Beispiele prüfen.
-6. Owner und Review-Datum setzen.
-7. Mit dem Code gemeinsam reviewen und einchecken.
+## Review and maintenance
 
-## Aktive Referenzen
+The code reviewer verifies:
 
-- [Tooling-Anleitung](tools/tooling.md): Einstieg, Befehlslandkarte und Fehlerbehebung für die Projekt-CLI.
+- Does the documentation match the implemented behavior?
+- Do commands and links work?
+- Is the change supported by tests or an ATP?
+- Was obsolete guidance replaced instead of merely supplemented?
+- Is the `Last review` date correct?
+- Is every authored sentence in English?
+
+A document becomes `Deprecated` when it no longer describes the preferred solution. It becomes `Archived` when it serves only as historical evidence. Active pages must not rely on archived content as their only source.
+
+## Documentation workflow
+
+1. Identify the audience and select the correct directory.
+2. Copy [DOCUMENT-TEMPLATE.md](DOCUMENT-TEMPLATE.md).
+3. Link the requirement, architecture decision, or ATP.
+4. Update documentation alongside the implementation.
+5. Verify commands, links, examples, and English language consistency.
+6. Set the owner and review date.
+7. Preview and regenerate the PyGitIndex navigation.
+8. Review and commit documentation with the code.
+
+## Verification
+
+```sh
+python tools/control.py docs index --dry-run
+python tools/control.py test --suite tools
+```
+
+Search Markdown files for obsolete non-English content before hand-off.
+
+## Related documents
+
+- [Tooling Guide](tools/tooling.md)
+- [Framework Architecture](def/architecture.md)
+- [ATP Workflow](atp/README.md)
