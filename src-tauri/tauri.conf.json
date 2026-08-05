@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Template Project",
+  "version": "0.1.0",
+  "identifier": "com.example.templateproject",
+  "mainBinaryName": "project-template",
+  "build": {
+    "beforeDevCommand": "cd ../frontend && npm run dev -- --host 127.0.0.1 --port 5173",
+    "beforeBuildCommand": "cd ../frontend && npm run build",
+    "devUrl": "http://127.0.0.1:5173",
+    "frontendDist": "../frontend/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Template Project",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 720,
+        "minHeight": 520,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "DeveloperTool",
+    "shortDescription": "Reusable full-stack desktop project template",
+    "longDescription": "A reusable project foundation combining Vite, TypeScript, FastAPI and Tauri.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico",
+      "icons/icon.png"
+    ]
+  }
+}

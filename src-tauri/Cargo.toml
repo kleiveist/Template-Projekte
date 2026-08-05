@@ -1,0 +1,13 @@
+[package]
+name = "project-template"
+version = "0.1.0"
+description = "Reusable Vite, FastAPI and Tauri desktop project template"
+authors = ["Template Project Contributors"]
+edition = "2021"
+rust-version = "1.77"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
