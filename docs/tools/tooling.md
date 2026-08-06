@@ -7,17 +7,17 @@
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
-| Last review | 2026-08-05 |
+| Last review | 2026-08-06 |
 | Audience | Contributors and release operators |
 | Related ATP | N/A — template-level tooling reference |
 
 ## Purpose
 
-This guide explains the central entry point for setup, development, testing, builds, Tauri, and documentation maintenance. It is designed for contributors returning after a long break as well as first-time users of the template.
+This guide explains the central entry point for profile-based project scaffolding, setup, development, testing, builds, Tauri, and documentation maintenance. It is designed for contributors returning after a long break as well as first-time users of the template.
 
 ## Scope
 
-The guide covers `tools/control.py`, the interactive console, and all web, API, desktop, test-report, and PyGitIndex workflows exposed through that command. Run every example from the repository root.
+The guide covers `tools/control.py`, the interactive console, and all profile, web, API, desktop, test-report, and PyGitIndex workflows exposed through that command. Run every example from the repository root.
 
 ## Safe return after a break
 
@@ -35,16 +35,17 @@ python tools/control.py install
 python tools/control.py run
 ```
 
-`doctor` checks runtimes, dependencies, project structure, and ports. `install` prepares the frontend and backend; it installs Playwright only when E2E tests are configured. `run` starts Vite and FastAPI together. In foreground mode, `Ctrl+C` stops both processes.
+`doctor` checks runtimes, dependencies, project structure, and ports. `install` prepares the frontend and backend; it installs Playwright only when E2E tests are configured. `run` starts the enabled local services. In foreground mode, `Ctrl+C` stops those processes.
 
 ## Command map
 
 | Command | Effect | Detailed help |
 | --- | --- | --- |
+| `init` | Generate a derived project from a selected profile | `python tools/control.py init --help` |
 | `doctor` | Inspect the development environment | `python tools/control.py doctor --help` |
 | `install` | Install or repair project dependencies | `python tools/control.py install --help` |
 | `console` | Open the guided interactive interface | `python tools/control.py console --help` |
-| `run` | Start the frontend and backend | `python tools/control.py run --help` |
+| `run` | Start the enabled local services | `python tools/control.py run --help` |
 | `stop` | Stop tracked development services | `python tools/control.py stop --help` |
 | `test` | Select test suites and reports | `python tools/control.py test` |
 | `build` | Select a web or desktop build | `python tools/control.py build` |
@@ -61,6 +62,26 @@ python tools/control.py tauri
 ```
 
 An unknown command displays the relevant help map, explains the error, and provides the next `--help` command.
+
+## Initialize a derived project
+
+Preview the available profiles and choose one interactively:
+
+```sh
+python tools/control.py init
+```
+
+Generate a specific profile non-interactively:
+
+```sh
+python tools/control.py init --profile web-only
+python tools/control.py init --profile desktop-cloud --target-dir ../desktop-cloud-app
+python tools/control.py init --profile full-platform --dry-run
+```
+
+The command writes into `.generated/<profile-id>` by default so the master template is not modified accidentally. Use `--target-dir` for a real destination outside the template workspace.
+
+Profile definitions live under `profiles/`. The generated project receives an active `project-profile.toml` manifest, and the shared tooling reads that file to skip disabled runtime layers cleanly.
 
 ## Interactive console
 
@@ -100,6 +121,8 @@ python tools/control.py stop
 
 Use `--frontend-port` and `--backend-port` for non-default ports. Run `python tools/control.py run --help` for every option.
 
+`run` starts only the services enabled by `project-profile.toml`. For example, `web-only` starts the frontend only, while `full-platform` starts frontend and backend together.
+
 ## Tests and reports
 
 ```sh
@@ -120,6 +143,8 @@ python tools/control.py test --suite all --report
 | `all` | Every configured suite |
 
 Reports are written under `.report/`. `python tools/control.py test --report done` removes only that generated report directory.
+
+When the active project profile disables the backend or desktop layer, the affected suites are skipped or downgraded to informative warnings instead of failing because that layer is intentionally absent.
 
 ## Builds
 
@@ -151,6 +176,8 @@ python tools/control.py tauri build --help
 ```
 
 The Tauri map also provides prerequisite setup, development mode, local AppImage installation, validation, and artifact collection.
+
+Desktop build and `tauri` commands require the active profile to enable `tauri`. Otherwise they fail with a clear profile-based message.
 
 ## Documentation indexing with PyGitIndex
 
@@ -203,6 +230,7 @@ After a tooling change, run at least:
 
 ```sh
 python tools/control.py
+python tools/control.py init --profile web-only --dry-run
 python tools/control.py build
 python tools/control.py docs
 python tools/control.py test
@@ -216,4 +244,5 @@ python tools/control.py build desktop --dry-run --no-clean
 
 - [Documentation Standard](../README.md)
 - [Framework Architecture](../def/architecture.md)
+- [Project Profiles](../def/project-profiles.md)
 - [ATP Workflow](../atp/README.md)

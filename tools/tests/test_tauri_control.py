@@ -8,11 +8,19 @@ import stat
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from tools import control
+from tools.profiles import runtime as profile_runtime
 from tools.tauri import common, doctor, paths, run
 from tools.tauri.build import appimage, installappimage, windows_portable
 from tools.tauri.linux import install as linux_install
 from tools.tauri.linux import install_arch
+
+pytestmark = pytest.mark.skipif(
+    not profile_runtime.feature_enabled("tauri"),
+    reason="Tauri feature disabled by active profile",
+)
 
 
 def test_tauri_parser_recognizes_subcommands() -> None:

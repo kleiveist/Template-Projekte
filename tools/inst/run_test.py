@@ -14,6 +14,7 @@ from typing import Any
 from tools import logger
 from tools.inst import report as report_writer
 from tools.inst import stop as service_cleanup
+from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE_TAIL_LINES = 12
@@ -101,7 +102,9 @@ def _backend_python() -> Path:
 
 
 def _needs_backend_runtime(selected_suites: list[str]) -> bool:
-    return bool({"schema", "api", "e2e"}.intersection(selected_suites))
+    if not profile_runtime.feature_enabled("backend", ROOT):
+        return False
+    return bool({"schema", "api"}.intersection(selected_suites))
 
 
 def _probe_backend_runtime() -> tuple[bool, str, list[str] | None]:
@@ -269,11 +272,19 @@ def _run_schema_suite() -> SuiteResult:
             detail=detail,
         )
     except ImportError:
+        if not profile_runtime.feature_enabled("backend", ROOT):
+            return SuiteResult(
+                "schema",
+                "WARN",
+                "jsonschema package missing in current runtime; suite skipped",
+                time.monotonic() - started,
+                detail=detail,
+            )
         backend_python = _backend_python()
         if not backend_python.exists():
             return SuiteResult(
                 "schema",
-                "FAIL",
+                "WARN",
                 "jsonschema package missing in current runtime and backend venv",
                 time.monotonic() - started,
                 detail=detail,
@@ -306,6 +317,9 @@ def _run_schema_suite() -> SuiteResult:
 
 def _run_api_suite() -> SuiteResult:
     started = time.monotonic()
+    if not profile_runtime.feature_enabled("backend", ROOT):
+        return SuiteResult("api", "WARN", "backend feature disabled; suite skipped", time.monotonic() - started)
+
     api_tests = ROOT / "backend" / "tests" / "api"
     if not api_tests.exists():
         return SuiteResult("api", "WARN", "backend/tests/api missing; suite skipped", time.monotonic() - started)

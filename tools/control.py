@@ -13,6 +13,8 @@ if str(ROOT) not in sys.path:
 
 from tools import logger
 from tools.inst import build, console, docs_index, doctor, install, run, run_test, stop
+from tools.profiles import cli as profile_cli
+from tools.profiles import runtime as profile_runtime
 from tools.tauri import build as tauri_build
 from tools.tauri import control as tauri_control
 
@@ -54,6 +56,9 @@ TAURI_COMMAND_ALIASES: dict[str, str] = {
 ROOT_HELP = """
 One entry point for the complete project lifecycle.
 
+Need a derived project from the master template?
+  init     Generate a profile-based scaffold in .generated/<profile-id> or --target-dir.
+
 Recommended workflow after returning to the project:
   1. doctor   Check tools, dependencies and occupied ports.
   2. install  Install or repair frontend, backend and optional test dependencies.
@@ -72,6 +77,8 @@ Groups with their own command maps:
 
 ROOT_EXAMPLES = """
 examples:
+  python tools/control.py init
+  python tools/control.py init --profile web-only --dry-run
   python tools/control.py doctor
   python tools/control.py install
   python tools/control.py run --detach
@@ -127,6 +134,28 @@ def _build_parser() -> argparse.ArgumentParser:
         dest="command",
         title="command map",
         metavar="<command>",
+    )
+
+    init_parser = subparsers.add_parser(
+        "init",
+        help="generate a derived project from a selected profile",
+        description="Create a profile-based project scaffold from the master template without modifying this repository.",
+        formatter_class=HelpFormatter,
+    )
+    init_parser.add_argument("--profile", help="profile id to generate; omit to choose interactively")
+    init_parser.add_argument(
+        "--target-dir",
+        metavar="PATH",
+        help="destination directory (default: .generated/<profile-id> below the template root)",
+    )
+    init_parser.add_argument("--dry-run", action="store_true", help="show the scaffold plan without writing files")
+    _add_examples(
+        init_parser,
+        """examples:
+  python tools/control.py init
+  python tools/control.py init --profile web-only
+  python tools/control.py init --profile desktop-cloud --target-dir ../desktop-cloud-app
+  python tools/control.py init --profile full-platform --dry-run""",
     )
 
     doctor_parser = subparsers.add_parser(
@@ -352,6 +381,10 @@ def _handle_build(args: argparse.Namespace) -> int:
     if args.build_command == "web":
         return build.main(args)
     if args.build_command == "desktop":
+        if not profile_runtime.feature_enabled("tauri", ROOT):
+            profile = profile_runtime.active_profile(ROOT)
+            logger.fail(f"Tauri desktop build is disabled by active profile '{profile.profile_id}'.")
+            return 1
         return tauri_build.main(args)
     logger.fail(f"Unknown build target: {args.build_command}")
     return 2
@@ -384,6 +417,7 @@ def _handle_docs(args: argparse.Namespace) -> int:
 
 def _handlers() -> dict[str, Handler]:
     return {
+        "init": profile_cli.main,
         "doctor": doctor.main,
         "install": install.main,
         "console": _handle_console,

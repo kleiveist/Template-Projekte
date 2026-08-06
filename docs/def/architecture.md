@@ -7,17 +7,17 @@
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
-| Last review | 2026-08-05 |
+| Last review | 2026-08-06 |
 | Audience | Developers and architects |
 | Related ATP | N/A — template-level architecture |
 
 ## Purpose
 
-This document defines the baseline architecture of the project template and explains how Vite, TypeScript, FastAPI and Tauri work together. Product-specific projects must update this document when they add deployment units, trust boundaries or framework-level dependencies.
+This document defines the baseline architecture of the project template, the shared feature modules, and the profile-based scaffold model. It explains how Vite, TypeScript, FastAPI and Tauri work together, and how project profiles reuse that same base without becoming separate template implementations. Product-specific projects must update this document when they add deployment units, trust boundaries or framework-level dependencies.
 
 ## Scope
 
-The architecture covers the web frontend, HTTP backend, desktop shell, shared contracts and local development tooling. It does not prescribe a product domain, database, authentication provider, cloud platform or desktop backend packaging strategy.
+The architecture covers the web frontend, HTTP backend, desktop shell, shared contracts, profile generator, and local development tooling. It does not prescribe a product domain, database, authentication provider, cloud platform or desktop backend packaging strategy.
 
 ## System context
 
@@ -71,9 +71,43 @@ src-tauri/
 ├── capabilities/        Tauri permission allowlists
 ├── icons/               Generated platform icons
 └── src/main.rs          Native composition root
+
+profiles/
+├── features.toml        Core paths, feature ownership and dependencies
+└── *.toml               Named profile presets
+
+project-profile.toml     Active profile manifest for the current project root
 ```
 
 Feature folders should be introduced only when the first real feature exists. Keep a feature's UI, state and tests close together, while reusable infrastructure remains at the framework boundary.
+
+## Profile presets and generator
+
+```mermaid
+flowchart TD
+    Master[Master repository]
+    Core[Shared core]
+    Features[Feature modules]
+    Profiles[Declarative profile definitions]
+    Generator[python tools/control.py init]
+    Web[Web project]
+    Desktop[Desktop project]
+    Full[Full platform project]
+
+    Master --> Core
+    Master --> Features
+    Master --> Profiles
+    Core --> Generator
+    Features --> Generator
+    Profiles --> Generator
+    Generator --> Web
+    Generator --> Desktop
+    Generator --> Full
+```
+
+Profiles are configuration presets over reusable features, not independent template implementations.
+
+The master repository keeps the complete baseline. The generator selects core paths plus feature-owned paths, writes `project-profile.toml` for the derived project, and rewrites the frontend profile module when the frontend feature is enabled. This allows the shared tooling to stay in one codebase while generated projects omit disabled runtime layers.
 
 ## Development interaction
 
@@ -121,6 +155,8 @@ flowchart LR
 ```
 
 `tools/control.py` is the only public command dispatcher. The interactive console does not duplicate build or test logic; it invokes the same CLI commands in subprocesses and adds descriptions, safe defaults, and confirmations. This keeps interactive actions reproducible in local shells and CI.
+
+The same CLI also exposes `python tools/control.py init`, which scaffolds a derived project from the declarative profile catalog. The active generated project stores its enabled features in `project-profile.toml`, and the shared tooling reads that manifest to skip disabled components instead of treating them as missing by default.
 
 The documentation command locates the system `PyGitIndex.py` script and delegates index, README navigation, and backlink generation to it. A narrow post-processing step translates only known non-English empty-state labels inside generated markers. Authored documentation is not automatically rewritten.
 
@@ -199,6 +235,7 @@ python tools/control.py build desktop
 ## Related documents
 
 - [Project README](../../README.md)
+- [Project profiles](project-profiles.md)
 - [Documentation standard](../README.md)
 - [ATP workflow](../atp/README.md)
 - [Tooling guide](../tools/tooling.md)

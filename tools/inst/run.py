@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from tools import logger
+from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
 RUNTIME_DIR = ROOT / "tools" / ".runtime"
@@ -82,61 +83,77 @@ def _clear_state() -> None:
 def _build_service_defs(frontend_port: int, backend_port: int) -> tuple[list[ServiceDef], list[str]]:
     errors: list[str] = []
     services: list[ServiceDef] = []
+    profile = profile_runtime.active_profile(ROOT)
 
     frontend_dir = ROOT / "frontend"
     backend_dir = ROOT / "backend"
 
-    if not (frontend_dir / "package.json").exists():
-        errors.append("Missing frontend/package.json")
-    if not (backend_dir / "app" / "main.py").exists():
-        errors.append("Missing backend/app/main.py")
+    if profile.has_feature("frontend"):
+        if not (frontend_dir / "package.json").exists():
+            errors.append("Missing frontend/package.json")
 
-    npm = shutil.which("npm")
-    if npm is None:
-        errors.append("npm not found. Action: install Node.js and npm.")
-
-    backend_python = _venv_python(backend_dir)
-    if not backend_python.exists():
-        backend_python = Path(shutil.which("python3") or shutil.which("python") or "")
-    if not backend_python.exists():
-        errors.append("Python executable not found for backend service.")
-    else:
-        probe = subprocess.run(
-            [str(backend_python), "-c", "import uvicorn"],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if probe.returncode != 0:
-            details = ((probe.stderr or "") + "\n" + (probe.stdout or "")).strip()
-            if not details:
-                details = f"exit code {probe.returncode}"
-            errors.append(
-                "Backend runtime is not executable. Action: run "
-                "'python tools/control.py install --skip-frontend --skip-playwright'. "
-                f"Details: {details}"
+        npm = shutil.which("npm")
+        if npm is None:
+            errors.append("npm not found. Action: install Node.js and npm.")
+        else:
+            services.append(
+                ServiceDef(
+                    name="frontend",
+                    command=[npm, "run", "dev", "--", "--host", "127.0.0.1", "--port", str(frontend_port)],
+                    cwd=frontend_dir,
+                    port=frontend_port,
+                )
             )
+
+    if profile.has_feature("backend"):
+        if not (backend_dir / "app" / "main.py").exists():
+            errors.append("Missing backend/app/main.py")
+
+        backend_python = _venv_python(backend_dir)
+        if not backend_python.exists():
+            backend_python = Path(shutil.which("python3") or shutil.which("python") or "")
+        if not backend_python.exists():
+            errors.append("Python executable not found for backend service.")
+        else:
+            probe = subprocess.run(
+                [str(backend_python), "-c", "import uvicorn"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if probe.returncode != 0:
+                details = ((probe.stderr or "") + "\n" + (probe.stdout or "")).strip()
+                if not details:
+                    details = f"exit code {probe.returncode}"
+                errors.append(
+                    "Backend runtime is not executable. Action: run "
+                    "'python tools/control.py install --skip-frontend --skip-playwright'. "
+                    f"Details: {details}"
+                )
+            else:
+                services.append(
+                    ServiceDef(
+                        name="backend",
+                        command=[
+                            str(backend_python),
+                            "-m",
+                            "uvicorn",
+                            "app.main:app",
+                            "--host",
+                            "127.0.0.1",
+                            "--port",
+                            str(backend_port),
+                        ],
+                        cwd=backend_dir,
+                        port=backend_port,
+                    )
+                )
 
     if errors:
         return services, errors
 
-    services.append(
-        ServiceDef(
-            name="frontend",
-            command=[npm, "run", "dev", "--", "--host", "127.0.0.1", "--port", str(frontend_port)],
-            cwd=frontend_dir,
-            port=frontend_port,
-        )
-    )
-
-    services.append(
-        ServiceDef(
-            name="backend",
-            command=[str(backend_python), "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", str(backend_port)],
-            cwd=backend_dir,
-            port=backend_port,
-        )
-    )
+    if not services:
+        errors.append("Active profile does not enable a runnable development service.")
 
     return services, errors
 
@@ -205,11 +222,18 @@ def _state_has_live_processes() -> bool:
 
 def _preflight(frontend_port: int, backend_port: int) -> list[str]:
     errors: list[str] = []
+    profile = profile_runtime.active_profile(ROOT)
 
     if _state_has_live_processes():
         errors.append("Tracked services are already running. Use 'python tools/control.py stop' first.")
 
-    for port in (frontend_port, backend_port):
+    ports: list[int] = []
+    if profile.has_feature("frontend"):
+        ports.append(frontend_port)
+    if profile.has_feature("backend"):
+        ports.append(backend_port)
+
+    for port in ports:
         if not _port_is_free(port):
             errors.append(f"Port {port} is already occupied.")
 

@@ -4,6 +4,7 @@
 *.zip
 /.dist/
 /.report/
+/.generated/
 
 # Local and editor files
 *.kate-swp

@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from tools import logger
+from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -351,19 +352,28 @@ def _print_summary(results: list[StepResult]) -> str:
 
 def main(args: argparse.Namespace) -> int:
     results: list[StepResult] = [_ensure_env_file()]
+    profile = profile_runtime.active_profile(ROOT)
+    frontend_enabled = profile.has_feature("frontend")
+    backend_enabled = profile.has_feature("backend")
 
     if args.skip_frontend:
         results.append(StepResult("frontend", "OK", "skipped by flag"))
+    elif not frontend_enabled:
+        results.append(StepResult("frontend", "OK", f"disabled by active profile '{profile.profile_id}'"))
     else:
         results.append(_install_frontend())
 
     if args.skip_backend:
         results.append(StepResult("backend", "OK", "skipped by flag"))
+    elif not backend_enabled:
+        results.append(StepResult("backend", "OK", f"disabled by active profile '{profile.profile_id}'"))
     else:
         results.append(_install_backend())
 
     if args.skip_playwright:
         results.append(StepResult("playwright", "OK", "skipped by flag"))
+    elif not frontend_enabled:
+        results.append(StepResult("playwright", "OK", "frontend disabled by active profile"))
     elif not _playwright_configured():
         results.append(StepResult("playwright", "OK", "not configured; optional browser install skipped"))
     else:

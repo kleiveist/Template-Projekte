@@ -14,6 +14,7 @@
 ## 📁 DEF
 - 🗂️ [Overview](docs/def/def.md)
 - 📝 [Framework architecture](docs/def/architecture.md)
+- 📝 [Project profiles](docs/def/project-profiles.md)
 
 ## 📁 DEV
 - 🗂️ [Overview](docs/dev/dev.md)
@@ -28,7 +29,7 @@
 <!-- AUTO-GENERATED:docs-index END -->
 # Full-Stack Project Template
 
-This repository is a lean starting point for applications built with Vite and TypeScript, FastAPI, and Tauri 2.
+This repository is a central master template for applications built with Vite and TypeScript, FastAPI, and Tauri 2. It keeps one shared core and exposes project profiles as reusable presets instead of maintaining separate template repositories.
 
 ## Included stack
 
@@ -57,6 +58,7 @@ python tools/control.py
 Then use the recommended sequence:
 
 ```sh
+python tools/control.py init
 python tools/control.py doctor
 python tools/control.py install
 python tools/control.py run
@@ -89,6 +91,8 @@ python tools/control.py console
 Examples:
 
 ```sh
+python tools/control.py init --profile web-only --dry-run
+python tools/control.py init --profile desktop-cloud --target-dir ../desktop-cloud-app
 python tools/control.py test --suite api
 python tools/control.py test --suite frontend
 python tools/control.py test --suite tools
@@ -111,12 +115,30 @@ It provides dedicated menus for environment setup, development services, tests a
 
 See the [Tooling Guide](docs/tools/tooling.md) for the complete command and console reference.
 
+## Project profiles
+
+Profiles are configuration presets over reusable features, not separate template implementations. The master repository keeps the shared core, feature modules, tooling, and documentation in one place, while `python tools/control.py init` scaffolds a derived project for a selected preset.
+
+| Profile | Frontend | FastAPI | Tauri | Cloud |
+| --- | ---: | ---: | ---: | ---: |
+| `web-only` | Yes | No | No | No |
+| `web-cloud` | Yes | Yes | No | Yes |
+| `desktop-local` | Yes | No | Yes | No |
+| `desktop-cloud` | Yes | Yes | Yes | Yes |
+| `full-platform` | Yes | Yes | Yes | Yes |
+
+Profile definitions live under `profiles/`. The active scaffolded project writes its enabled feature set to `project-profile.toml`, and the shared tooling reads that file to skip disabled components automatically.
+
+See [Project Profiles](docs/def/project-profiles.md) for the architecture and preset details.
+
 ## Project structure
 
 ```text
 backend/             FastAPI application and API tests
 docs/                Documentation rules, templates, architecture, and ATPs
 frontend/            Vite and TypeScript application with frontend tests
+profiles/            Declarative feature and profile definitions
+project-profile.toml Active feature preset for the current project root
 shared/              Framework-neutral contracts, examples, and shared assets
 src-tauri/           Tauri configuration, Rust entry point, and application icons
 tools/control.py     Shared project CLI entry point
@@ -124,13 +146,24 @@ tools/control.py     Shared project CLI entry point
 
 ## Create a project from this template
 
-1. Copy the repository or use it as a Git template, then start a new history.
-2. Search for `template-project`, `project-template`, `Template Project`, and `com.example.templateproject`; replace them with project-specific values.
-3. Replace `src-tauri/app-icon.svg` and generate platform icons with `npm --prefix frontend run tauri -- icon ../src-tauri/app-icon.svg`.
-4. Document the product objective, ownership, and quality criteria.
-5. Create the first ATP from `docs/atp/ATP-TEMPLATE.md`.
-6. Refresh documentation navigation with `python tools/control.py docs index`.
-7. Run `python tools/control.py test --suite all` and commit the first completed ATP with the implementation.
+1. Choose a profile and preview the scaffold plan:
+
+```sh
+python tools/control.py init --profile web-only --dry-run
+```
+
+2. Generate the derived project into the safe default `.generated/<profile-id>` location or an explicit target directory:
+
+```sh
+python tools/control.py init --profile full-platform --target-dir ../my-product
+```
+
+3. In the generated project, search for `template-project`, `project-template`, `Template Project`, and `com.example.templateproject`; replace them with project-specific values.
+4. If the project includes desktop support, replace `src-tauri/app-icon.svg` and generate platform icons with `npm --prefix frontend run tauri -- icon ../src-tauri/app-icon.svg`.
+5. Document the product objective, ownership, and quality criteria.
+6. Create the first ATP from `docs/atp/ATP-TEMPLATE.md`.
+7. Refresh documentation navigation with `python tools/control.py docs index`.
+8. Run `python tools/control.py test --suite all` and commit the first completed ATP with the implementation.
 
 ## Required documentation
 
@@ -139,6 +172,7 @@ English is the only documentation language for this repository and all projects 
 - [Documentation Standard](docs/README.md)
 - [Documentation Template](docs/DOCUMENT-TEMPLATE.md)
 - [Framework Architecture](docs/def/architecture.md)
+- [Project Profiles](docs/def/project-profiles.md)
 - [ATP Workflow](docs/atp/README.md)
 - [ATP Template](docs/atp/ATP-TEMPLATE.md)
 - [Tooling Guide](docs/tools/tooling.md)

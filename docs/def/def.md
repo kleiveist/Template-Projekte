@@ -7,5 +7,6 @@
 
 ## 📄 Pages
 - 📝 [Framework architecture](architecture.md)
+- 📝 [Project profiles](project-profiles.md)
 
 <!-- AUTO-GENERATED:docs-index END -->

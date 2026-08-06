@@ -3,8 +3,10 @@ from __future__ import annotations
 import argparse
 
 from tools import logger
+from tools.profiles import runtime as profile_runtime
 from tools.tauri import build, copy, doctor, install, run, test
 from tools.tauri.build import installappimage
+from tools.tauri import paths
 
 
 class TauriHelpFormatter(argparse.RawDescriptionHelpFormatter):
@@ -150,13 +152,22 @@ Use '<command> --help' before an unfamiliar or destructive operation.
 
 
 def main(args: argparse.Namespace) -> int:
+    profile = profile_runtime.active_profile(paths.ROOT)
+    tauri_enabled = profile.has_feature("tauri")
+
     if getattr(args, "tauri_command", None) is None:
         tauri_parser = getattr(args, "tauri_parser", None)
         if tauri_parser is not None:
             tauri_parser.print_help()
+            if not tauri_enabled:
+                logger.info(f"Tauri feature is disabled by active profile '{profile.profile_id}'.")
             return 0
         logger.info("Use 'python tools/control.py tauri --help' to list Tauri commands.")
         return 0
+
+    if not tauri_enabled:
+        logger.fail(f"Tauri feature is disabled by active profile '{profile.profile_id}'.")
+        return 1
 
     handlers = {
         "doctor": doctor.main,

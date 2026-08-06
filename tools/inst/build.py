@@ -9,6 +9,7 @@ import zipfile
 from pathlib import Path
 
 from tools import logger
+from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
 FRONTEND_DIR = ROOT / "frontend"
@@ -54,6 +55,11 @@ def _create_web_zip() -> tuple[bool, str]:
 
 def main(args: argparse.Namespace) -> int:
     _ = args
+    if not profile_runtime.feature_enabled("frontend", ROOT):
+        profile = profile_runtime.active_profile(ROOT)
+        logger.fail(f"Web build is disabled by active profile '{profile.profile_id}'.")
+        return 1
+
     package_json = FRONTEND_DIR / "package.json"
     if not package_json.exists():
         logger.fail("frontend/package.json missing; cannot run web build")

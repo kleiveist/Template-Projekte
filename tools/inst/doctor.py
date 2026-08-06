@@ -13,6 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 from tools import logger
+from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -102,46 +103,65 @@ def _check_port(port: int) -> CheckResult:
 
 def _check_project_structure() -> list[CheckResult]:
     results: list[CheckResult] = []
+    profile = profile_runtime.active_profile(ROOT)
 
     frontend = ROOT / "frontend"
     backend = ROOT / "backend"
     shared = ROOT / "shared"
 
-    if frontend.exists() and (frontend / "package.json").exists():
-        results.append(CheckResult("frontend", "OK", "frontend scaffold is present"))
-    else:
-        results.append(CheckResult("frontend", "FAIL", "frontend scaffold missing (expected frontend/package.json)"))
+    if profile.has_feature("frontend"):
+        if frontend.exists() and (frontend / "package.json").exists():
+            results.append(CheckResult("frontend", "OK", "frontend scaffold is present"))
+        else:
+            results.append(CheckResult("frontend", "FAIL", "frontend scaffold missing (expected frontend/package.json)"))
 
-    if backend.exists() and (backend / "app" / "main.py").exists():
-        results.append(CheckResult("backend", "OK", "backend scaffold is present"))
+        node_modules = frontend / "node_modules"
+        if node_modules.exists():
+            results.append(CheckResult("frontend-deps", "OK", "node_modules found"))
+        else:
+            results.append(CheckResult("frontend-deps", "WARN", "node_modules not found (run install)"))
     else:
-        results.append(CheckResult("backend", "FAIL", "backend scaffold missing (expected backend/app/main.py)"))
+        results.append(CheckResult("frontend", "OK", f"disabled by active profile '{profile.profile_id}'"))
+        results.append(CheckResult("frontend-deps", "OK", "frontend dependencies not required for this profile"))
+
+    if profile.has_feature("backend"):
+        if backend.exists() and (backend / "app" / "main.py").exists():
+            results.append(CheckResult("backend", "OK", "backend scaffold is present"))
+        else:
+            results.append(CheckResult("backend", "FAIL", "backend scaffold missing (expected backend/app/main.py)"))
+
+        backend_venv = backend / ".venv"
+        if backend_venv.exists():
+            results.append(CheckResult("backend-venv", "OK", "backend/.venv found"))
+        else:
+            fastapi_available = importlib.util.find_spec("fastapi") is not None
+            if fastapi_available:
+                results.append(
+                    CheckResult("backend-venv", "WARN", "backend/.venv missing, but fastapi is importable globally")
+                )
+            else:
+                results.append(CheckResult("backend-venv", "WARN", "backend/.venv missing (run install)"))
+    else:
+        results.append(CheckResult("backend", "OK", f"disabled by active profile '{profile.profile_id}'"))
+        results.append(CheckResult("backend-venv", "OK", "backend virtualenv not required for this profile"))
 
     if shared.exists():
         results.append(CheckResult("shared", "OK", "shared directory is present"))
     else:
         results.append(CheckResult("shared", "WARN", "shared directory missing"))
 
-    node_modules = frontend / "node_modules"
-    if node_modules.exists():
-        results.append(CheckResult("frontend-deps", "OK", "node_modules found"))
-    else:
-        results.append(CheckResult("frontend-deps", "WARN", "node_modules not found (run install)"))
-
-    backend_venv = backend / ".venv"
-    if backend_venv.exists():
-        results.append(CheckResult("backend-venv", "OK", "backend/.venv found"))
-    else:
-        fastapi_available = importlib.util.find_spec("fastapi") is not None
-        if fastapi_available:
-            results.append(CheckResult("backend-venv", "WARN", "backend/.venv missing, but fastapi is importable globally"))
-        else:
-            results.append(CheckResult("backend-venv", "WARN", "backend/.venv missing (run install)"))
-
     return results
 
 
 def _check_backend_runtime() -> CheckResult:
+    profile = profile_runtime.active_profile(ROOT)
+    if not profile.has_feature("backend"):
+        return CheckResult(
+            name="backend-runtime",
+            status="OK",
+            message=f"disabled by active profile '{profile.profile_id}'",
+        )
+
     backend_python = _backend_python()
     if not backend_python.exists():
         return CheckResult(
@@ -172,6 +192,10 @@ def _check_backend_runtime() -> CheckResult:
 
 
 def _check_playwright_browser() -> CheckResult:
+    profile = profile_runtime.active_profile(ROOT)
+    if not profile.has_feature("frontend"):
+        return CheckResult(name="playwright", status="OK", message="frontend disabled by active profile")
+
     frontend_dir = ROOT / "frontend"
     if not (frontend_dir / "package.json").exists():
         return CheckResult(name="playwright", status="WARN", message="frontend/package.json missing; check skipped")
@@ -226,15 +250,18 @@ def _playwright_configured() -> bool:
 
 
 def run_checks() -> tuple[list[CheckResult], str]:
+    profile = profile_runtime.active_profile(ROOT)
     checks: list[CheckResult] = [
         _check_current_python(),
         _check_binary("node", "Node.js (includes npm)", ["node", "--version"]),
         _check_binary("npm", "npm", ["npm", "--version"]),
         _check_binary("npx", "npm (includes npx)", ["npx", "--version"]),
         _check_optional_binary("uv", "uv for faster Python installs", ["uv", "--version"]),
-        _check_port(5173),
-        _check_port(8000),
     ]
+    if profile.has_feature("frontend"):
+        checks.append(_check_port(5173))
+    if profile.has_feature("backend"):
+        checks.append(_check_port(8000))
     checks.extend(_check_project_structure())
     checks.append(_check_backend_runtime())
     checks.append(_check_playwright_browser())
