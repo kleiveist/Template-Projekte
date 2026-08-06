@@ -23,6 +23,7 @@ def test_ci_workflows_have_safe_common_policy() -> None:
         content = _workflow(name)
         assert "pull_request:" in content
         assert "push:" in content
+        assert "workflow_dispatch:" in content
         assert "- main" in content
         assert "permissions:\n  contents: read" in content
         assert "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in content
