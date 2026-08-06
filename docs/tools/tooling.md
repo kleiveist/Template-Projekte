@@ -13,7 +13,7 @@
 
 ## Purpose
 
-This guide explains the central entry point for profile-based project scaffolding, setup, development, testing, builds, Tauri, and documentation maintenance. It is designed for contributors returning after a long break as well as first-time users of the template.
+This guide explains the central entry point for profile-based project scaffolding, setup, development, testing, optional database migrations, builds, Tauri, and documentation maintenance. It is designed for contributors returning after a long break as well as first-time users of the template.
 
 ## Scope
 
@@ -49,6 +49,7 @@ python tools/control.py run
 | `stop` | Stop tracked development services | `python tools/control.py stop --help` |
 | `test` | Select test suites and reports | `python tools/control.py test` |
 | `build` | Select a web or desktop build | `python tools/control.py build` |
+| `db` | Diagnose optional database configuration and run Alembic | `python tools/control.py db` |
 | `docs` | Maintain navigation with PyGitIndex | `python tools/control.py docs` |
 | `tauri` | Manage desktop diagnostics, development, and artifacts | `python tools/control.py tauri` |
 
@@ -56,6 +57,7 @@ Group commands display the next level of help when called without an action:
 
 ```sh
 python tools/control.py build
+python tools/control.py db
 python tools/control.py docs
 python tools/control.py test
 python tools/control.py tauri
@@ -77,9 +79,10 @@ Generate a specific profile non-interactively:
 python tools/control.py init --profile web-only
 python tools/control.py init --profile desktop-cloud --target-dir ../desktop-cloud-app
 python tools/control.py init --profile full-platform --dry-run
+python tools/control.py init --profile web-cloud --with postgres
 ```
 
-The command writes into `.generated/<profile-id>` by default so the master template is not modified accidentally. Use `--target-dir` for a real destination outside the template workspace.
+The command writes into `.generated/<profile-id>` by default, or `.generated/<profile-id>-<capability>` when `--with` is used, so the master template is not modified accidentally. Repeat `--with` or pass comma-separated feature IDs for multiple capabilities. Use `--target-dir` for a real destination outside the template workspace.
 
 Profile definitions live under `profiles/`. The generated project receives an active `project-profile.toml` manifest, and the shared tooling reads that file to skip disabled runtime layers cleanly.
 
@@ -137,6 +140,8 @@ python tools/control.py test --suite all --report
 | --- | --- |
 | `api` | FastAPI tests |
 | `schema` | Shared JSON Schema and examples |
+| `database` | SQLAlchemy configuration, engine, and session unit tests |
+| `postgres` | PostgreSQL connection test; skipped without an available `DATABASE_URL_TEST` |
 | `frontend` | Vitest tests |
 | `e2e` | Playwright tests when configured |
 | `tools` | Project CLI and Tauri helper tests |
@@ -145,6 +150,29 @@ python tools/control.py test --suite all --report
 Reports are written under `.report/`. `python tools/control.py test --report done` removes only that generated report directory.
 
 When the active project profile disables the backend or desktop layer, the affected suites are skipped or downgraded to informative warnings instead of failing because that layer is intentionally absent.
+
+## Database diagnostics and migrations
+
+Database commands require the optional `database` capability. A project without it receives `Database feature is not enabled for this project.` and no traceback.
+
+Set `DATABASE_URL` in the server process environment, then run the read-only diagnostics:
+
+```sh
+python tools/control.py db doctor
+python tools/control.py db doctor --connect
+```
+
+The normal doctor validates configuration and imports only. `--connect` additionally opens a connection, executes `SELECT 1`, and closes it without modifying data.
+
+Apply or revert migrations explicitly:
+
+```sh
+python tools/control.py db upgrade
+python tools/control.py db downgrade
+python tools/control.py db revision --message "add example"
+```
+
+FastAPI startup never runs these commands automatically. See [Database Feature](../def/database-feature.md) for configuration, dependency, and security details.
 
 ## Builds
 
@@ -244,5 +272,6 @@ python tools/control.py build desktop --dry-run --no-clean
 
 - [Documentation Standard](../README.md)
 - [Framework Architecture](../def/architecture.md)
+- [Database Feature](../def/database-feature.md)
 - [Project Profiles](../def/project-profiles.md)
 - [ATP Workflow](../atp/README.md)

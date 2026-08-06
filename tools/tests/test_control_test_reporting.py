@@ -53,7 +53,15 @@ def test_test_alias_with_suite_runs_requested_suite() -> None:
 def test_all_suite_includes_frontend_npm_test() -> None:
     from tools.inst import run_test
 
-    assert run_test._expand_suites("all") == ["schema", "api", "frontend", "e2e", "tools"]
+    assert run_test._expand_suites("all") == [
+        "schema",
+        "api",
+        "database",
+        "postgres",
+        "frontend",
+        "e2e",
+        "tools",
+    ]
 
 
 def test_e2e_bootstrap_runs_cleanup_before_service_start(monkeypatch) -> None:

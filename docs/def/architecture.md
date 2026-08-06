@@ -13,11 +13,11 @@
 
 ## Purpose
 
-This document defines the baseline architecture of the project template, the shared feature modules, and the profile-based scaffold model. It explains how Vite, TypeScript, FastAPI and Tauri work together, and how project profiles reuse that same base without becoming separate template implementations. Product-specific projects must update this document when they add deployment units, trust boundaries or framework-level dependencies.
+This document defines the baseline architecture of the project template, the shared feature modules, and the profile-based scaffold model. It explains how Vite, TypeScript, FastAPI, Tauri and optional server capabilities work together, and how project profiles reuse that same base without becoming separate template implementations. Product-specific projects must update this document when they add deployment units, trust boundaries or framework-level dependencies.
 
 ## Scope
 
-The architecture covers the web frontend, HTTP backend, desktop shell, shared contracts, profile generator, and local development tooling. It does not prescribe a product domain, database, authentication provider, cloud platform or desktop backend packaging strategy.
+The architecture covers the web frontend, HTTP backend, desktop shell, shared contracts, optional database infrastructure, profile generator, and local development tooling. It does not prescribe a product domain, database schema, authentication provider, cloud platform or desktop backend packaging strategy.
 
 ## System context
 
@@ -28,13 +28,15 @@ flowchart LR
     Desktop[Tauri desktop shell]
     Frontend[Vite and TypeScript frontend]
     Backend[FastAPI backend]
-    External[(Future data stores or external services)]
+    Database[(Optional PostgreSQL database)]
+    External[External services]
 
     User --> Browser
     User --> Desktop
     Browser --> Frontend
     Desktop --> Frontend
     Frontend -->|HTTPS or local HTTP /api| Backend
+    Backend -.->|SQLAlchemy and Psycopg when enabled| Database
     Backend -.->|Add only when required| External
 ```
 
@@ -46,6 +48,8 @@ The same frontend source supports two hosts. A browser downloads the static buil
 | --- | --- | --- | --- |
 | Frontend | Vite + TypeScript | Presentation, browser interaction, client-side state and typed API clients | Server secrets, direct database access or Python imports |
 | Backend | FastAPI + Uvicorn | HTTP contracts, validation, application orchestration and server-side integrations | Browser DOM logic or desktop UI concerns |
+| Database capability | SQLAlchemy 2 + Alembic | Server-side persistence configuration, sessions and schema migrations | Product models, automatic startup migrations or client-side database access |
+| PostgreSQL capability | Psycopg 3 | Optional PostgreSQL driver and connectivity checks | Credentials committed to source control |
 | Desktop shell | Tauri 2 + Rust | Native window, packaging and explicitly approved native capabilities | Product business logic that also belongs to the web version |
 | Shared | JSON and static assets | Framework-neutral contracts and examples consumed across boundaries | Executable framework-specific behavior |
 | Tooling | Python | Local lifecycle commands spanning more than one container | Product runtime behavior |
@@ -60,7 +64,10 @@ frontend/src/
 
 backend/app/
 ├── api/                 FastAPI routers and HTTP models
+├── db/                  Optional SQLAlchemy configuration and sessions
 └── main.py              Backend composition root and middleware
+
+backend/alembic/          Optional Alembic migration environment
 
 shared/
 ├── assets/              Cross-runtime static assets
@@ -87,8 +94,10 @@ Feature folders should be introduced only when the first real feature exists. Ke
 flowchart TD
     Master[Master repository]
     Core[Shared core]
-    Features[Feature modules]
-    Profiles[Declarative profile definitions]
+    Features[Reusable feature modules]
+    Profiles[Platform profile presets]
+    Capabilities[Optional capabilities]
+    Selection[Resolved project configuration]
     Generator[python tools/control.py init]
     Web[Web project]
     Desktop[Desktop project]
@@ -97,17 +106,40 @@ flowchart TD
     Master --> Core
     Master --> Features
     Master --> Profiles
+    Master --> Capabilities
     Core --> Generator
     Features --> Generator
-    Profiles --> Generator
+    Profiles --> Selection
+    Capabilities --> Selection
+    Selection --> Generator
     Generator --> Web
     Generator --> Desktop
     Generator --> Full
 ```
 
-Profiles are configuration presets over reusable features, not independent template implementations.
+Profiles are configuration presets over reusable features, not independent template implementations. Platform profiles select the runtime shape, while optional capabilities extend a compatible profile without creating another profile. For example, `web-cloud` selects `frontend + backend + cloud`; `--with postgres` adds `postgres`, resolves its `database` dependency, and reuses the same backend implementation.
 
-The master repository keeps the complete baseline. The generator selects core paths plus feature-owned paths, writes `project-profile.toml` for the derived project, and rewrites the frontend profile module when the frontend feature is enabled. This allows the shared tooling to stay in one codebase while generated projects omit disabled runtime layers.
+The master repository keeps the complete baseline. The generator validates the selected profile and capabilities, resolves dependencies, selects core paths plus feature-owned paths, writes `project-profile.toml` for the derived project, and rewrites the frontend profile module when the frontend feature is enabled. This allows the shared tooling to stay in one codebase while generated projects omit disabled runtime layers and dependencies.
+
+## Optional database interaction
+
+```mermaid
+flowchart LR
+    Client[Browser or Tauri client]
+    API[FastAPI backend]
+    Session[SQLAlchemy session]
+    Driver[Psycopg driver]
+    PostgreSQL[(PostgreSQL)]
+    Alembic[Alembic CLI]
+
+    Client -->|HTTP API| API
+    API --> Session
+    Session --> Driver
+    Driver --> PostgreSQL
+    Alembic -->|Explicit migration command| PostgreSQL
+```
+
+Only the backend and explicit migration commands may access PostgreSQL. Engine creation is lazy and never opens a connection during module import. Application startup does not create, drop or migrate schemas; operators run Alembic explicitly through `python tools/control.py db`.
 
 ## Development interaction
 
@@ -139,6 +171,7 @@ flowchart LR
     Environment[Doctor and installation]
     Services[Vite and FastAPI services]
     Quality[Tests and reports]
+    Database[Database diagnostics and migrations]
     Releases[Web and Tauri builds]
     Docs[PyGitIndex wrapper]
     SystemIndex[System PyGitIndex.py]
@@ -149,6 +182,7 @@ flowchart LR
     CLI --> Environment
     CLI --> Services
     CLI --> Quality
+    CLI --> Database
     CLI --> Releases
     CLI --> Docs
     Docs --> SystemIndex
@@ -156,7 +190,7 @@ flowchart LR
 
 `tools/control.py` is the only public command dispatcher. The interactive console does not duplicate build or test logic; it invokes the same CLI commands in subprocesses and adds descriptions, safe defaults, and confirmations. This keeps interactive actions reproducible in local shells and CI.
 
-The same CLI also exposes `python tools/control.py init`, which scaffolds a derived project from the declarative profile catalog. The active generated project stores its enabled features in `project-profile.toml`, and the shared tooling reads that manifest to skip disabled components instead of treating them as missing by default.
+The same CLI also exposes `python tools/control.py init`, which scaffolds a derived project from the declarative profile catalog. Optional capabilities are selected with `--with`, for example `init --profile web-cloud --with postgres`. The active generated project stores its selected optional capabilities and fully resolved features in `project-profile.toml`, and the shared tooling reads that manifest to skip disabled components instead of treating them as missing by default.
 
 The documentation command locates the system `PyGitIndex.py` script and delegates index, README navigation, and backlink generation to it. A narrow post-processing step translates only known non-English empty-state labels inside generated markers. Authored documentation is not automatically rewritten.
 
@@ -192,6 +226,8 @@ That decision changes packaging, updates, observability and the security model, 
 5. Route handlers stay thin: product logic belongs in backend service or domain modules introduced by the derived project.
 6. Frontend views call the API through modules under `frontend/src/api`; scattered raw URLs are not allowed.
 7. Every cross-container contract change includes consumer tests and an ATP update.
+8. `postgres` requires `database`, and `database` requires `backend`; invalid capability combinations fail before scaffolding.
+9. Frontend and Tauri code never connect directly to PostgreSQL or receive `DATABASE_URL`.
 
 ## Security boundaries
 
@@ -200,6 +236,8 @@ The browser or webview is an untrusted client. FastAPI validates every request r
 Tauri capabilities follow least privilege. The template grants only `core:default`. Derived projects add individual permissions together with threat analysis, architecture documentation and acceptance coverage. Production projects must replace the template's null Content Security Policy with a restrictive policy suitable for their content and API endpoints.
 
 CORS is not authentication. Before exposing the API beyond local development, add an authentication and authorization design, HTTPS, request limits, structured logging and an environment-specific origin allowlist.
+
+Database credentials are process environment values and are never written to generated frontend files, logs or committed configuration. The generator may add only a placeholder to `.env.example`. `DATABASE_URL_TEST` is separate from development or production configuration, and PostgreSQL integration tests skip unless that dedicated variable is supplied.
 
 ## Extension path
 
@@ -236,6 +274,7 @@ python tools/control.py build desktop
 
 - [Project README](../../README.md)
 - [Project profiles](project-profiles.md)
+- [Optional database feature](database-feature.md)
 - [Documentation standard](../README.md)
 - [ATP workflow](../atp/README.md)
 - [Tooling guide](../tools/tooling.md)

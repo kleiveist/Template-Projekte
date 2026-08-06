@@ -10,6 +10,9 @@ class FeatureDefinition:
     description: str
     paths: tuple[str, ...]
     requires: tuple[str, ...] = ()
+    optional: bool = False
+    selectable: bool = False
+    env_example: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,6 +40,7 @@ class ProjectProfile:
     name: str
     description: str
     features: tuple[str, ...]
+    optional_features: tuple[str, ...] = ()
 
     def has_feature(self, feature_id: str) -> bool:
         return feature_id in self.features

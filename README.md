@@ -14,6 +14,7 @@
 ## 📁 DEF
 - 🗂️ [Overview](docs/def/def.md)
 - 📝 [Framework architecture](docs/def/architecture.md)
+- 📝 [Database feature](docs/def/database-feature.md)
 - 📝 [Project profiles](docs/def/project-profiles.md)
 
 ## 📁 DEV
@@ -37,6 +38,7 @@ This repository is a central master template for applications built with Vite an
 | --- | --- | --- |
 | Web frontend | Vite 6, TypeScript 5, Vitest | Browser user interface and frontend tests |
 | Backend | FastAPI, Uvicorn, Pytest | HTTP API and API tests |
+| Optional database | SQLAlchemy 2.x, Alembic, PostgreSQL, Psycopg 3 | Server-side persistence and explicit migrations |
 | Desktop | Tauri 2, Rust | Native desktop shell for the web frontend |
 | Tooling | Python | Shared setup, development, testing, build, and documentation workflows |
 
@@ -81,6 +83,7 @@ python tools/control.py run
 python tools/control.py stop
 python tools/control.py test
 python tools/control.py build
+python tools/control.py db
 python tools/control.py docs
 python tools/control.py tauri
 python tools/control.py console
@@ -93,6 +96,7 @@ Examples:
 ```sh
 python tools/control.py init --profile web-only --dry-run
 python tools/control.py init --profile desktop-cloud --target-dir ../desktop-cloud-app
+python tools/control.py init --profile web-cloud --with postgres --dry-run
 python tools/control.py test --suite api
 python tools/control.py test --suite frontend
 python tools/control.py test --suite tools
@@ -119,17 +123,19 @@ See the [Tooling Guide](docs/tools/tooling.md) for the complete command and cons
 
 Profiles are configuration presets over reusable features, not separate template implementations. The master repository keeps the shared core, feature modules, tooling, and documentation in one place, while `python tools/control.py init` scaffolds a derived project for a selected preset.
 
-| Profile | Frontend | FastAPI | Tauri | Cloud |
-| --- | ---: | ---: | ---: | ---: |
-| `web-only` | Yes | No | No | No |
-| `web-cloud` | Yes | Yes | No | Yes |
-| `desktop-local` | Yes | No | Yes | No |
-| `desktop-cloud` | Yes | Yes | Yes | Yes |
-| `full-platform` | Yes | Yes | Yes | Yes |
+| Profile | Frontend | FastAPI | Tauri | Cloud | PostgreSQL |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `web-only` | Yes | No | No | No | Not compatible |
+| `web-cloud` | Yes | Yes | No | Yes | Optional |
+| `desktop-local` | Yes | No | Yes | No | Not compatible |
+| `desktop-cloud` | Yes | Yes | Yes | Yes | Optional |
+| `full-platform` | Yes | Yes | Yes | Yes | Optional |
 
 Profile definitions live under `profiles/`. The active scaffolded project writes its enabled feature set to `project-profile.toml`, and the shared tooling reads that file to skip disabled components automatically.
 
 See [Project Profiles](docs/def/project-profiles.md) for the architecture and preset details.
+
+Optional capabilities extend a profile without creating new profile families. PostgreSQL support is selected with `--with postgres`; it adds generic SQLAlchemy/Alembic infrastructure transitively and remains entirely absent from projects that do not select it. See [Database Feature](docs/def/database-feature.md).
 
 ## Project structure
 
@@ -172,6 +178,7 @@ English is the only documentation language for this repository and all projects 
 - [Documentation Standard](docs/README.md)
 - [Documentation Template](docs/DOCUMENT-TEMPLATE.md)
 - [Framework Architecture](docs/def/architecture.md)
+- [Database Feature](docs/def/database-feature.md)
 - [Project Profiles](docs/def/project-profiles.md)
 - [ATP Workflow](docs/atp/README.md)
 - [ATP Template](docs/atp/ATP-TEMPLATE.md)

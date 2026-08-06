@@ -82,9 +82,22 @@ def _venv_python(venv_dir: Path) -> Path:
     return candidates[0] if sys.platform == "win32" else candidates[1]
 
 
-def _install_backend_with_uv(backend_dir: Path) -> subprocess.CompletedProcess[str]:
+def _requirement_arguments(requirements: list[Path]) -> list[str]:
+    arguments: list[str] = []
+    for path in requirements:
+        arguments.extend(["-r", str(path)])
+    return arguments
+
+
+def _install_backend_with_uv(
+    backend_dir: Path,
+    requirements: list[Path],
+) -> subprocess.CompletedProcess[str]:
     python_bin = _venv_python(backend_dir / ".venv")
-    return _run(["uv", "pip", "install", "--python", str(python_bin), "-r", str(backend_dir / "requirements.txt")], cwd=ROOT)
+    return _run(
+        ["uv", "pip", "install", "--python", str(python_bin), *_requirement_arguments(requirements)],
+        cwd=ROOT,
+    )
 
 
 def _select_venv_seed_python() -> str:
@@ -235,7 +248,7 @@ def _ensure_backend_venv_consistency(py: Path, venv_dir: Path) -> tuple[bool, st
     return True, "venv repaired"
 
 
-def _install_backend_with_pip(backend_dir: Path) -> tuple[bool, str]:
+def _install_backend_with_pip(backend_dir: Path, requirements: list[Path]) -> tuple[bool, str]:
     venv_dir = backend_dir / ".venv"
     if not venv_dir.exists():
         logger.info("Creating backend virtualenv")
@@ -261,7 +274,10 @@ def _install_backend_with_pip(backend_dir: Path) -> tuple[bool, str]:
 
     logger.info("Installing backend requirements")
     started = time.monotonic()
-    pip_install = _run([str(py), "-m", "pip", "install", "-r", str(backend_dir / "requirements.txt")], cwd=ROOT)
+    pip_install = _run(
+        [str(py), "-m", "pip", "install", *_requirement_arguments(requirements)],
+        cwd=ROOT,
+    )
     elapsed = time.monotonic() - started
     if pip_install.returncode != 0:
         return False, f"pip install failed after {elapsed:.1f}s: {_tail((pip_install.stdout or '') + (pip_install.stderr or ''))}"
@@ -270,12 +286,23 @@ def _install_backend_with_pip(backend_dir: Path) -> tuple[bool, str]:
     return True, "pip/venv backend install completed"
 
 
+def _backend_requirements() -> list[Path]:
+    profile = profile_runtime.active_profile(ROOT)
+    requirements = [ROOT / "backend" / "requirements.txt"]
+    if profile.has_feature("database"):
+        requirements.append(ROOT / "backend" / "requirements-database.txt")
+    if profile.has_feature("postgres"):
+        requirements.append(ROOT / "backend" / "requirements-postgres.txt")
+    return requirements
+
+
 def _install_backend() -> StepResult:
     backend_dir = ROOT / "backend"
-    requirements = backend_dir / "requirements.txt"
+    requirements = _backend_requirements()
 
-    if not requirements.exists():
-        return StepResult("backend", "FAIL", "missing backend/requirements.txt")
+    missing = [path.relative_to(ROOT).as_posix() for path in requirements if not path.exists()]
+    if missing:
+        return StepResult("backend", "FAIL", f"missing backend requirement file(s): {', '.join(missing)}")
 
     uv = shutil.which("uv")
     if uv is not None:
@@ -283,19 +310,19 @@ def _install_backend() -> StepResult:
         uv_venv = _ensure_backend_venv_with_uv(backend_dir)
         if uv_venv.returncode == 0:
             logger.info("Installing backend requirements with uv")
-            uv_install = _install_backend_with_uv(backend_dir)
+            uv_install = _install_backend_with_uv(backend_dir, requirements)
             if uv_install.returncode == 0:
                 return StepResult("backend", "OK", "installed dependencies with uv")
 
         logger.warn("uv path failed, switching to pip/venv fallback")
-        pip_ok, pip_msg = _install_backend_with_pip(backend_dir)
+        pip_ok, pip_msg = _install_backend_with_pip(backend_dir, requirements)
         if pip_ok:
             return StepResult("backend", "WARN", "uv failed; pip fallback succeeded")
         uv_details = _tail((uv_venv.stdout or "") + "\n" + (uv_venv.stderr or ""))
         return StepResult("backend", "FAIL", f"uv path failed ({uv_details}); fallback failed: {pip_msg}")
 
     logger.info("uv not found; using pip/venv fallback for backend installation")
-    pip_ok, pip_msg = _install_backend_with_pip(backend_dir)
+    pip_ok, pip_msg = _install_backend_with_pip(backend_dir, requirements)
     if pip_ok:
         return StepResult("backend", "OK", "installed dependencies with the supported pip/venv fallback (uv is optional)")
     return StepResult("backend", "FAIL", f"backend install failed without uv: {pip_msg}")

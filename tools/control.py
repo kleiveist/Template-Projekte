@@ -12,7 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools import logger
-from tools.inst import build, console, docs_index, doctor, install, run, run_test, stop
+from tools.inst import build, console, db, docs_index, doctor, install, run, run_test, stop
 from tools.profiles import cli as profile_cli
 from tools.profiles import runtime as profile_runtime
 from tools.tauri import build as tauri_build
@@ -71,6 +71,7 @@ Prefer a menu? Start the optional interactive console:
 
 Groups with their own command maps:
   python tools/control.py build
+  python tools/control.py db
   python tools/control.py docs
   python tools/control.py tauri
 """
@@ -85,6 +86,7 @@ examples:
   python tools/control.py stop
   python tools/control.py test --suite all --report
   python tools/control.py build web
+  python tools/control.py db doctor
   python tools/control.py docs index --dry-run
   python tools/control.py tauri
 
@@ -144,9 +146,17 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     init_parser.add_argument("--profile", help="profile id to generate; omit to choose interactively")
     init_parser.add_argument(
+        "--with",
+        dest="optional_features",
+        action="append",
+        default=[],
+        metavar="FEATURE",
+        help="add an optional capability; repeat the flag or use comma-separated feature ids",
+    )
+    init_parser.add_argument(
         "--target-dir",
         metavar="PATH",
-        help="destination directory (default: .generated/<profile-id> below the template root)",
+        help="destination directory (default: .generated/<profile-id>[-<capability>] below the template root)",
     )
     init_parser.add_argument("--dry-run", action="store_true", help="show the scaffold plan without writing files")
     _add_examples(
@@ -154,6 +164,7 @@ def _build_parser() -> argparse.ArgumentParser:
         """examples:
   python tools/control.py init
   python tools/control.py init --profile web-only
+  python tools/control.py init --profile web-cloud --with postgres
   python tools/control.py init --profile desktop-cloud --target-dir ../desktop-cloud-app
   python tools/control.py init --profile full-platform --dry-run""",
     )
@@ -254,6 +265,23 @@ More desktop commands:
   python tools/control.py tauri""",
     )
 
+    db_parser = subparsers.add_parser(
+        "db",
+        help="manage optional database diagnostics and migrations",
+        description="Database command map. Commands require the active project to enable the database feature.",
+        formatter_class=HelpFormatter,
+    )
+    db.configure_parser(db_parser)
+    _add_examples(
+        db_parser,
+        """examples:
+  python tools/control.py db doctor
+  python tools/control.py db doctor --connect
+  python tools/control.py db upgrade
+  python tools/control.py db downgrade
+  python tools/control.py db revision --message 'add widgets'""",
+    )
+
     docs_parser = subparsers.add_parser(
         "docs",
         help="manage documentation navigation with PyGitIndex",
@@ -335,7 +363,7 @@ More desktop commands:
     test_parser.set_defaults(test_parser=test_parser)
     test_parser.add_argument(
         "--suite",
-        choices=["api", "schema", "frontend", "e2e", "tools", "all"],
+        choices=["api", "schema", "database", "postgres", "frontend", "e2e", "tools", "all"],
         default=None,
         help="suite to run; use all for the complete configured set",
     )
@@ -353,6 +381,8 @@ More desktop commands:
         """suites:
   api       FastAPI tests
   schema    shared JSON Schema examples (skipped until configured)
+  database  SQLAlchemy and session unit tests
+  postgres  PostgreSQL integration tests (skipped without DATABASE_URL_TEST)
   frontend  Vitest tests
   e2e       Playwright tests (skipped until configured)
   tools     restored Python tooling tests
@@ -423,6 +453,7 @@ def _handlers() -> dict[str, Handler]:
         "install": install.main,
         "console": _handle_console,
         "build": _handle_build,
+        "db": db.main,
         "docs": _handle_docs,
         "run": run.run_command,
         "stop": stop.main,

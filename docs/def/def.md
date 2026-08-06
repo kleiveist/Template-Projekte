@@ -7,6 +7,7 @@
 
 ## 📄 Pages
 - 📝 [Framework architecture](architecture.md)
+- 📝 [Database feature](database-feature.md)
 - 📝 [Project profiles](project-profiles.md)
 
 <!-- AUTO-GENERATED:docs-index END -->

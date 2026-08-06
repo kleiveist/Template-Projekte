@@ -36,6 +36,7 @@ class ScaffoldPlan:
     target_dir: Path
     profile: ProjectProfile
     paths: tuple[Path, ...]
+    env_example: tuple[str, ...]
 
 
 def build_scaffold_plan(
@@ -44,12 +45,14 @@ def build_scaffold_plan(
     project_root: Path,
     target_dir: Path,
     profile_id: str,
+    optional_features: tuple[str, ...] = (),
 ) -> ScaffoldPlan:
     root = project_root.resolve()
     target = target_dir.resolve()
-    profile = resolve_profile(catalog, profile_id)
+    profile = resolve_profile(catalog, profile_id, optional_features=optional_features)
     relative_paths = _ordered_relative_paths(catalog, profile)
     source_paths = tuple(root / relative for relative in relative_paths)
+    env_example = _ordered_env_examples(catalog, profile)
 
     _validate_sources(source_paths, root)
     _validate_target(root, target)
@@ -59,6 +62,7 @@ def build_scaffold_plan(
         target_dir=target,
         profile=profile,
         paths=source_paths,
+        env_example=env_example,
     )
 
 
@@ -79,15 +83,18 @@ def scaffold_project(plan: ScaffoldPlan, *, dry_run: bool = False) -> None:
     _write_project_profile(plan.target_dir, plan.profile)
     _write_frontend_profile_module(plan.target_dir, plan.profile)
     _configure_frontend_dependencies(plan.target_dir, plan.profile)
+    _configure_env_example(plan.target_dir, plan.env_example)
 
 
 def render_project_profile(profile: ProjectProfile) -> str:
     feature_lines = ", ".join(_quoted(value) for value in profile.features)
+    optional_lines = ", ".join(_quoted(value) for value in profile.optional_features)
     return (
         f"schema_version = {profile.schema_version}\n"
         f"id = {_quoted(profile.profile_id)}\n"
         f"name = {_quoted(profile.name)}\n"
         f"description = {_quoted(profile.description)}\n"
+        f"optional_features = [{optional_lines}]\n"
         f"features = [{feature_lines}]\n"
     )
 
@@ -129,6 +136,19 @@ def _ordered_relative_paths(catalog: ProfileCatalog, profile: ProjectProfile) ->
             add(relative)
 
     return tuple(ordered)
+
+
+def _ordered_env_examples(catalog: ProfileCatalog, profile: ProjectProfile) -> tuple[str, ...]:
+    entries: list[str] = []
+    seen_keys: set[str] = set()
+    for feature_id in profile.features:
+        for entry in catalog.features[feature_id].env_example:
+            key = entry.split("=", 1)[0]
+            if key in seen_keys:
+                continue
+            entries.append(entry)
+            seen_keys.add(key)
+    return tuple(entries)
 
 
 def _validate_sources(source_paths: tuple[Path, ...], project_root: Path) -> None:
@@ -236,6 +256,25 @@ def _configure_frontend_dependencies(target_dir: Path, profile: ProjectProfile) 
     if isinstance(dependencies, dict):
         dependencies.pop("@tauri-apps/cli", None)
     _write_json(lock_path, lock)
+
+
+def _configure_env_example(target_dir: Path, entries: tuple[str, ...]) -> None:
+    if not entries:
+        return
+    path = target_dir / ".env.example"
+    existing = path.read_text(encoding="utf-8") if path.exists() else ""
+    existing_keys = {
+        line.split("=", 1)[0]
+        for line in existing.splitlines()
+        if line and not line.startswith("#") and "=" in line
+    }
+    additions = [entry for entry in entries if entry.split("=", 1)[0] not in existing_keys]
+    if not additions:
+        return
+    separator = "" if not existing or existing.endswith("\n\n") else "\n"
+    additions_text = "\n".join(additions)
+    content = f"{existing}{separator}{additions_text}\n"
+    path.write_text(content, encoding="utf-8", newline="\n")
 
 
 def _read_json_object(path: Path) -> dict[str, Any]:

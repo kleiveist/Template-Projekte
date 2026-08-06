@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PROFILES_DIR = ROOT / "profiles"
 HAS_BACKEND_SOURCE = (ROOT / "backend" / "app" / "main.py").exists()
 HAS_TAURI_SOURCE = (ROOT / "src-tauri" / "tauri.conf.json").exists()
+HAS_DATABASE_SOURCE = (ROOT / "backend" / "app" / "db" / "engine.py").exists()
 
 
 def test_all_declared_profiles_load() -> None:
@@ -122,6 +123,43 @@ def test_each_profile_activates_expected_features() -> None:
         assert resolved.features == features
 
 
+def test_database_and_postgres_features_are_declarative_capabilities() -> None:
+    catalog = loader.load_catalog(PROFILES_DIR, validate_paths=False)
+
+    database = catalog.features["database"]
+    postgres = catalog.features["postgres"]
+
+    assert database.optional is True
+    assert database.selectable is False
+    assert database.requires == ("backend",)
+    assert postgres.optional is True
+    assert postgres.selectable is True
+    assert postgres.requires == ("database",)
+
+
+def test_postgres_resolves_transitive_database_dependency() -> None:
+    catalog = loader.load_catalog(PROFILES_DIR, validate_paths=False)
+
+    resolved = loader.resolve_profile(catalog, "web-cloud", optional_features=("postgres",))
+
+    assert resolved.optional_features == ("postgres",)
+    assert resolved.features == ("frontend", "backend", "cloud", "database", "postgres")
+
+
+def test_postgres_rejects_profile_without_backend() -> None:
+    catalog = loader.load_catalog(PROFILES_DIR, validate_paths=False)
+
+    with pytest.raises(validator.CatalogValidationError, match="not enabled by the selected project profile"):
+        loader.resolve_profile(catalog, "web-only", optional_features=("postgres",))
+
+
+def test_unknown_optional_feature_is_rejected() -> None:
+    catalog = loader.load_catalog(PROFILES_DIR, validate_paths=False)
+
+    with pytest.raises(validator.CatalogValidationError, match="Unknown optional feature"):
+        loader.resolve_profile(catalog, "web-cloud", optional_features=("unknown-db",))
+
+
 def test_profile_configuration_can_be_extended_without_breaking_loading(tmp_path) -> None:
     root = tmp_path / "repo"
     profiles_dir = root / "profiles"
@@ -222,8 +260,8 @@ def test_scaffold_plan_uses_only_profile_feature_paths(
     )
     selected = {path.relative_to(ROOT).as_posix() for path in plan.paths}
 
-    assert expected <= selected
-    assert selected.isdisjoint(excluded)
+    assert all(any(item == prefix or item.startswith(f"{prefix}/") for item in selected) for prefix in expected)
+    assert all(not any(item == prefix or item.startswith(f"{prefix}/") for item in selected) for prefix in excluded)
     assert {"README.md", "docs", "profiles", "shared", "tools"} <= selected
 
 
@@ -432,6 +470,9 @@ def test_web_only_scaffold_runs_profile_aware_commands(tmp_path: Path) -> None:
     assert "tauri" not in package["scripts"]
     assert "@tauri-apps/cli" not in package["devDependencies"]
     assert "@tauri-apps/cli" not in lock_text
+    assert not (target / "backend" / "app" / "db").exists()
+    assert not (target / "backend" / "alembic.ini").exists()
+    assert "DATABASE_URL" not in (target / ".env.example").read_text(encoding="utf-8")
 
     command = [sys.executable, str(target / "tools" / "control.py"), "build", "desktop", "--dry-run"]
     completed = subprocess.run(command, cwd=target, text=True, capture_output=True, check=False)
@@ -439,3 +480,75 @@ def test_web_only_scaffold_runs_profile_aware_commands(tmp_path: Path) -> None:
     assert completed.returncode == 1
     assert "disabled by active profile 'web-only'" in output
     assert "Unhandled error" not in output
+
+    db_command = [sys.executable, str(target / "tools" / "control.py"), "db", "doctor"]
+    db_completed = subprocess.run(db_command, cwd=target, text=True, capture_output=True, check=False)
+    db_output = db_completed.stdout + db_completed.stderr
+    assert db_completed.returncode == 1
+    assert "Database feature is not enabled for this project" in db_output
+    assert "Traceback" not in db_output
+
+
+@pytest.mark.skipif(not HAS_BACKEND_SOURCE, reason="Backend source is absent in this derived project")
+def test_web_cloud_without_database_omits_database_capability(tmp_path: Path) -> None:
+    target = tmp_path / "web-cloud-project"
+
+    assert control.main(["init", "--profile", "web-cloud", "--target-dir", str(target)]) == 0
+
+    assert (target / "backend" / "app" / "main.py").exists()
+    assert not (target / "backend" / "app" / "db").exists()
+    assert not (target / "backend" / "alembic.ini").exists()
+    assert not (target / "backend" / "requirements-database.txt").exists()
+    assert not (target / "backend" / "requirements-postgres.txt").exists()
+    assert "DATABASE_URL" not in (target / ".env.example").read_text(encoding="utf-8")
+
+    active = loader.load_active_profile(target)
+    assert active.features == ("frontend", "backend", "cloud")
+    assert active.optional_features == ()
+
+
+@pytest.mark.skipif(not HAS_DATABASE_SOURCE, reason="Database sources are absent in this derived project")
+def test_web_cloud_with_postgres_scaffolds_database_capability(tmp_path: Path) -> None:
+    target = tmp_path / "web-cloud-postgres"
+
+    assert control.main(
+        ["init", "--profile", "web-cloud", "--with", "postgres", "--target-dir", str(target)]
+    ) == 0
+
+    assert (target / "backend" / "app" / "db" / "base.py").exists()
+    assert (target / "backend" / "alembic.ini").exists()
+    assert (target / "backend" / "alembic" / "env.py").exists()
+    assert (target / "backend" / "requirements-database.txt").exists()
+    assert (target / "backend" / "requirements-postgres.txt").exists()
+    assert not (target / "src-tauri").exists()
+
+    manifest = tomllib.loads((target / "project-profile.toml").read_text(encoding="utf-8"))
+    assert manifest["optional_features"] == ["postgres"]
+    assert manifest["features"] == ["frontend", "backend", "cloud", "database", "postgres"]
+    assert "postgresql+psycopg://app:change-me" in (target / ".env.example").read_text(encoding="utf-8")
+
+    active = loader.load_active_profile(target)
+    assert active.has_feature("database")
+    assert active.has_feature("postgres")
+
+
+def test_init_with_postgres_rejects_web_only_cleanly(monkeypatch, tmp_path: Path) -> None:
+    messages: list[str] = []
+    monkeypatch.setattr("tools.profiles.cli.logger.fail", messages.append)
+
+    code = control.main(
+        ["init", "--profile", "web-only", "--with", "postgres", "--target-dir", str(tmp_path / "invalid")]
+    )
+
+    assert code == 1
+    assert any("not enabled by the selected project profile" in message for message in messages)
+
+
+@pytest.mark.skipif(not HAS_DATABASE_SOURCE, reason="Database sources are absent in this derived project")
+def test_interactive_init_offers_postgres_for_backend_profile(monkeypatch, tmp_path: Path) -> None:
+    answers = iter(["2", "1"])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(answers))
+    target = tmp_path / "interactive-postgres"
+
+    assert control.main(["init", "--target-dir", str(target)]) == 0
+    assert loader.load_active_profile(target).optional_features == ("postgres",)

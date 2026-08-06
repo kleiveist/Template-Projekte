@@ -28,7 +28,7 @@ This document defines how the repository models project profiles. A profile is a
 ### Excluded
 
 - product-specific feature modules;
-- database, authentication, Docker, CI/CD, or deployment details; and
+- database implementation details, authentication, Docker, CI/CD, or deployment details; and
 - post-generation renaming or branding automation.
 
 ## Definitions
@@ -38,6 +38,7 @@ This document defines how the repository models project profiles. A profile is a
 | Core | Shared repository content copied into every generated project, for example `docs/`, `tools/`, `shared/`, and root metadata files |
 | Feature | A reusable technical capability, such as `frontend`, `backend`, `tauri`, or `cloud` |
 | Profile | A named preset that enables a validated feature combination |
+| Optional capability | An additive feature selected with `--with` after choosing a platform profile |
 | Active project profile | The machine-readable manifest at `project-profile.toml` used by tooling inside the current project root |
 
 ## Single-repository strategy
@@ -48,7 +49,7 @@ The reasons are:
 
 - code, tooling, and documentation stay in one maintenance stream;
 - feature dependencies are validated once instead of duplicated across repositories;
-- new capabilities such as `sql`, `postgres`, `auth`, `docker`, or `redis` can be introduced as additive features; and
+- new capabilities such as `postgres`, `auth`, `docker`, or `redis` can be introduced as additive features; and
 - profiles remain small presets over the same core instead of becoming long-lived forks.
 
 ## Declarative files
@@ -63,6 +64,8 @@ Each `profiles/<profile-id>.toml` file defines:
 - `features`
 - `order`
 
+Feature definitions can additionally declare `optional`, `selectable`, `requires`, owned scaffold `paths`, and safe `.env.example` entries. Optional capabilities are never hardcoded into platform profile files.
+
 Example:
 
 ```toml
@@ -74,17 +77,19 @@ description = "Tauri desktop client backed by a FastAPI cloud API."
 features = ["frontend", "backend", "tauri", "cloud"]
 ```
 
-The active project manifest uses the same core fields in `project-profile.toml`.
+The active project manifest adds `optional_features` and stores the fully resolved `features` list in `project-profile.toml`.
 
 ## Current profiles
 
-| Profile | Frontend | FastAPI | Tauri | Cloud | Enabled features |
-| --- | ---: | ---: | ---: | ---: | --- |
-| `web-only` | Yes | No | No | No | `frontend` |
-| `web-cloud` | Yes | Yes | No | Yes | `frontend`, `backend`, `cloud` |
-| `desktop-local` | Yes | No | Yes | No | `frontend`, `tauri` |
-| `desktop-cloud` | Yes | Yes | Yes | Yes | `frontend`, `backend`, `tauri`, `cloud` |
-| `full-platform` | Yes | Yes | Yes | Yes | `frontend`, `backend`, `tauri`, `cloud` |
+| Profile | Frontend | FastAPI | Tauri | Cloud | PostgreSQL | Enabled profile features |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| `web-only` | Yes | No | No | No | Not compatible | `frontend` |
+| `web-cloud` | Yes | Yes | No | Yes | Optional | `frontend`, `backend`, `cloud` |
+| `desktop-local` | Yes | No | Yes | No | Not compatible | `frontend`, `tauri` |
+| `desktop-cloud` | Yes | Yes | Yes | Yes | Optional | `frontend`, `backend`, `tauri`, `cloud` |
+| `full-platform` | Yes | Yes | Yes | Yes | Optional | `frontend`, `backend`, `tauri`, `cloud` |
+
+The master repository selects `postgres` in its own `project-profile.toml` so its complete optional implementation and tests are available for maintenance. This does not modify the `full-platform` preset: a generated full-platform project includes PostgreSQL only when `--with postgres` is supplied.
 
 ## Feature dependency rules
 
@@ -92,8 +97,19 @@ The current baseline validates these dependencies:
 
 - `tauri` requires `frontend`
 - `cloud` requires `backend`
+- `database` requires `backend`
+- `postgres` requires `database`
 
-Future features extend the same dependency model, for example `postgres` requiring `backend`.
+Future features extend the same dependency model, for example `auth` requiring `backend`.
+
+Optional dependency resolution is transitive. `--with postgres` adds `database`, but it does not silently add the non-optional `backend` platform feature. Therefore backend-enabled profiles accept PostgreSQL while `web-only` and `desktop-local` reject it with a clear dependency error.
+
+Example resolution:
+
+```text
+web-cloud + postgres
+= frontend + backend + cloud + database + postgres
+```
 
 Invalid combinations are rejected with explicit errors. Example:
 
@@ -106,6 +122,12 @@ Catalog paths must be relative, use forward slashes, stay inside the master repo
 ## Generator model
 
 `python tools/control.py init` resolves a profile, builds a scaffold plan from core paths plus enabled feature paths, then writes a derived project into `.generated/<profile-id>` by default or an explicit `--target-dir`.
+
+Use repeated `--with` flags for optional capabilities:
+
+```sh
+python tools/control.py init --profile web-cloud --with postgres
+```
 
 The generated project receives:
 
@@ -128,16 +150,17 @@ The shared tooling reads `project-profile.toml` and adjusts behavior:
 - `doctor` reports disabled layers as intentionally inactive;
 - `run` starts only enabled services;
 - `stop` inspects only ports owned by enabled services;
-- `build desktop` and `tauri ...` reject disabled desktop workflows cleanly; and
+- `build desktop` and `tauri ...` reject disabled desktop workflows cleanly;
+- `db ...` rejects projects without `database` and delegates explicit migrations to Alembic when enabled; and
 - frontend starter code uses a generated profile module to hide the backend status check when the backend feature is disabled.
 
 ## Extension path
 
 To add a future capability:
 
-1. extend `profiles/features.toml` with the new feature and its dependencies;
+1. extend `profiles/features.toml` with the new feature, optional metadata, and dependencies;
 2. attach owned paths only when the feature introduces dedicated scaffold content;
-3. update one or more profile presets; and
+3. mark it selectable when users should choose it with `--with`, without adding it to platform profile presets; and
 4. add tests and documentation in the same change.
 
 This keeps profile growth additive rather than architectural.
@@ -153,5 +176,6 @@ python tools/control.py test --suite tools
 ## Related documents
 
 - [Framework architecture](architecture.md)
+- [Database feature](database-feature.md)
 - [Tooling Guide](../tools/tooling.md)
 - [Project README](../../README.md)

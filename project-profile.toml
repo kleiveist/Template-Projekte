@@ -2,4 +2,5 @@ schema_version = 1
 id = "full-platform"
 name = "Full platform"
 description = "Complete baseline with browser frontend, FastAPI backend, Tauri desktop shell, and cloud-ready structure."
-features = ["frontend", "backend", "tauri", "cloud"]
+optional_features = ["postgres"]
+features = ["frontend", "backend", "tauri", "cloud", "database", "postgres"]

@@ -21,6 +21,7 @@ class ProfileLookupError(ProfileError):
 
 
 ID_PATTERN = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*")
+ENV_EXAMPLE_PATTERN = re.compile(r"[A-Z][A-Z0-9_]*=.*")
 
 
 def _validate_id(value: str, *, kind: str) -> str | None:
@@ -98,6 +99,58 @@ def validate_feature_selection(feature_ids: Iterable[str], catalog: ProfileCatal
     return selected
 
 
+def resolve_optional_features(
+    base_feature_ids: Iterable[str],
+    requested_feature_ids: Iterable[str],
+    catalog: ProfileCatalog,
+) -> tuple[str, ...]:
+    selected = list(dict.fromkeys(base_feature_ids))
+    enabled = set(selected)
+    requested = tuple(dict.fromkeys(requested_feature_ids))
+
+    unknown = [feature_id for feature_id in requested if feature_id not in catalog.features]
+    if unknown:
+        raise CatalogValidationError("\n".join(f"Unknown optional feature '{item}'." for item in unknown))
+
+    non_optional = [feature_id for feature_id in requested if not catalog.features[feature_id].optional]
+    if non_optional:
+        raise CatalogValidationError(
+            "\n".join(
+                f"Feature '{item}' is provided by project profiles and cannot be selected with '--with'."
+                for item in non_optional
+            )
+        )
+
+    resolving: set[str] = set()
+
+    def add(feature_id: str, *, requested_by: str) -> None:
+        if feature_id in enabled:
+            return
+        if feature_id in resolving:
+            raise CatalogValidationError(f"Feature dependency cycle encountered while resolving '{feature_id}'.")
+
+        feature = catalog.features[feature_id]
+        resolving.add(feature_id)
+        for dependency in feature.requires:
+            if dependency in enabled:
+                continue
+            dependency_feature = catalog.features[dependency]
+            if not dependency_feature.optional:
+                raise CatalogValidationError(
+                    f"Optional feature '{requested_by}' requires feature '{dependency}', "
+                    "which is not enabled by the selected project profile."
+                )
+            add(dependency, requested_by=requested_by)
+        resolving.remove(feature_id)
+        selected.append(feature_id)
+        enabled.add(feature_id)
+
+    for feature_id in requested:
+        add(feature_id, requested_by=feature_id)
+
+    return validate_feature_selection(selected, catalog)
+
+
 def validate_catalog(
     catalog: ProfileCatalog,
     *,
@@ -135,6 +188,13 @@ def validate_catalog(
         for dependency in feature.requires:
             if dependency not in catalog.features:
                 errors.append(f"Feature '{feature.id}' requires unknown feature '{dependency}'.")
+        if feature.selectable and not feature.optional:
+            errors.append(f"Feature '{feature.id}' is selectable but is not marked optional.")
+        for entry in feature.env_example:
+            if not ENV_EXAMPLE_PATTERN.fullmatch(entry):
+                errors.append(
+                    f"Feature '{feature.id}' env example '{entry}' must use the form UPPER_CASE_NAME=value."
+                )
         for relative in feature.paths:
             path_error = _validate_relative_path(relative, context=f"Feature '{feature.id}'")
             if path_error:
@@ -164,6 +224,15 @@ def validate_catalog(
             validate_feature_selection(profile.features, catalog)
         except CatalogValidationError as exc:
             errors.append(f"Profile '{profile.id}' is invalid: {exc}")
+        optional_in_profile = [
+            item
+            for item in profile.features
+            if catalog.features.get(item) is not None and catalog.features[item].optional
+        ]
+        if optional_in_profile:
+            errors.append(
+                f"Profile '{profile.id}' must not hardcode optional feature(s): {', '.join(optional_in_profile)}."
+            )
 
     if errors:
         raise CatalogValidationError("\n".join(errors))

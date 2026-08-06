@@ -12,7 +12,7 @@ if str(ROOT) not in sys.path:
 
 from tools import logger
 
-SUITES = {"schema", "api", "frontend", "e2e", "tools", "all"}
+SUITES = {"schema", "api", "database", "postgres", "frontend", "e2e", "tools", "all"}
 DESKTOP_TARGETS = {"linux", "windows", "windows-portable", "windows-cross-linux", "macos"}
 
 
@@ -64,7 +64,7 @@ def _print_menu(title: str, description: str, entries: list[tuple[str, str]]) ->
 
 
 def _prompt_suite() -> str | None:
-    value = _read("Suite (schema/api/frontend/e2e/tools/all): ")
+    value = _read("Suite (schema/api/database/postgres/frontend/e2e/tools/all): ")
     if value not in SUITES:
         logger.warn("Unknown suite. Use the test map to review available suites.")
         return None

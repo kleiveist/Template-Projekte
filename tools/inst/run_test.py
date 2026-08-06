@@ -21,7 +21,6 @@ CONSOLE_TAIL_LINES = 12
 REPORT_TAIL_LINES = 80
 FRONTEND_PORT = 5173
 BACKEND_PORT = 8000
-BACKEND_RUNTIME_IMPORTS = "import jsonschema, pytest, uvicorn"
 
 
 @dataclass(slots=True)
@@ -91,7 +90,7 @@ def _run(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess
 
 def _expand_suites(value: str) -> list[str]:
     if value == "all":
-        return ["schema", "api", "frontend", "e2e", "tools"]
+        return ["schema", "api", "database", "postgres", "frontend", "e2e", "tools"]
     return [value]
 
 
@@ -115,15 +114,25 @@ def _tooling_python() -> Path:
 def _needs_backend_runtime(selected_suites: list[str]) -> bool:
     if not profile_runtime.feature_enabled("backend", ROOT):
         return False
-    return bool({"schema", "api"}.intersection(selected_suites))
+    return bool({"schema", "api", "database", "postgres"}.intersection(selected_suites))
 
 
-def _probe_backend_runtime() -> tuple[bool, str, list[str] | None]:
+def _backend_runtime_imports(selected_suites: list[str]) -> str:
+    modules = ["jsonschema", "pytest", "uvicorn"]
+    profile = profile_runtime.active_profile(ROOT)
+    if profile.has_feature("database") and {"database", "postgres"}.intersection(selected_suites):
+        modules.extend(["sqlalchemy", "alembic"])
+    if profile.has_feature("postgres") and "postgres" in selected_suites:
+        modules.append("psycopg")
+    return "import " + ", ".join(dict.fromkeys(modules))
+
+
+def _probe_backend_runtime(selected_suites: list[str]) -> tuple[bool, str, list[str] | None]:
     backend_python = _backend_python()
     if not backend_python.exists():
         return False, f"backend venv python missing at {backend_python}", None
 
-    command = [str(backend_python), "-c", BACKEND_RUNTIME_IMPORTS]
+    command = [str(backend_python), "-c", _backend_runtime_imports(selected_suites)]
     completed = _run(command, cwd=ROOT)
     if completed.returncode == 0:
         return True, "backend runtime imports succeeded", command
@@ -138,7 +147,7 @@ def _ensure_backend_runtime(selected_suites: list[str]) -> SuiteResult | None:
     if not _needs_backend_runtime(selected_suites):
         return None
 
-    probe_ok, probe_detail, probe_command = _probe_backend_runtime()
+    probe_ok, probe_detail, probe_command = _probe_backend_runtime(selected_suites)
     if probe_ok:
         return None
 
@@ -167,7 +176,7 @@ def _ensure_backend_runtime(selected_suites: list[str]) -> SuiteResult | None:
             detail=f"Initial probe failed: {probe_detail}",
         )
 
-    repaired_ok, repaired_detail, repaired_command = _probe_backend_runtime()
+    repaired_ok, repaired_detail, repaired_command = _probe_backend_runtime(selected_suites)
     if not repaired_ok:
         return SuiteResult(
             "backend-preflight",
@@ -355,6 +364,58 @@ def _run_api_suite() -> SuiteResult:
     )
 
 
+def _run_database_suite() -> SuiteResult:
+    started = time.monotonic()
+    if not profile_runtime.feature_enabled("database", ROOT):
+        return SuiteResult(
+            "database",
+            "WARN",
+            "database feature disabled; suite skipped",
+            time.monotonic() - started,
+        )
+
+    tests_dir = ROOT / "backend" / "tests" / "db"
+    if not tests_dir.exists():
+        return SuiteResult("database", "FAIL", "backend/tests/db missing", time.monotonic() - started)
+    command = [str(_backend_python()), "-m", "pytest", "-q", str(tests_dir)]
+    completed = _run(command, cwd=ROOT)
+    return _result_from_completed(
+        name="database",
+        completed=completed,
+        started=started,
+        command=command,
+        cwd=ROOT,
+        ok_message="SQLAlchemy database unit tests passed",
+        fail_message="SQLAlchemy database unit tests failed",
+    )
+
+
+def _run_postgres_suite() -> SuiteResult:
+    started = time.monotonic()
+    if not profile_runtime.feature_enabled("postgres", ROOT):
+        return SuiteResult(
+            "postgres",
+            "WARN",
+            "postgres feature disabled; suite skipped",
+            time.monotonic() - started,
+        )
+
+    tests_dir = ROOT / "backend" / "tests" / "integration"
+    if not tests_dir.exists():
+        return SuiteResult("postgres", "FAIL", "backend/tests/integration missing", time.monotonic() - started)
+    command = [str(_backend_python()), "-m", "pytest", "-q", str(tests_dir)]
+    completed = _run(command, cwd=ROOT)
+    return _result_from_completed(
+        name="postgres",
+        completed=completed,
+        started=started,
+        command=command,
+        cwd=ROOT,
+        ok_message="PostgreSQL integration suite passed or skipped cleanly",
+        fail_message="PostgreSQL integration suite failed",
+    )
+
+
 def _run_frontend_suite() -> SuiteResult:
     started = time.monotonic()
     frontend_dir = ROOT / "frontend"
@@ -511,6 +572,8 @@ def _print_suite_guide() -> None:
     print("Use an explicit suite command:")
     print("  python tools/control.py test --suite api      # Backend API only")
     print("  python tools/control.py test --suite schema   # Schema validation only")
+    print("  python tools/control.py test --suite database # SQLAlchemy database unit tests")
+    print("  python tools/control.py test --suite postgres # Optional PostgreSQL integration test")
     print("  python tools/control.py test --suite frontend # Frontend unit tests with npm test")
     print("  python tools/control.py test --suite e2e      # Frontend E2E with Playwright")
     print("  python tools/control.py test --suite tools    # Restored tooling tests")
@@ -657,6 +720,10 @@ def main(args: argparse.Namespace) -> int:
                     results.append(_run_schema_suite())
                 elif suite == "api":
                     results.append(_run_api_suite())
+                elif suite == "database":
+                    results.append(_run_database_suite())
+                elif suite == "postgres":
+                    results.append(_run_postgres_suite())
                 elif suite == "frontend":
                     results.append(_run_frontend_suite())
                 elif suite == "tools":
@@ -667,6 +734,10 @@ def main(args: argparse.Namespace) -> int:
                     results.append(_run_schema_suite())
                 elif suite == "api":
                     results.append(_run_api_suite())
+                elif suite == "database":
+                    results.append(_run_database_suite())
+                elif suite == "postgres":
+                    results.append(_run_postgres_suite())
                 elif suite == "frontend":
                     results.append(_run_frontend_suite())
                 elif suite == "e2e":

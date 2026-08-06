@@ -15,6 +15,7 @@
 ## 📁 DEF
 - 🗂️ [Overview](def/def.md)
 - 📝 [Framework architecture](def/architecture.md)
+- 📝 [Database feature](def/database-feature.md)
 - 📝 [Project profiles](def/project-profiles.md)
 
 ## 📁 DEV

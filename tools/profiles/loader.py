@@ -5,7 +5,12 @@ from pathlib import Path
 from typing import Any
 
 from tools.profiles.model import FeatureDefinition, ProfileCatalog, ProfileDefinition, ProjectProfile
-from tools.profiles.validator import ProfileLookupError, validate_catalog, validate_feature_selection
+from tools.profiles.validator import (
+    ProfileLookupError,
+    resolve_optional_features,
+    validate_catalog,
+    validate_feature_selection,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PROFILES_DIR = ROOT / "profiles"
@@ -38,6 +43,13 @@ def _optional_int(payload: dict[str, Any], key: str, *, default: int) -> int:
     value = payload.get(key, default)
     if not isinstance(value, int) or isinstance(value, bool):
         raise ValueError(f"'{key}' must be an integer when present.")
+    return value
+
+
+def _optional_bool(payload: dict[str, Any], key: str, *, default: bool = False) -> bool:
+    value = payload.get(key, default)
+    if not isinstance(value, bool):
+        raise ValueError(f"'{key}' must be a boolean when present.")
     return value
 
 
@@ -107,6 +119,9 @@ def load_catalog(
             description=_require_str(raw, "description", context=f"{features_path}: [features.{feature_id}]"),
             paths=_optional_str_list(raw.get("paths")),
             requires=_optional_str_list(raw.get("requires")),
+            optional=_optional_bool(raw, "optional"),
+            selectable=_optional_bool(raw, "selectable"),
+            env_example=_optional_str_list(raw.get("env_example")),
         )
 
     profiles: dict[str, ProfileDefinition] = {}
@@ -146,19 +161,26 @@ def _load_profile_definition(path: Path) -> ProfileDefinition:
     )
 
 
-def resolve_profile(catalog: ProfileCatalog, profile_id: str) -> ProjectProfile:
+def resolve_profile(
+    catalog: ProfileCatalog,
+    profile_id: str,
+    *,
+    optional_features: tuple[str, ...] = (),
+) -> ProjectProfile:
     profile = catalog.profiles.get(profile_id)
     if profile is None:
         known = ", ".join(sorted(catalog.profiles))
         raise ProfileLookupError(f"Unknown profile '{profile_id}'. Available profiles: {known}.")
 
-    features = validate_feature_selection(profile.features, catalog)
+    base_features = validate_feature_selection(profile.features, catalog)
+    features = resolve_optional_features(base_features, optional_features, catalog)
     return ProjectProfile(
         schema_version=catalog.schema_version,
         profile_id=profile.id,
         name=profile.name,
         description=profile.description,
         features=features,
+        optional_features=optional_features,
     )
 
 
@@ -172,10 +194,14 @@ def load_project_profile(
     schema_version = _schema_version(payload, context=str(path))
 
     features = _require_str_list(payload.get("features"), context=f"{path}: features")
+    requested_features = _optional_str_list(payload.get("optional_features"))
     profile_id = _require_str(payload, "id", context=str(path))
     if catalog is not None:
         features = validate_feature_selection(features, catalog)
-        declared = resolve_profile(catalog, profile_id)
+        base = resolve_profile(catalog, profile_id)
+        if not requested_features:
+            requested_features = tuple(item for item in features if item not in base.features)
+        declared = resolve_profile(catalog, profile_id, optional_features=requested_features)
         if features != declared.features:
             raise ValueError(
                 f"{path} features do not match declared profile '{profile_id}': "
@@ -188,6 +214,7 @@ def load_project_profile(
         name=_require_str(payload, "name", context=str(path)),
         description=_require_str(payload, "description", context=str(path)),
         features=features,
+        optional_features=requested_features,
     )
 
 
@@ -218,10 +245,19 @@ def _infer_profile_from_scaffold(project_root: Path) -> ProjectProfile:
     if (project_root / "src-tauri" / "tauri.conf.json").exists():
         features.append("tauri")
 
+    optional_features: list[str] = []
+    if (project_root / "backend" / "app" / "db").exists():
+        features.append("database")
+        optional_features.append("database")
+    if (project_root / "backend" / "requirements-postgres.txt").exists():
+        features.append("postgres")
+        optional_features.append("postgres")
+
     return ProjectProfile(
         schema_version=1,
         profile_id="inferred-project",
         name="Inferred project",
         description="Profile inferred from the directories present in the current project root.",
         features=tuple(features),
+        optional_features=tuple(optional_features),
     )

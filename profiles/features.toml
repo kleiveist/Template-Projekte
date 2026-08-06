@@ -19,7 +19,14 @@ paths = ["frontend"]
 [features.backend]
 name = "Backend"
 description = "FastAPI backend service"
-paths = ["backend"]
+paths = [
+  "backend/app/__init__.py",
+  "backend/app/api",
+  "backend/app/main.py",
+  "backend/pytest.ini",
+  "backend/requirements.txt",
+  "backend/tests/api",
+]
 
 [features.tauri]
 name = "Tauri"
@@ -32,3 +39,28 @@ name = "Cloud"
 description = "Cloud-ready deployment profile metadata"
 paths = []
 requires = ["backend"]
+
+[features.database]
+name = "SQL database"
+description = "SQLAlchemy 2.x database infrastructure and Alembic migrations"
+paths = [
+  "backend/alembic",
+  "backend/alembic.ini",
+  "backend/app/db",
+  "backend/requirements-database.txt",
+  "backend/tests/db",
+]
+requires = ["backend"]
+optional = true
+
+[features.postgres]
+name = "PostgreSQL"
+description = "PostgreSQL support through the Psycopg 3 driver"
+paths = [
+  "backend/requirements-postgres.txt",
+  "backend/tests/integration",
+]
+requires = ["database"]
+optional = true
+selectable = true
+env_example = ["DATABASE_URL=postgresql+psycopg://app:change-me@127.0.0.1:5432/app"]
