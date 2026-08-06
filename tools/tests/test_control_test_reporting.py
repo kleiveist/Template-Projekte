@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import subprocess
 
+import pytest
+
 from tools import control
 from tools.inst import report
+from tools.profiles.model import ProjectProfile
 
 
 def _payload() -> dict[str, object]:
@@ -74,6 +77,97 @@ def test_disabled_optional_suites_report_skip(monkeypatch) -> None:
     assert run_test._run_database_suite().status == "SKIP"
     assert run_test._run_postgres_suite().status == "SKIP"
     assert run_test._run_tauri_suite().status == "SKIP"
+
+
+def test_subprocess_start_failure_becomes_a_ci_compatible_result(monkeypatch) -> None:
+    from tools.inst import run_test
+
+    monkeypatch.setattr(
+        run_test.subprocess,
+        "run",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(FileNotFoundError("missing runtime")),
+    )
+
+    completed = run_test._run(["missing-runtime"])
+
+    assert completed.returncode == 127
+    assert "missing runtime" in completed.stderr
+
+
+def test_tooling_runtime_ignores_stale_virtualenv(monkeypatch, tmp_path) -> None:
+    from tools.inst import run_test
+
+    tooling_python = tmp_path / "tools" / ".venv" / "bin" / "python"
+    backend_python = tmp_path / "backend" / ".venv" / "bin" / "python"
+    tooling_python.parent.mkdir(parents=True)
+    backend_python.parent.mkdir(parents=True)
+    tooling_python.touch()
+    backend_python.touch()
+
+    def fake_run(command: list[str], cwd=None) -> subprocess.CompletedProcess[str]:
+        returncode = 0 if command[0] == str(backend_python) else 1
+        return subprocess.CompletedProcess(command, returncode, stdout="", stderr="")
+
+    monkeypatch.setattr(run_test, "ROOT", tmp_path)
+    monkeypatch.setattr(run_test, "_run", fake_run)
+
+    assert run_test._tooling_python() == backend_python
+
+
+@pytest.mark.parametrize(
+    ("profile_id", "features", "expected"),
+    [
+        (
+            "desktop-local",
+            {"frontend", "tauri"},
+            {"api": "SKIP", "database": "SKIP", "postgres": "SKIP", "frontend": "OK", "tauri": "OK"},
+        ),
+        (
+            "desktop-cloud",
+            {"frontend", "backend", "tauri", "cloud"},
+            {"api": "OK", "database": "SKIP", "postgres": "SKIP", "frontend": "OK", "tauri": "OK"},
+        ),
+    ],
+)
+def test_desktop_profiles_select_only_enabled_feature_suites(
+    monkeypatch,
+    tmp_path,
+    profile_id: str,
+    features: set[str],
+    expected: dict[str, str],
+) -> None:
+    from tools.inst import run_test
+
+    (tmp_path / "frontend").mkdir()
+    (tmp_path / "frontend" / "package.json").write_text("{}", encoding="utf-8")
+    (tmp_path / "backend" / "tests" / "api").mkdir(parents=True)
+    profile = ProjectProfile(
+        schema_version=1,
+        profile_id=profile_id,
+        name=profile_id,
+        description="profile-aware test selection",
+        features=tuple(features),
+    )
+
+    monkeypatch.setattr(run_test, "ROOT", tmp_path)
+    monkeypatch.setattr(run_test.profile_runtime, "active_profile", lambda _root: profile)
+    monkeypatch.setattr(run_test.profile_runtime, "feature_enabled", lambda feature, _root: feature in features)
+    monkeypatch.setattr(run_test.shutil, "which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(
+        run_test,
+        "_run",
+        lambda command, cwd=None: subprocess.CompletedProcess(command, 0, stdout="passed", stderr=""),
+    )
+
+    actual = {
+        "api": run_test._run_api_suite().status,
+        "database": run_test._run_database_suite().status,
+        "postgres": run_test._run_postgres_suite().status,
+        "frontend": run_test._run_frontend_suite().status,
+        "tauri": run_test._run_tauri_suite().status,
+    }
+
+    assert actual == expected
 
 
 def test_configured_postgres_suite_invokes_integration_tests(monkeypatch, tmp_path) -> None:

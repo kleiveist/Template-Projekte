@@ -263,7 +263,12 @@ def _install_backend_with_pip(backend_dir: Path, requirements: list[Path]) -> tu
 
     py = _venv_python(venv_dir)
     if not py.exists():
-        return False, f"venv python not found at {py}"
+        logger.warn(f"venv python not found at {py}; attempting automatic rebuild repair")
+        rebuilt, rebuild_msg = _rebuild_backend_venv(venv_dir, f"venv python is missing at {py}")
+        if not rebuilt:
+            return False, rebuild_msg
+        if not py.exists():
+            return False, f"venv python still not found after rebuild at {py}"
 
     consistent, consistency_msg = _ensure_backend_venv_consistency(py, venv_dir)
     if not consistent:
@@ -341,13 +346,13 @@ def _runtime_imports(python: Path, modules: str) -> bool:
 
 
 def _install_tooling_runtime() -> StepResult:
-    backend_python = _venv_python(ROOT / "backend" / ".venv")
-    if _runtime_imports(backend_python, "pytest"):
-        return StepResult("tooling", "OK", "pytest provided by backend virtualenv")
-
     tooling_python = _venv_python(TOOLS_VENV)
     if _runtime_imports(tooling_python, "pytest"):
         return StepResult("tooling", "OK", "tools/.venv already provides pytest")
+
+    backend_python = _venv_python(ROOT / "backend" / ".venv")
+    if not TOOLS_VENV.exists() and _runtime_imports(backend_python, "pytest"):
+        return StepResult("tooling", "OK", "pytest provided by backend virtualenv")
 
     if not TOOLS_REQUIREMENTS.exists():
         return StepResult("tooling", "FAIL", "missing tools/requirements.txt")

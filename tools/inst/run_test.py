@@ -85,7 +85,10 @@ def _format_command(command: list[str] | None, *, max_chars: int | None = None) 
 
 
 def _run(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, cwd=cwd, text=True, capture_output=True, check=False)
+    try:
+        return subprocess.run(cmd, cwd=cwd, text=True, capture_output=True, check=False)
+    except OSError as exc:
+        return subprocess.CompletedProcess(cmd, 127, stdout="", stderr=str(exc))
 
 
 def _expand_suites(value: str) -> list[str]:
@@ -104,11 +107,22 @@ def _tooling_python() -> Path:
     windows_python = ROOT / "tools" / ".venv" / "Scripts" / "python.exe"
     unix_python = ROOT / "tools" / ".venv" / "bin" / "python"
     tooling_python = windows_python if windows_python.exists() else unix_python
-    if tooling_python.exists():
+    if _tooling_runtime_ready(tooling_python):
         return tooling_python
 
     backend_python = _backend_python()
+    if _tooling_runtime_ready(backend_python):
+        return backend_python
+    if tooling_python.exists():
+        return tooling_python
     return backend_python if backend_python.exists() else Path(sys.executable)
+
+
+def _tooling_runtime_ready(python: Path) -> bool:
+    if not python.exists():
+        return False
+    completed = _run([str(python), "-c", "import jsonschema, pytest"], cwd=ROOT)
+    return completed.returncode == 0
 
 
 def _needs_backend_runtime(selected_suites: list[str]) -> bool:

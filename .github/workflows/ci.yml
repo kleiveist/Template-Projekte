@@ -13,9 +13,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-env:
-  DATABASE_URL: postgresql+psycopg://template_test:test-password@127.0.0.1:5432/template_test
-
 jobs:
   tooling:
     name: Core / Tooling, Profiles & Configuration
@@ -23,9 +20,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
           cache: pip
@@ -33,6 +30,8 @@ jobs:
       - name: Install tooling dependencies
         run: python tools/control.py install --skip-frontend --skip-backend --skip-playwright
       - name: Validate runtime configuration
+        env:
+          DATABASE_URL: postgresql+psycopg://template_test:test-password@127.0.0.1:5432/template_test
         run: python tools/control.py config doctor
       - name: Run tooling, profile, and configuration tests
         run: python tools/control.py test --suite tools
@@ -45,9 +44,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
           cache: pip
@@ -73,13 +72,13 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
       - name: Set up Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: npm
@@ -99,13 +98,13 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
       - name: Set up Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: npm
@@ -115,7 +114,7 @@ jobs:
           rustup toolchain install stable --profile minimal
           rustup default stable
       - name: Cache Cargo dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
@@ -130,6 +129,8 @@ jobs:
       - name: Install Tauri system dependencies
         run: python tools/control.py tauri install --skip-rust --skip-node --skip-frontend
       - name: Run Tauri doctor
+        env:
+          DATABASE_URL: postgresql+psycopg://template_test:test-password@127.0.0.1:5432/template_test
         run: python tools/control.py tauri doctor
       - name: Run Tauri and Rust tests
         run: python tools/control.py test --suite tauri

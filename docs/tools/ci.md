@@ -49,6 +49,8 @@ python tools/control.py build web
 
 `test --suite all` reads `project-profile.toml`. Disabled features report `SKIP` and return success. Missing files or failed checks for enabled features report `FAIL` and return a non-zero exit code.
 
+Tests that exercise generator capabilities outside a derived project's enabled feature set are skipped. The same tooling suite still runs in every generated project; only master-only source-completeness checks are excluded when the corresponding source modules were intentionally not scaffolded.
+
 ## Test levels
 
 | Level | Coverage | Public command |
@@ -78,6 +80,8 @@ The jobs are independent and run in parallel. Native installers are not produced
 ### Profile Matrix
 
 `.github/workflows/profiles.yml` generates `web-only`, `web-cloud`, `desktop-local`, `desktop-cloud`, and `full-platform` projects. Each matrix entry runs an initial structure doctor, dependency installation, a prepared-environment doctor, the profile-aware complete suite, and a production web build. Desktop entries also install Linux Tauri prerequisites, run Tauri doctor, and execute Cargo checks.
+
+On Debian-family Linux runners, `tauri install` refreshes apt metadata before a non-interactive install. It uses the Tauri v2 WebKitGTK 4.1 dependency set and selects the release-appropriate FUSE 2 package name (`libfuse2` on Ubuntu 22.04 and `libfuse2t64` on Ubuntu 24.04 and newer). Missing required compile-time libraries make `tauri doctor` fail; AppImage-only helpers remain warnings during check-only CI.
 
 The matrix uses `fail-fast: false`. One broken preset therefore does not hide the status of the other presets.
 
@@ -114,6 +118,8 @@ Application startup never runs migrations. CI invokes `db upgrade` explicitly.
 | PostgreSQL | 16 service container for integration tests |
 
 These values test the minimum versions documented by the template for Python and Node.js and the supported stable Rust channel.
+
+The official setup and cache actions use their Node.js 24-based stable majors. This internal action runtime is independent of the project-level Node.js 20 baseline above.
 
 ## Dependency installation and caching
 

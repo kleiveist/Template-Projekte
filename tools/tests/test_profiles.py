@@ -33,7 +33,7 @@ def test_all_declared_profiles_load() -> None:
 
 
 @pytest.mark.skipif(
-    not HAS_BACKEND_SOURCE or not HAS_TAURI_SOURCE,
+    not HAS_BACKEND_SOURCE or not HAS_TAURI_SOURCE or not HAS_DATABASE_SOURCE,
     reason="Complete feature sources exist only in the master repository",
 )
 def test_master_catalog_paths_exist() -> None:
@@ -527,7 +527,10 @@ def test_web_cloud_without_database_omits_database_capability(tmp_path: Path) ->
     assert active.optional_features == ()
 
 
-@pytest.mark.skipif(not HAS_TAURI_SOURCE, reason="Tauri source is absent in this derived project")
+@pytest.mark.skipif(
+    not HAS_BACKEND_SOURCE or not HAS_TAURI_SOURCE,
+    reason="Desktop-cloud feature sources are absent in this derived project",
+)
 def test_desktop_cloud_scaffold_includes_public_api_config_only(tmp_path: Path) -> None:
     target = tmp_path / "desktop-cloud-project"
 

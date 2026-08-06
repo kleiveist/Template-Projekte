@@ -47,7 +47,11 @@ def test_core_ci_uses_supported_runtimes_and_public_tooling() -> None:
     assert "python tools/control.py build web" in content
     assert "cache: pip" in content
     assert "cache: npm" in content
-    assert "actions/cache@v4" in content
+    assert "actions/checkout@v7" in content
+    assert "actions/setup-python@v7" in content
+    assert "actions/setup-node@v7" in content
+    assert "actions/cache@v6" in content
+    assert "\nenv:\n  DATABASE_URL:" not in content
 
 
 def test_profile_matrix_generates_and_tests_every_profile() -> None:
@@ -68,6 +72,10 @@ def test_profile_matrix_generates_and_tests_every_profile() -> None:
     assert "python tools/control.py test --suite all" in content
     assert "python tools/control.py build web" in content
     assert "python tools/control.py tauri doctor" in content
+    assert "actions/checkout@v7" in content
+    assert "actions/setup-python@v7" in content
+    assert "actions/setup-node@v7" in content
+    assert "actions/cache@v6" in content
 
 
 def test_postgres_ci_uses_isolated_service_health_check_and_migration() -> None:
@@ -84,3 +92,6 @@ def test_postgres_ci_uses_isolated_service_health_check_and_migration() -> None:
     assert "python tools/control.py test --suite postgres" in content
     assert "--profile web-cloud" in content
     assert "--with postgres" in content
+    assert "actions/checkout@v7" in content
+    assert "actions/setup-python@v7" in content
+    assert "actions/setup-node@v7" in content

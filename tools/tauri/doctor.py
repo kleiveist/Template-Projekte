@@ -174,11 +174,15 @@ def _platform_checks() -> list[CheckResult]:
 
 def _linux_checks() -> list[CheckResult]:
     checks = [
-        _check_pkg_config("webkitgtk", ["webkit2gtk-4.1", "webkit2gtk-4.0"]),
-        _check_pkg_config("gtk3", ["gtk+-3.0"]),
-        _check_pkg_config("librsvg", ["librsvg-2.0"]),
-        _check_pkg_config("openssl", ["openssl"]),
-        _check_pkg_config("appindicator", ["ayatana-appindicator3-0.1", "appindicator3-0.1"]),
+        _check_pkg_config("webkitgtk", ["webkit2gtk-4.1"], required=True),
+        _check_pkg_config("gtk3", ["gtk+-3.0"], required=True),
+        _check_pkg_config("librsvg", ["librsvg-2.0"], required=True),
+        _check_pkg_config("openssl", ["openssl"], required=True),
+        _check_pkg_config(
+            "appindicator",
+            ["ayatana-appindicator3-0.1", "appindicator3-0.1"],
+            required=True,
+        ),
         _check_optional_binary("patchelf", "patchelf for AppImage builds", ["patchelf", "--version"]),
         _check_optional_binary("mksquashfs", "squashfs-tools for AppImage builds", ["mksquashfs", "-version"]),
         _check_optional_binary(
@@ -191,15 +195,17 @@ def _linux_checks() -> list[CheckResult]:
     return checks
 
 
-def _check_pkg_config(name: str, packages: list[str]) -> CheckResult:
+def _check_pkg_config(name: str, packages: list[str], *, required: bool = False) -> CheckResult:
     if shutil.which("pkg-config") is None:
-        return CheckResult(name, "WARN", "pkg-config missing; system dependency check skipped")
+        status = "FAIL" if required else "WARN"
+        return CheckResult(name, status, "pkg-config missing; system dependencies cannot be verified")
 
     for package in packages:
         ok, output = common.command_output(["pkg-config", "--modversion", package])
         if ok:
             return CheckResult(name, "OK", f"{package} {output}")
-    return CheckResult(name, "WARN", f"missing pkg-config package: {' or '.join(packages)}")
+    status = "FAIL" if required else "WARN"
+    return CheckResult(name, status, f"missing required pkg-config package: {' or '.join(packages)}")
 
 
 def _check_libfuse2() -> CheckResult:

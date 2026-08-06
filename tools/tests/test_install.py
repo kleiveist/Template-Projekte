@@ -45,3 +45,33 @@ def test_frontend_install_falls_back_without_lockfile(monkeypatch, tmp_path: Pat
 
     assert install._install_frontend().status == "OK"
     assert calls[0][1] == "install"
+
+
+def test_backend_install_rebuilds_venv_when_python_is_missing(monkeypatch, tmp_path: Path) -> None:
+    backend = tmp_path / "backend"
+    venv = backend / ".venv"
+    venv.mkdir(parents=True)
+    python = venv / "bin" / "python"
+    rebuild_reasons: list[str] = []
+
+    def fake_rebuild(_venv_dir: Path, reason: str) -> tuple[bool, str]:
+        rebuild_reasons.append(reason)
+        python.parent.mkdir(parents=True, exist_ok=True)
+        python.touch()
+        return True, "venv rebuilt"
+
+    monkeypatch.setattr(install, "ROOT", tmp_path)
+    monkeypatch.setattr(install, "_venv_python", lambda _venv_dir: python)
+    monkeypatch.setattr(install, "_rebuild_backend_venv", fake_rebuild)
+    monkeypatch.setattr(install, "_ensure_backend_venv_consistency", lambda _python, _venv: (True, "ready"))
+    monkeypatch.setattr(
+        install,
+        "_run",
+        lambda command, cwd=None: subprocess.CompletedProcess(command, 0, stdout="", stderr=""),
+    )
+
+    ok, message = install._install_backend_with_pip(backend, [])
+
+    assert ok is True
+    assert message == "pip/venv backend install completed"
+    assert rebuild_reasons == [f"venv python is missing at {python}"]

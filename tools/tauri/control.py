@@ -173,6 +173,13 @@ def main(args: argparse.Namespace) -> int:
         return 0
 
     if not tauri_enabled:
+        command = getattr(args, "tauri_command", None)
+        if command in {"doctor", "install", "test"}:
+            logger.info(
+                f"Tauri {command} skipped because the feature is disabled by active profile "
+                f"'{profile.profile_id}'."
+            )
+            return 0
         logger.fail(f"Tauri feature is disabled by active profile '{profile.profile_id}'.")
         return 1
 
