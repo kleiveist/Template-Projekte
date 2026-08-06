@@ -157,7 +157,8 @@ def package_manager_install_command() -> list[str]:
         pnpm = shutil.which("pnpm") or "pnpm"
         return [pnpm, "install"]
     npm = shutil.which("npm") or "npm"
-    return [npm, "install", "--no-audit", "--no-fund"]
+    action = "ci" if paths.FRONTEND_PACKAGE_LOCK.exists() else "install"
+    return [npm, action, "--no-audit", "--no-fund"]
 
 
 def missing_frontend_dependency_paths() -> list[Path]:

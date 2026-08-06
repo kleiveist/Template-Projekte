@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 
 from tools import logger
 from tools.tauri import build as tauri_build
-from tools.tauri import doctor, paths
+from tools.tauri import common, doctor, paths
 
 
 def main(args: argparse.Namespace) -> int:
@@ -21,6 +22,9 @@ def main(args: argparse.Namespace) -> int:
     if getattr(args, "build_dry_run", False) or getattr(args, "all", False):
         dry_run_args = argparse.Namespace(target="linux", dry_run=True, no_clean=True)
         failures += 0 if tauri_build.main(dry_run_args) == 0 else 1
+
+    if getattr(args, "cargo", False) or getattr(args, "all", False):
+        failures += _run_cargo_checks()
 
     if failures:
         logger.fail(f"Tauri tests completed with {failures} failing check(s)")
@@ -53,4 +57,22 @@ def _validate_structure() -> int:
             logger.fail(f"Tauri config JSON invalid: {exc}")
             failures += 1
 
+    return failures
+
+
+def _run_cargo_checks() -> int:
+    cargo = shutil.which("cargo")
+    if cargo is None:
+        logger.fail("cargo not found. Action: install the Rust stable toolchain.")
+        return 1
+
+    failures = 0
+    manifest = str(paths.TAURI_DIR / "Cargo.toml")
+    commands = [
+        ([cargo, "check", "--locked", "--manifest-path", manifest], "Cargo check"),
+        ([cargo, "test", "--locked", "--manifest-path", manifest], "Rust tests"),
+    ]
+    for command, label in commands:
+        result = common.run_command(command, cwd=paths.ROOT)
+        failures += common.print_result(result, f"{label} passed", f"{label} failed") != 0
     return failures

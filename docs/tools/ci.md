@@ -1,0 +1,192 @@
+<!-- AUTO-GENERATED:backlink START -->
+[← Back](tools.md)
+<!-- AUTO-GENERATED:backlink END -->
+# Continuous Integration
+
+| Field | Value |
+| --- | --- |
+| Status | Active |
+| Owner | Project team |
+| Last review | 2026-08-06 |
+| Audience | Contributors and repository maintainers |
+| Related ATP | N/A - automated evidence supports, but does not replace, feature ATPs |
+
+## Purpose
+
+This document defines the automated quality gates for the master template. Continuous integration detects regressions in shared tooling, feature modules, profile generation, PostgreSQL integration, and production web builds before a change reaches `main`.
+
+## Scope
+
+The workflows under `.github/workflows/` run for pull requests and pushes to `main`. They validate the repository and temporary generated projects. Deployment, publishing, signing, release creation, and production database operations are outside this CI baseline.
+
+## Local and CI equivalence
+
+GitHub Actions orchestrates the same public interface used by developers:
+
+```text
+GitHub Actions
+      |
+      v
+python tools/control.py
+      |
+      +-- install
+      +-- doctor / config doctor / tauri doctor
+      +-- test --suite <name>
+      +-- db upgrade
+      +-- build web
+```
+
+Project behavior remains in `tools/control.py` and its modules. Workflow YAML is responsible only for runtime setup, dependency caches, temporary service containers, command ordering, and job boundaries.
+
+The local baseline is:
+
+```sh
+python tools/control.py install
+python tools/control.py doctor
+python tools/control.py test --suite all
+python tools/control.py build web
+```
+
+`test --suite all` reads `project-profile.toml`. Disabled features report `SKIP` and return success. Missing files or failed checks for enabled features report `FAIL` and return a non-zero exit code.
+
+## Test levels
+
+| Level | Coverage | Public command |
+| --- | --- | --- |
+| Core tests | Tooling, profiles, configuration, schema, FastAPI, SQLAlchemy, frontend, Tauri, and Rust | `python tools/control.py test --suite <name>` |
+| External service tests | PostgreSQL connectivity and Alembic migration | `python tools/control.py test --suite postgres`, `python tools/control.py db upgrade` |
+| Generated project tests | Real scaffolds for every supported profile | `python tools/control.py init`, followed by generated-project commands |
+| Build verification | TypeScript checking and Vite production bundling | `python tools/control.py build web` |
+
+Playwright E2E remains an optional suite. It reports `SKIP` until a real E2E configuration and tests exist.
+
+## Workflows
+
+### Core CI
+
+`.github/workflows/ci.yml` separates failures into four jobs:
+
+| Check name | Responsibility |
+| --- | --- |
+| `Core / Tooling, Profiles & Configuration` | CLI, generator, profile, configuration, and workflow regression tests |
+| `Core / Backend, Database & Schema` | JSON Schema, FastAPI, and SQLAlchemy unit tests |
+| `Core / Frontend & Web Build` | Vitest and a production Vite build |
+| `Core / Tauri & Rust` | Tauri doctor, configuration validation, `cargo check`, and Rust tests |
+
+The jobs are independent and run in parallel. Native installers are not produced.
+
+### Profile Matrix
+
+`.github/workflows/profiles.yml` generates `web-only`, `web-cloud`, `desktop-local`, `desktop-cloud`, and `full-platform` projects. Each matrix entry runs an initial structure doctor, dependency installation, a prepared-environment doctor, the profile-aware complete suite, and a production web build. Desktop entries also install Linux Tauri prerequisites, run Tauri doctor, and execute Cargo checks.
+
+The matrix uses `fail-fast: false`. One broken preset therefore does not hide the status of the other presets.
+
+### PostgreSQL Integration
+
+`.github/workflows/postgres.yml` starts PostgreSQL 16 as an isolated service container with test-only credentials and a `pg_isready` health check. No external database is contacted.
+
+The integration job performs this sequence:
+
+```text
+fresh temporary database
+        |
+        v
+config doctor
+        |
+        v
+Alembic upgrade head
+        |
+        v
+PostgreSQL integration test
+```
+
+The same workflow generates `web-cloud --with postgres`, then runs doctor, migration, the complete profile-aware suite, and the web build in that generated project. `DATABASE_URL` and `DATABASE_URL_TEST` point only to the job-local service.
+
+Application startup never runs migrations. CI invokes `db upgrade` explicitly.
+
+## Runtime versions
+
+| Runtime | CI baseline |
+| --- | --- |
+| Python | 3.11 |
+| Node.js | 20 |
+| Rust | Stable toolchain |
+| PostgreSQL | 16 service container for integration tests |
+
+These values test the minimum versions documented by the template for Python and Node.js and the supported stable Rust channel.
+
+## Dependency installation and caching
+
+`control.py install` uses `npm ci` whenever `frontend/package-lock.json` exists and falls back to `npm install` only for projects without a lockfile. Cargo commands use `--locked` with `src-tauri/Cargo.lock`. Python keeps the existing requirements-file and virtual-environment strategy.
+
+GitHub-hosted caches cover:
+
+- pip downloads keyed by the relevant requirements files;
+- npm downloads keyed by `frontend/package-lock.json`;
+- Cargo registry, Git sources, and target output keyed by `src-tauri/Cargo.lock`.
+
+Caches improve execution time but are never required for correctness.
+
+## Permissions and secrets
+
+Every workflow declares only `contents: read`. Pull requests from forks do not require repository secrets. PostgreSQL uses the temporary user, password, and database declared in workflow YAML; those values exist only inside an isolated CI run and are not production credentials.
+
+The workflows do not use cloud credentials, signing material, deployment tokens, package publishing, releases, or write permissions. Commands must not print database URLs or other secret values. Each job runs `git diff --exit-code` to detect unintended changes to versioned files.
+
+## Failure handling
+
+Jobs use explicit timeouts. Pull-request concurrency cancels an older run after a newer commit arrives, while `main` runs are not cancelled. Independent jobs remain parallel so GitHub reports the failing subsystem directly.
+
+`PASS`, `SKIP`, and `FAIL` have distinct meanings:
+
+- `PASS`: the selected check ran and completed successfully.
+- `SKIP`: the active profile disables the feature or an optional suite is not configured.
+- `FAIL`: an enabled feature is incomplete, configuration is invalid, or the executed check failed.
+
+A configured but unreachable `DATABASE_URL_TEST` is a failure, not a skip.
+
+## Branch protection recommendation
+
+Configure `main` branch protection after the workflows have completed stable repository runs. Require the actual checks shown by GitHub for:
+
+- all four `Core / ...` jobs;
+- all five `Profiles / ...` matrix jobs;
+- `PostgreSQL / Integration & Migration`;
+- `Profiles / web-cloud + postgres`.
+
+Require pull requests and current branch status before merge. Do not grant test workflows deployment or bypass privileges.
+
+## Acceptance evidence
+
+Automated tests and CI output provide repeatable technical evidence. They do not replace feature acceptance:
+
+```text
+Automated tests + CI evidence + acceptance testing = feature acceptance
+```
+
+Reference relevant CI runs from an ATP when they support an acceptance decision.
+
+## Verification
+
+Run the local equivalents from the repository root:
+
+```sh
+python tools/control.py test --suite tools
+python tools/control.py test --suite schema
+python tools/control.py test --suite api
+python tools/control.py test --suite database
+python tools/control.py test --suite frontend
+python tools/control.py test --suite tauri
+python tools/control.py build web
+```
+
+PostgreSQL verification additionally requires a disposable test database through `DATABASE_URL` and `DATABASE_URL_TEST`.
+
+## Related documents
+
+- [Tooling Guide](tooling.md)
+- [Framework Architecture](../def/architecture.md)
+- [Project Profiles](../def/project-profiles.md)
+- [Database Feature](../def/database-feature.md)
+- [Runtime Configuration](../def/configuration.md)
+- [ATP Workflow](../atp/README.md)

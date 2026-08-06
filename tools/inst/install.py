@@ -61,15 +61,18 @@ def _install_frontend() -> StepResult:
     if npm is None:
         return StepResult("frontend", "FAIL", "npm not found. Action: install Node.js and npm.")
 
-    logger.info("Running frontend dependency installation (npm install --no-audit --no-fund)")
+    lockfile = frontend_dir / "package-lock.json"
+    install_action = "ci" if lockfile.exists() else "install"
+    command = [npm, install_action, "--no-audit", "--no-fund"]
+    logger.info(f"Running frontend dependency installation ({' '.join(command[1:])})")
     started = time.monotonic()
-    completed = _run([npm, "install", "--no-audit", "--no-fund"], cwd=frontend_dir)
+    completed = _run(command, cwd=frontend_dir)
     elapsed = time.monotonic() - started
     if completed.returncode == 0:
-        return StepResult("frontend", "OK", f"npm install completed ({elapsed:.1f}s)")
+        return StepResult("frontend", "OK", f"npm {install_action} completed ({elapsed:.1f}s)")
 
     details = _tail((completed.stdout or "") + "\n" + (completed.stderr or ""))
-    return StepResult("frontend", "FAIL", f"npm install failed after {elapsed:.1f}s: {details}")
+    return StepResult("frontend", "FAIL", f"npm {install_action} failed after {elapsed:.1f}s: {details}")
 
 
 def _ensure_backend_venv_with_uv(backend_dir: Path) -> subprocess.CompletedProcess[str]:

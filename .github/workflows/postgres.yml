@@ -1,0 +1,129 @@
+name: PostgreSQL Integration
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  integration:
+    name: PostgreSQL / Integration & Migration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql+psycopg://postgres:test-password@127.0.0.1:5432/template_test
+      DATABASE_URL_TEST: postgresql+psycopg://postgres:test-password@127.0.0.1:5432/template_test
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test-password
+          POSTGRES_DB: template_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d template_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            tools/requirements.txt
+            backend/requirements.txt
+            backend/requirements-database.txt
+            backend/requirements-postgres.txt
+      - name: Install backend and PostgreSQL dependencies
+        run: python tools/control.py install --skip-frontend --skip-tooling --skip-playwright
+      - name: Validate test configuration
+        run: python tools/control.py config doctor
+      - name: Upgrade empty PostgreSQL database
+        run: python tools/control.py db upgrade
+      - name: Run PostgreSQL integration tests
+        run: python tools/control.py test --suite postgres
+      - name: Verify repository files are unchanged
+        run: git diff --exit-code
+
+  generated-postgres:
+    name: Profiles / web-cloud + postgres
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql+psycopg://postgres:test-password@127.0.0.1:5432/template_test
+      DATABASE_URL_TEST: postgresql+psycopg://postgres:test-password@127.0.0.1:5432/template_test
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test-password
+          POSTGRES_DB: template_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d template_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            tools/requirements.txt
+            backend/requirements.txt
+            backend/requirements-database.txt
+            backend/requirements-postgres.txt
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Generate PostgreSQL profile project
+        run: >-
+          python tools/control.py init
+          --profile web-cloud
+          --with postgres
+          --target-dir .generated/ci-web-cloud-postgres
+      - name: Inspect generated project structure
+        working-directory: .generated/ci-web-cloud-postgres
+        run: python tools/control.py doctor
+      - name: Install generated project dependencies
+        working-directory: .generated/ci-web-cloud-postgres
+        run: python tools/control.py install --skip-playwright
+      - name: Diagnose generated project
+        working-directory: .generated/ci-web-cloud-postgres
+        run: python tools/control.py doctor
+      - name: Upgrade generated project database
+        working-directory: .generated/ci-web-cloud-postgres
+        run: python tools/control.py db upgrade
+      - name: Test generated project
+        working-directory: .generated/ci-web-cloud-postgres
+        run: python tools/control.py test --suite all
+      - name: Build generated web bundle
+        working-directory: .generated/ci-web-cloud-postgres
+        run: python tools/control.py build web
+      - name: Verify repository files are unchanged
+        run: git diff --exit-code

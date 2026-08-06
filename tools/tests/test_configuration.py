@@ -17,8 +17,8 @@ from tools.config import (
     validate_configuration,
 )
 from tools.profiles.model import ProjectProfile
-from tools.profiles.loader import load_catalog
-from tools.inst import install
+from tools.profiles.loader import load_active_profile, load_catalog
+from tools.inst import configuration, install
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT = load_contract(ROOT / "config" / "environment.toml")
@@ -266,16 +266,15 @@ def test_env_example_rendering_follows_features(
     assert all(f"{name}=" not in rendered for name in excluded)
 
 
-def test_master_env_example_matches_declarative_contract() -> None:
-    rendered = render_env_example(
-        CONTRACT,
-        ("frontend", "backend", "tauri", "cloud", "database", "postgres"),
-    )
+def test_active_env_example_matches_declarative_contract() -> None:
+    rendered = render_env_example(CONTRACT, load_active_profile(ROOT).features)
 
     assert (ROOT / ".env.example").read_text(encoding="utf-8") == rendered
 
 
 def test_config_show_masks_database_url(monkeypatch, capsys) -> None:
+    profile = _profile("frontend", "backend", "database", "postgres")
+    monkeypatch.setattr(configuration.profile_runtime, "active_profile", lambda _root: profile)
     monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://app:secret@localhost:5432/app")
 
     assert control.main(["config", "show"]) == 0

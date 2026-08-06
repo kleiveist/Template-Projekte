@@ -223,6 +223,24 @@ flowchart LR
 
 `tools/control.py` is the only public command dispatcher. The interactive console does not duplicate build or test logic; it invokes the same CLI commands in subprocesses and adds descriptions, safe defaults, and confirmations. This keeps interactive actions reproducible in local shells and CI.
 
+GitHub Actions follows the same boundary:
+
+```mermaid
+flowchart LR
+    Actions[GitHub Actions]
+    CLI[Public tools/control.py interface]
+    Tests[Project tests]
+    Builds[Project builds]
+    Generated[Generated profile projects]
+
+    Actions --> CLI
+    CLI --> Tests
+    CLI --> Builds
+    CLI --> Generated
+```
+
+CI orchestrates the same project tooling used by developers locally. Workflow files set up runtimes, caches, temporary services, and job boundaries; they do not reimplement profile, test, migration, or build behavior.
+
 The same CLI also exposes `python tools/control.py init`, which scaffolds a derived project from the declarative profile catalog. Optional capabilities are selected with `--with`, for example `init --profile web-cloud --with postgres`. The active generated project stores its selected optional capabilities and fully resolved features in `project-profile.toml`, and the shared tooling reads that manifest to skip disabled components instead of treating them as missing by default.
 
 The documentation command locates the system `PyGitIndex.py` script and delegates index, README navigation, and backlink generation to it. A narrow post-processing step translates only known non-English empty-state labels inside generated markers. Authored documentation is not automatically rewritten.
@@ -314,3 +332,4 @@ python tools/control.py build desktop
 - [Documentation standard](../README.md)
 - [ATP workflow](../atp/README.md)
 - [Tooling guide](../tools/tooling.md)
+- [Continuous integration](../tools/ci.md)

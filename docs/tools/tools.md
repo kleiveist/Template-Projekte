@@ -6,6 +6,7 @@
 <!-- AUTO-GENERATED:docs-index START -->
 
 ## 📄 Pages
+- 📝 [Continuous Integration](ci.md)
 - 📝 [Tooling Guide](tooling.md)
 
 ## 📁 Tauri

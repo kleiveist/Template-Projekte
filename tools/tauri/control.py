@@ -129,13 +129,19 @@ Use '<command> --help' before an unfamiliar or destructive operation.
     test_parser = tauri_subparsers.add_parser(
         "test",
         help="validate the desktop tooling",
-        description="Check the committed Tauri structure and optionally include doctor and build-plan checks.",
+        description="Check the committed Tauri structure and optionally include doctor, Cargo, and build-plan checks.",
         formatter_class=TauriHelpFormatter,
     )
     test_parser.add_argument("--doctor", action="store_true", help="include Tauri environment diagnostics")
+    test_parser.add_argument("--cargo", action="store_true", help="run cargo check and Rust tests with Cargo.lock")
     test_parser.add_argument("--build-dry-run", action="store_true", help="include a Linux build dry-run")
     test_parser.add_argument("--all", action="store_true", help="include every optional check")
-    test_parser.epilog = "examples:\n  python tools/control.py tauri test\n  python tools/control.py tauri test --all"
+    test_parser.epilog = (
+        "examples:\n"
+        "  python tools/control.py tauri test\n"
+        "  python tools/control.py tauri test --cargo\n"
+        "  python tools/control.py tauri test --all"
+    )
 
     copy_parser = tauri_subparsers.add_parser(
         "copy",

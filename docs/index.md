@@ -24,6 +24,7 @@
 
 ## 📁 Tools
 - 🗂️ [Overview](tools/tools.md)
+- 📝 [Continuous Integration](tools/ci.md)
 - 📝 [Tooling Guide](tools/tooling.md)
 
 ## 📁 USR

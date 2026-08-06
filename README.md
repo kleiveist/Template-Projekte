@@ -23,6 +23,7 @@
 
 ## 📁 Tools
 - 🗂️ [Overview](docs/tools/tools.md)
+- 📝 [Continuous Integration](docs/tools/ci.md)
 - 📝 [Tooling Guide](docs/tools/tooling.md)
 
 ## 📁 USR
@@ -147,6 +148,10 @@ The template uses one environment contract with profile-aware `.env.example` fil
 
 Use `python tools/control.py config show` to inspect masked effective values and `python tools/control.py config doctor` to validate them. See [Runtime Configuration](docs/def/configuration.md) for the variable contract, priority, and security boundaries.
 
+## Continuous integration
+
+Pull requests and pushes to `main` run automated core tests, all five generated project profiles, PostgreSQL integration and Alembic migration checks, Tauri/Rust checks, and production web builds. CI delegates project behavior to the same `tools/control.py` interface used locally and requires no production secrets. See [Continuous Integration](docs/tools/ci.md) for workflows, runtimes, caching, security, and branch protection guidance.
+
 ## Project structure
 
 ```text
@@ -195,5 +200,6 @@ English is the only documentation language for this repository and all projects 
 - [ATP Workflow](docs/atp/README.md)
 - [ATP Template](docs/atp/ATP-TEMPLATE.md)
 - [Tooling Guide](docs/tools/tooling.md)
+- [Continuous Integration](docs/tools/ci.md)
 
 A new or changed feature is complete only when its code, tests, acceptance evidence, and affected documentation are updated together.

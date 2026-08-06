@@ -35,7 +35,7 @@ python tools/control.py install
 python tools/control.py run
 ```
 
-`doctor` checks runtimes, dependencies, the active profile, effective configuration, and configured ports. `install` prepares enabled frontend and backend dependencies without creating or changing `.env`. It also prepares a small `tools/.venv` for shared Python tests when Pytest is not available from the backend virtualenv, and installs Playwright only when E2E tests are configured. `run` starts the enabled local services. In foreground mode, `Ctrl+C` stops those processes.
+`doctor` checks runtimes, dependencies, the active profile, effective configuration, and configured ports. `install` prepares enabled frontend and backend dependencies without creating or changing `.env`. Frontend installation uses `npm ci` when `package-lock.json` exists. The command also prepares a small `tools/.venv` for shared Python tests when Pytest is not available from the backend virtualenv, and installs Playwright only when E2E tests are configured. `run` starts the enabled local services. In foreground mode, `Ctrl+C` stops those processes.
 
 ## Command map
 
@@ -167,11 +167,12 @@ python tools/control.py test --suite all --report
 | `frontend` | Vitest tests |
 | `e2e` | Playwright tests when configured |
 | `tools` | Project CLI and Tauri helper tests |
+| `tauri` | Tauri structure, `cargo check --locked`, and Rust tests |
 | `all` | Every configured suite |
 
 Reports are written under `.report/`. `python tools/control.py test --report done` removes only that generated report directory.
 
-When the active project profile disables the backend or desktop layer, the affected suites are skipped or downgraded to informative warnings instead of failing because that layer is intentionally absent.
+When the active project profile disables a feature, its affected suites report `SKIP` and return success. Missing tests or source files for an enabled feature report `FAIL`. PostgreSQL reports `SKIP` when `DATABASE_URL_TEST` is absent, but a configured invalid or unreachable test database reports `FAIL`.
 
 ## Database diagnostics and migrations
 
@@ -272,7 +273,7 @@ Do not manually edit blocks between `AUTO-GENERATED` markers.
 5. For indexing problems, run `python tools/control.py docs index --dry-run --script <path>`.
 6. Rerun only the affected test suite, then run `--suite all` before hand-off.
 
-Missing optional suites are reported as `WARN` during `test --suite all`. Missing optional accelerators such as `uv` do not reduce the Doctor status. A `FAIL` means the selected workflow did not complete successfully.
+Missing optional suites are reported as `SKIP` during `test --suite all`. Missing optional accelerators such as `uv` do not reduce the Doctor status. A `FAIL` means the selected workflow did not complete successfully.
 
 ## Verification
 
@@ -297,4 +298,5 @@ python tools/control.py build desktop --dry-run --no-clean
 - [Database Feature](../def/database-feature.md)
 - [Runtime Configuration](../def/configuration.md)
 - [Project Profiles](../def/project-profiles.md)
+- [Continuous Integration](ci.md)
 - [ATP Workflow](../atp/README.md)

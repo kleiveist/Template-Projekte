@@ -382,7 +382,7 @@ More desktop commands:
     test_parser.set_defaults(test_parser=test_parser)
     test_parser.add_argument(
         "--suite",
-        choices=["api", "schema", "database", "postgres", "frontend", "e2e", "tools", "all"],
+        choices=["api", "schema", "database", "postgres", "frontend", "e2e", "tools", "tauri", "all"],
         default=None,
         help="suite to run; use all for the complete configured set",
     )
@@ -399,12 +399,13 @@ More desktop commands:
         test_parser,
         """suites:
   api       FastAPI tests
-  schema    shared JSON Schema examples (skipped until configured)
+  schema    shared JSON Schema examples
   database  SQLAlchemy and session unit tests
   postgres  PostgreSQL integration tests (skipped without DATABASE_URL_TEST)
   frontend  Vitest tests
   e2e       Playwright tests (skipped until configured)
   tools     restored Python tooling tests
+  tauri     Tauri structure, cargo check, and Rust tests
   all       every configured suite
 
 examples:

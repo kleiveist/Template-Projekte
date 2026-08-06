@@ -12,7 +12,7 @@ import pytest
 
 from tools import control
 from tools.profiles import runtime as profile_runtime
-from tools.tauri import common, doctor, paths, run
+from tools.tauri import common, doctor, paths, run, test as tauri_test
 from tools.tauri.build import appimage, installappimage, windows_portable
 from tools.tauri.linux import install as linux_install
 from tools.tauri.linux import install_arch
@@ -34,6 +34,7 @@ def test_tauri_parser_recognizes_subcommands() -> None:
         ["tauri", "build", "--target", "windows-portable", "--dry-run", "--bundles", "deb,rpm"],
         ["tauri", "build", "--appimage", "--dry-run", "--skip-appimage-preflight"],
         ["tauri", "test", "--all"],
+        ["tauri", "test", "--cargo"],
         ["tauri", "copy", "--dry-run", "--target-dir", ".dist/desktop"],
     ]
 
@@ -118,6 +119,35 @@ def test_tauri_install_dry_run_skips_mutating_commands(monkeypatch) -> None:
 
     assert code == 0
     assert commands
+
+
+def test_tauri_npm_install_uses_package_lock(monkeypatch) -> None:
+    monkeypatch.setattr(common, "package_manager", lambda: "npm")
+    monkeypatch.setattr(common.shutil, "which", lambda name: "/usr/bin/npm" if name == "npm" else None)
+
+    assert common.package_manager_install_command() == [
+        "/usr/bin/npm",
+        "ci",
+        "--no-audit",
+        "--no-fund",
+    ]
+
+
+def test_tauri_cargo_checks_use_locked_dependencies(monkeypatch) -> None:
+    commands: list[list[str]] = []
+
+    monkeypatch.setattr(tauri_test.shutil, "which", lambda name: "/usr/bin/cargo" if name == "cargo" else None)
+    monkeypatch.setattr(
+        common,
+        "run_command",
+        lambda command, **kwargs: commands.append(command)
+        or common.CommandResult(command=command, cwd=paths.ROOT, returncode=0),
+    )
+
+    assert tauri_test._run_cargo_checks() == 0
+    assert [command[1] for command in commands] == ["check", "test"]
+    assert all("--locked" in command for command in commands)
+    assert all("--manifest-path" in command for command in commands)
 
 
 def test_tauri_arch_install_uses_noninteractive_pacman(monkeypatch) -> None:

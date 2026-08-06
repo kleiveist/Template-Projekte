@@ -54,14 +54,48 @@ def test_all_suite_includes_frontend_npm_test() -> None:
     from tools.inst import run_test
 
     assert run_test._expand_suites("all") == [
+        "tools",
         "schema",
         "api",
         "database",
         "postgres",
         "frontend",
         "e2e",
-        "tools",
+        "tauri",
     ]
+
+
+def test_disabled_optional_suites_report_skip(monkeypatch) -> None:
+    from tools.inst import run_test
+
+    monkeypatch.setattr(run_test.profile_runtime, "feature_enabled", lambda _feature, _root: False)
+
+    assert run_test._run_api_suite().status == "SKIP"
+    assert run_test._run_database_suite().status == "SKIP"
+    assert run_test._run_postgres_suite().status == "SKIP"
+    assert run_test._run_tauri_suite().status == "SKIP"
+
+
+def test_configured_postgres_suite_invokes_integration_tests(monkeypatch, tmp_path) -> None:
+    from tools.inst import run_test
+
+    tests_dir = tmp_path / "backend" / "tests" / "integration"
+    tests_dir.mkdir(parents=True)
+    monkeypatch.setattr(run_test, "ROOT", tmp_path)
+    monkeypatch.setattr(run_test.profile_runtime, "feature_enabled", lambda feature, _root: feature == "postgres")
+    monkeypatch.setenv("DATABASE_URL_TEST", "postgresql+psycopg://test:test@127.0.0.1:5432/test")
+    monkeypatch.setattr(run_test, "_backend_python", lambda: tmp_path / "python")
+    monkeypatch.setattr(
+        run_test,
+        "_run",
+        lambda command, cwd=None: subprocess.CompletedProcess(command, 0, stdout="1 passed", stderr=""),
+    )
+
+    result = run_test._run_postgres_suite()
+
+    assert result.status == "OK"
+    assert result.command is not None
+    assert result.command[-1] == str(tests_dir)
 
 
 def test_e2e_bootstrap_runs_cleanup_before_service_start(monkeypatch) -> None:
@@ -86,8 +120,9 @@ def test_e2e_bootstrap_runs_cleanup_before_service_start(monkeypatch) -> None:
     assert started_by_runner is True
     assert bootstrap.status == "OK"
     assert bootstrap.message == "services started by test runner"
+    backend_port = 8000 if run_test.profile_runtime.feature_enabled("backend", run_test.ROOT) else 0
     assert calls == [
-        ("cleanup", (5173, 8000, False)),
+        ("cleanup", (5173, backend_port, False)),
         ("run", [run_test.sys.executable, str(run_test.ROOT / "tools" / "control.py"), "run", "--detach"]),
     ]
 

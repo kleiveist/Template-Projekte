@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shlex
 import shutil
 import subprocess
@@ -89,7 +90,7 @@ def _run(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess
 
 def _expand_suites(value: str) -> list[str]:
     if value == "all":
-        return ["schema", "api", "database", "postgres", "frontend", "e2e", "tools"]
+        return ["tools", "schema", "api", "database", "postgres", "frontend", "e2e", "tauri"]
     return [value]
 
 
@@ -113,7 +114,7 @@ def _tooling_python() -> Path:
 def _needs_backend_runtime(selected_suites: list[str]) -> bool:
     if not profile_runtime.feature_enabled("backend", ROOT):
         return False
-    return bool({"schema", "api", "database", "postgres"}.intersection(selected_suites))
+    return bool({"api", "database", "postgres"}.intersection(selected_suites))
 
 
 def _backend_runtime_imports(selected_suites: list[str]) -> str:
@@ -248,8 +249,8 @@ def _run_schema_suite() -> SuiteResult:
     if not schema_path.exists() or not valid_path.exists() or not invalid_path.exists():
         return SuiteResult(
             "schema",
-            "WARN",
-            "schema files missing; suite skipped",
+            "FAIL",
+            "required schema fixtures are missing",
             time.monotonic() - started,
             detail=detail,
         )
@@ -291,20 +292,12 @@ def _run_schema_suite() -> SuiteResult:
             detail=detail,
         )
     except ImportError:
-        if not profile_runtime.feature_enabled("backend", ROOT):
+        schema_python = _backend_python() if profile_runtime.feature_enabled("backend", ROOT) else _tooling_python()
+        if not schema_python.exists():
             return SuiteResult(
                 "schema",
-                "WARN",
-                "jsonschema package missing in current runtime; suite skipped",
-                time.monotonic() - started,
-                detail=detail,
-            )
-        backend_python = _backend_python()
-        if not backend_python.exists():
-            return SuiteResult(
-                "schema",
-                "WARN",
-                "jsonschema package missing in current runtime and backend venv",
+                "FAIL",
+                "jsonschema runtime is missing; run 'python tools/control.py install'",
                 time.monotonic() - started,
                 detail=detail,
             )
@@ -319,7 +312,7 @@ def _run_schema_suite() -> SuiteResult:
             "assert not list(v.iter_errors(valid)); "
             "assert list(v.iter_errors(invalid)); "
         )
-        command = [str(backend_python), "-c", script]
+        command = [str(schema_python), "-c", script]
         completed = _run(command, cwd=ROOT)
         result = _result_from_completed(
             name="schema",
@@ -327,8 +320,8 @@ def _run_schema_suite() -> SuiteResult:
             started=started,
             command=command,
             cwd=ROOT,
-            ok_message="schema examples validated via backend venv",
-            fail_message="schema validation failed via backend venv",
+            ok_message="schema examples validated via project runtime",
+            fail_message="schema validation failed via project runtime",
         )
         result.detail = detail
         return result
@@ -337,11 +330,11 @@ def _run_schema_suite() -> SuiteResult:
 def _run_api_suite() -> SuiteResult:
     started = time.monotonic()
     if not profile_runtime.feature_enabled("backend", ROOT):
-        return SuiteResult("api", "WARN", "backend feature disabled; suite skipped", time.monotonic() - started)
+        return SuiteResult("api", "SKIP", "backend feature disabled", time.monotonic() - started)
 
     api_tests = ROOT / "backend" / "tests" / "api"
     if not api_tests.exists():
-        return SuiteResult("api", "WARN", "backend/tests/api missing; suite skipped", time.monotonic() - started)
+        return SuiteResult("api", "FAIL", "backend/tests/api missing", time.monotonic() - started)
 
     backend_python = _backend_python()
     if not backend_python.exists():
@@ -368,8 +361,8 @@ def _run_database_suite() -> SuiteResult:
     if not profile_runtime.feature_enabled("database", ROOT):
         return SuiteResult(
             "database",
-            "WARN",
-            "database feature disabled; suite skipped",
+            "SKIP",
+            "database feature disabled",
             time.monotonic() - started,
         )
 
@@ -394,8 +387,16 @@ def _run_postgres_suite() -> SuiteResult:
     if not profile_runtime.feature_enabled("postgres", ROOT):
         return SuiteResult(
             "postgres",
-            "WARN",
-            "postgres feature disabled; suite skipped",
+            "SKIP",
+            "postgres feature disabled",
+            time.monotonic() - started,
+        )
+
+    if not os.environ.get("DATABASE_URL_TEST", "").strip():
+        return SuiteResult(
+            "postgres",
+            "SKIP",
+            "DATABASE_URL_TEST is not configured",
             time.monotonic() - started,
         )
 
@@ -417,13 +418,16 @@ def _run_postgres_suite() -> SuiteResult:
 
 def _run_frontend_suite() -> SuiteResult:
     started = time.monotonic()
+    if not profile_runtime.feature_enabled("frontend", ROOT):
+        return SuiteResult("frontend", "SKIP", "frontend feature disabled", time.monotonic() - started)
+
     frontend_dir = ROOT / "frontend"
     package_json = frontend_dir / "package.json"
     if not package_json.exists():
         return SuiteResult(
             "frontend",
-            "WARN",
-            "frontend/package.json missing; suite skipped",
+            "FAIL",
+            "frontend/package.json missing",
             time.monotonic() - started,
         )
 
@@ -448,7 +452,7 @@ def _run_tools_suite() -> SuiteResult:
     started = time.monotonic()
     tests_dir = ROOT / "tools" / "tests"
     if not tests_dir.exists():
-        return SuiteResult("tools", "WARN", "tools/tests missing; suite skipped", time.monotonic() - started)
+        return SuiteResult("tools", "FAIL", "tools/tests missing", time.monotonic() - started)
 
     python = str(_tooling_python())
     command = [python, "-m", "pytest", "-q", str(tests_dir)]
@@ -468,7 +472,7 @@ def _run_e2e_suite() -> SuiteResult:
     started = time.monotonic()
     e2e_tests = ROOT / "frontend" / "tests" / "e2e"
     if not e2e_tests.exists():
-        return SuiteResult("e2e", "WARN", "frontend/tests/e2e missing; suite skipped", time.monotonic() - started)
+        return SuiteResult("e2e", "SKIP", "Playwright E2E is not configured", time.monotonic() - started)
 
     npx = shutil.which("npx")
     if npx is None:
@@ -484,6 +488,30 @@ def _run_e2e_suite() -> SuiteResult:
         cwd=ROOT / "frontend",
         ok_message="playwright e2e suite passed",
         fail_message="playwright e2e suite failed",
+    )
+
+
+def _run_tauri_suite() -> SuiteResult:
+    started = time.monotonic()
+    if not profile_runtime.feature_enabled("tauri", ROOT):
+        return SuiteResult("tauri", "SKIP", "tauri feature disabled", time.monotonic() - started)
+
+    command = [
+        sys.executable,
+        str(ROOT / "tools" / "control.py"),
+        "tauri",
+        "test",
+        "--cargo",
+    ]
+    completed = _run(command, cwd=ROOT)
+    return _result_from_completed(
+        name="tauri",
+        completed=completed,
+        started=started,
+        command=command,
+        cwd=ROOT,
+        ok_message="Tauri structure, cargo check, and Rust tests passed",
+        fail_message="Tauri or Rust checks failed",
     )
 
 
@@ -597,6 +625,7 @@ def _print_suite_guide() -> None:
     print("  python tools/control.py test --suite frontend # Frontend unit tests with npm test")
     print("  python tools/control.py test --suite e2e      # Frontend E2E with Playwright")
     print("  python tools/control.py test --suite tools    # Restored tooling tests")
+    print("  python tools/control.py test --suite tauri    # Tauri structure, cargo check, and Rust tests")
     print("  python tools/control.py test --suite all      # Complete configured test run")
     print("")
     print("Useful options:")
@@ -748,6 +777,8 @@ def main(args: argparse.Namespace) -> int:
                     results.append(_run_frontend_suite())
                 elif suite == "tools":
                     results.append(_run_tools_suite())
+                elif suite == "tauri":
+                    results.append(_run_tauri_suite())
         else:
             for suite in selected_suites:
                 if suite == "schema":
@@ -764,6 +795,8 @@ def main(args: argparse.Namespace) -> int:
                     results.append(_run_e2e_suite())
                 elif suite == "tools":
                     results.append(_run_tools_suite())
+                elif suite == "tauri":
+                    results.append(_run_tauri_suite())
     finally:
         _stop_services_if_started(started_by_runner)
 

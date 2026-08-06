@@ -25,6 +25,6 @@ def test_postgres_connection_when_test_database_is_available() -> None:
             with engine.connect() as connection:
                 assert connection.scalar(text("SELECT 1")) == 1
         except SQLAlchemyError as exc:
-            pytest.skip(f"PostgreSQL test database is unavailable: {exc.__class__.__name__}")
+            pytest.fail(f"Configured PostgreSQL test database is unavailable: {exc.__class__.__name__}")
     finally:
         engine.dispose()

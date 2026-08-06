@@ -5,6 +5,7 @@ from typing import TextIO
 
 _EMOJI = {
     "OK": "✅",
+    "SKIP": "⏭️",
     "WARN": "⚠️",
     "FAIL": "❌",
     "INFO": "ℹ️",

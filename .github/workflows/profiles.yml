@@ -1,0 +1,101 @@
+name: Profile Matrix
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  generated-project:
+    name: Profiles / ${{ matrix.profile }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      # Report every broken preset in one run instead of hiding failures behind the first result.
+      fail-fast: false
+      matrix:
+        include:
+          - profile: web-only
+            desktop: false
+          - profile: web-cloud
+            desktop: false
+          - profile: desktop-local
+            desktop: true
+          - profile: desktop-cloud
+            desktop: true
+          - profile: full-platform
+            desktop: true
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            tools/requirements.txt
+            backend/requirements.txt
+            backend/requirements-database.txt
+            backend/requirements-postgres.txt
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Set up Rust stable
+        if: matrix.desktop
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+      - name: Cache Cargo dependencies
+        if: matrix.desktop
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            .generated/ci-${{ matrix.profile }}/src-tauri/target
+          key: ${{ runner.os }}-cargo-profile-${{ matrix.profile }}-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-profile-${{ matrix.profile }}-
+            ${{ runner.os }}-cargo-
+      - name: Generate profile project
+        run: >-
+          python tools/control.py init
+          --profile ${{ matrix.profile }}
+          --target-dir .generated/ci-${{ matrix.profile }}
+      - name: Inspect generated project structure
+        working-directory: .generated/ci-${{ matrix.profile }}
+        run: python tools/control.py doctor
+      - name: Install generated project dependencies
+        working-directory: .generated/ci-${{ matrix.profile }}
+        run: python tools/control.py install --skip-playwright
+      - name: Install generated Tauri system dependencies
+        if: matrix.desktop
+        working-directory: .generated/ci-${{ matrix.profile }}
+        run: python tools/control.py tauri install --skip-rust --skip-node --skip-frontend
+      - name: Diagnose generated project
+        working-directory: .generated/ci-${{ matrix.profile }}
+        run: python tools/control.py doctor
+      - name: Diagnose generated Tauri project
+        if: matrix.desktop
+        working-directory: .generated/ci-${{ matrix.profile }}
+        run: python tools/control.py tauri doctor
+      - name: Test generated project
+        working-directory: .generated/ci-${{ matrix.profile }}
+        run: python tools/control.py test --suite all
+      - name: Build generated web bundle
+        working-directory: .generated/ci-${{ matrix.profile }}
+        run: python tools/control.py build web
+      - name: Verify repository files are unchanged
+        run: git diff --exit-code
