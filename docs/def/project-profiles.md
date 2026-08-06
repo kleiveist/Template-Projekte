@@ -101,6 +101,8 @@ Invalid combinations are rejected with explicit errors. Example:
 Feature 'tauri' requires feature 'frontend'.
 ```
 
+Catalog paths must be relative, use forward slashes, stay inside the master repository, and avoid `.` or `..` segments. Unknown dependencies and dependency cycles are rejected before generation.
+
 ## Generator model
 
 `python tools/control.py init` resolves a profile, builds a scaffold plan from core paths plus enabled feature paths, then writes a derived project into `.generated/<profile-id>` by default or an explicit `--target-dir`.
@@ -112,15 +114,20 @@ The generated project receives:
 - the copied `profiles/` definitions for future reference; and
 - a generated `project-profile.toml` manifest.
 
+For profiles without `tauri`, the generator also removes the Tauri npm script and CLI dependency from the copied frontend package metadata and lockfile. This keeps disabled desktop tooling out of web dependency installation without maintaining a second frontend template.
+
 The generator does not clone separate template repositories. It also does not mutate the master template root.
+
+Master repository tests validate that every catalog path exists. Each generator run validates the selected scaffold plan before writing files. A derived project loads the same catalog without requiring paths owned by disabled features, then validates its active feature selection from `project-profile.toml`. This distinction lets reduced projects keep shared tooling while intentionally omitting inactive layers.
 
 ## Tooling behavior
 
 The shared tooling reads `project-profile.toml` and adjusts behavior:
 
-- `install` skips disabled runtime layers;
+- `install` skips disabled runtime layers and prepares `tools/.venv` when no backend virtualenv provides Pytest;
 - `doctor` reports disabled layers as intentionally inactive;
 - `run` starts only enabled services;
+- `stop` inspects only ports owned by enabled services;
 - `build desktop` and `tauri ...` reject disabled desktop workflows cleanly; and
 - frontend starter code uses a generated profile module to hide the backend status check when the backend feature is disabled.
 

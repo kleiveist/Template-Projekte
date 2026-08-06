@@ -14,6 +14,7 @@ class FeatureDefinition:
 
 @dataclass(frozen=True, slots=True)
 class ProfileDefinition:
+    schema_version: int
     id: str
     name: str
     description: str

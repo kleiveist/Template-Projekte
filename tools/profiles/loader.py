@@ -10,6 +10,7 @@ from tools.profiles.validator import ProfileLookupError, validate_catalog, valid
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PROFILES_DIR = ROOT / "profiles"
 DEFAULT_PROJECT_PROFILE = ROOT / "project-profile.toml"
+SUPPORTED_SCHEMA_VERSION = 1
 
 
 def _read_toml(path: Path) -> dict[str, Any]:
@@ -35,8 +36,20 @@ def _require_str(payload: dict[str, Any], key: str, *, context: str) -> str:
 
 def _optional_int(payload: dict[str, Any], key: str, *, default: int) -> int:
     value = payload.get(key, default)
-    if not isinstance(value, int):
+    if not isinstance(value, int) or isinstance(value, bool):
         raise ValueError(f"'{key}' must be an integer when present.")
+    return value
+
+
+def _schema_version(payload: dict[str, Any], *, context: str) -> int:
+    value = payload.get("schema_version", SUPPORTED_SCHEMA_VERSION)
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise ValueError(f"{context} must define an integer 'schema_version'.")
+    if value != SUPPORTED_SCHEMA_VERSION:
+        raise ValueError(
+            f"{context} uses unsupported schema version {value}; "
+            f"this tooling supports version {SUPPORTED_SCHEMA_VERSION}."
+        )
     return value
 
 
@@ -73,9 +86,7 @@ def load_catalog(
     features_path = directory / "features.toml"
     payload = _read_toml(features_path)
 
-    schema_version = payload.get("schema_version", 1)
-    if not isinstance(schema_version, int):
-        raise ValueError(f"{features_path} must define an integer 'schema_version'.")
+    schema_version = _schema_version(payload, context=str(features_path))
 
     core_section = payload.get("core")
     if not isinstance(core_section, dict):
@@ -119,15 +130,14 @@ def load_catalog(
 
 def _load_profile_definition(path: Path) -> ProfileDefinition:
     payload = _read_toml(path)
-    schema_version = payload.get("schema_version", 1)
-    if not isinstance(schema_version, int):
-        raise ValueError(f"{path} must define an integer 'schema_version'.")
+    schema_version = _schema_version(payload, context=str(path))
 
     profile_id = _require_str(payload, "id", context=str(path))
     if path.stem != profile_id:
         raise ValueError(f"{path} must use the same file name and profile id ('{path.stem}' != '{profile_id}').")
 
     return ProfileDefinition(
+        schema_version=schema_version,
         id=profile_id,
         order=_optional_int(payload, "order", default=1000),
         name=_require_str(payload, "name", context=str(path)),
@@ -159,17 +169,22 @@ def load_project_profile(
 ) -> ProjectProfile:
     path = (profile_path or DEFAULT_PROJECT_PROFILE).resolve()
     payload = _read_toml(path)
-    schema_version = payload.get("schema_version", 1)
-    if not isinstance(schema_version, int):
-        raise ValueError(f"{path} must define an integer 'schema_version'.")
+    schema_version = _schema_version(payload, context=str(path))
 
     features = _require_str_list(payload.get("features"), context=f"{path}: features")
+    profile_id = _require_str(payload, "id", context=str(path))
     if catalog is not None:
         features = validate_feature_selection(features, catalog)
+        declared = resolve_profile(catalog, profile_id)
+        if features != declared.features:
+            raise ValueError(
+                f"{path} features do not match declared profile '{profile_id}': "
+                f"expected {list(declared.features)}, got {list(features)}."
+            )
 
     return ProjectProfile(
         schema_version=schema_version,
-        profile_id=_require_str(payload, "id", context=str(path)),
+        profile_id=profile_id,
         name=_require_str(payload, "name", context=str(path)),
         description=_require_str(payload, "description", context=str(path)),
         features=features,
@@ -182,7 +197,9 @@ def load_active_profile(project_root: Path | None = None) -> ProjectProfile:
     if not profiles_dir.exists():
         return _infer_profile_from_scaffold(root)
 
-    catalog = load_catalog(profiles_dir)
+    # A derived project retains the complete catalog for reference, but only
+    # enabled feature paths are expected to exist in that scaffold.
+    catalog = load_catalog(profiles_dir, validate_paths=False)
     profile_path = root / "project-profile.toml"
     if profile_path.exists():
         return load_project_profile(profile_path, catalog=catalog)

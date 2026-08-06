@@ -191,6 +191,32 @@ def _check_backend_runtime() -> CheckResult:
     )
 
 
+def _check_tooling_runtime() -> CheckResult:
+    candidates = [
+        ROOT / "tools" / ".venv" / "Scripts" / "python.exe",
+        ROOT / "tools" / ".venv" / "bin" / "python",
+        _backend_python(),
+        Path(sys.executable),
+    ]
+    python = next((candidate for candidate in candidates if candidate.exists()), None)
+    if python is None:
+        return CheckResult("tooling-runtime", "WARN", "Python runtime for tooling tests not found")
+
+    check = subprocess.run(
+        [str(python), "-c", "import pytest"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if check.returncode == 0:
+        return CheckResult("tooling-runtime", "OK", f"pytest importable via {python}")
+    return CheckResult(
+        "tooling-runtime",
+        "WARN",
+        "pytest unavailable. Action: run 'python tools/control.py install'.",
+    )
+
+
 def _check_playwright_browser() -> CheckResult:
     profile = profile_runtime.active_profile(ROOT)
     if not profile.has_feature("frontend"):
@@ -264,6 +290,7 @@ def run_checks() -> tuple[list[CheckResult], str]:
         checks.append(_check_port(8000))
     checks.extend(_check_project_structure())
     checks.append(_check_backend_runtime())
+    checks.append(_check_tooling_runtime())
     checks.append(_check_playwright_browser())
 
     overall = "OK"

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import json
+import os
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from tools.profiles.loader import resolve_profile
 from tools.profiles.model import ProfileCatalog, ProjectProfile
@@ -75,24 +78,25 @@ def scaffold_project(plan: ScaffoldPlan, *, dry_run: bool = False) -> None:
 
     _write_project_profile(plan.target_dir, plan.profile)
     _write_frontend_profile_module(plan.target_dir, plan.profile)
+    _configure_frontend_dependencies(plan.target_dir, plan.profile)
 
 
 def render_project_profile(profile: ProjectProfile) -> str:
-    feature_lines = ", ".join(f'"{feature}"' for feature in profile.features)
+    feature_lines = ", ".join(_quoted(value) for value in profile.features)
     return (
         f"schema_version = {profile.schema_version}\n"
-        f'id = "{profile.profile_id}"\n'
-        f'name = "{profile.name}"\n'
-        f'description = "{profile.description}"\n'
+        f"id = {_quoted(profile.profile_id)}\n"
+        f"name = {_quoted(profile.name)}\n"
+        f"description = {_quoted(profile.description)}\n"
         f"features = [{feature_lines}]\n"
     )
 
 
 def render_frontend_profile_module(profile: ProjectProfile) -> str:
-    feature_lines = ", ".join(f'"{feature}"' for feature in profile.features)
+    feature_lines = ", ".join(_quoted(value) for value in profile.features)
     return (
-        f'export const activeProfileId = "{profile.profile_id}";\n'
-        f'export const activeProfileName = "{profile.name}";\n'
+        f"export const activeProfileId = {_quoted(profile.profile_id)};\n"
+        f"export const activeProfileName = {_quoted(profile.name)};\n"
         f"export const enabledFeatures = [{feature_lines}] as const;\n"
         f"export type ProjectFeature = (typeof enabledFeatures)[number];\n\n"
         "const featureSet = new Set<string>(enabledFeatures);\n\n"
@@ -100,6 +104,11 @@ def render_frontend_profile_module(profile: ProjectProfile) -> str:
         "  return featureSet.has(feature);\n"
         "}\n"
     )
+
+
+def _quoted(value: str) -> str:
+    # JSON string syntax is valid for TOML basic strings and TypeScript literals.
+    return json.dumps(value, ensure_ascii=False)
 
 
 def _ordered_relative_paths(catalog: ProfileCatalog, profile: ProjectProfile) -> tuple[Path, ...]:
@@ -123,9 +132,35 @@ def _ordered_relative_paths(catalog: ProfileCatalog, profile: ProjectProfile) ->
 
 
 def _validate_sources(source_paths: tuple[Path, ...], project_root: Path) -> None:
+    outside = [path for path in source_paths if not path.resolve().is_relative_to(project_root)]
+    if outside:
+        raise GenerationError(f"Scaffold source path resolves outside the template repository: {outside[0]}.")
+
     missing = [path.relative_to(project_root).as_posix() for path in source_paths if not path.exists()]
     if missing:
         raise GenerationError(f"Scaffold source path(s) are missing: {', '.join(missing)}.")
+
+    for source in source_paths:
+        if not source.is_dir():
+            continue
+        for directory, dirnames, filenames in os.walk(source, topdown=True, followlinks=False):
+            parent = Path(directory)
+            dirnames[:] = [name for name in dirnames if not _is_ignored_name(name)]
+            for name in (*dirnames, *filenames):
+                if _is_ignored_name(name):
+                    continue
+                candidate = parent / name
+                if candidate.is_symlink():
+                    _validate_symlink(candidate, project_root)
+
+
+def _validate_symlink(path: Path, project_root: Path) -> None:
+    try:
+        link_target = path.resolve(strict=True)
+    except OSError as exc:
+        raise GenerationError(f"Scaffold source contains a broken symbolic link: {path}.") from exc
+    if not link_target.is_relative_to(project_root):
+        raise GenerationError(f"Scaffold source symbolic link points outside the template repository: {path}.")
 
 
 def _validate_target(project_root: Path, target_dir: Path) -> None:
@@ -145,11 +180,11 @@ def _validate_target(project_root: Path, target_dir: Path) -> None:
 
 
 def _ignore_transient_content(_directory: str, names: list[str]) -> list[str]:
-    ignored: list[str] = []
-    for name in names:
-        if name in IGNORED_NAMES or name.endswith((".pyc", ".pyo")):
-            ignored.append(name)
-    return ignored
+    return [name for name in names if _is_ignored_name(name)]
+
+
+def _is_ignored_name(name: str) -> bool:
+    return name in IGNORED_NAMES or name.endswith((".pyc", ".pyo"))
 
 
 def _write_project_profile(target_dir: Path, profile: ProjectProfile) -> None:
@@ -163,3 +198,55 @@ def _write_frontend_profile_module(target_dir: Path, profile: ProjectProfile) ->
         return
     module_path = frontend_dir / "project-profile.ts"
     module_path.write_text(render_frontend_profile_module(profile), encoding="utf-8", newline="\n")
+
+
+def _configure_frontend_dependencies(target_dir: Path, profile: ProjectProfile) -> None:
+    if profile.has_feature("tauri"):
+        return
+
+    package_path = target_dir / "frontend" / "package.json"
+    if not package_path.exists():
+        return
+
+    package = _read_json_object(package_path)
+    scripts = package.get("scripts")
+    if isinstance(scripts, dict):
+        scripts.pop("tauri", None)
+    dev_dependencies = package.get("devDependencies")
+    if isinstance(dev_dependencies, dict):
+        dev_dependencies.pop("@tauri-apps/cli", None)
+    _write_json(package_path, package)
+
+    lock_path = target_dir / "frontend" / "package-lock.json"
+    if not lock_path.exists():
+        return
+
+    lock = _read_json_object(lock_path)
+    packages = lock.get("packages")
+    if isinstance(packages, dict):
+        root_package = packages.get("")
+        if isinstance(root_package, dict):
+            root_dev_dependencies = root_package.get("devDependencies")
+            if isinstance(root_dev_dependencies, dict):
+                root_dev_dependencies.pop("@tauri-apps/cli", None)
+        for key in list(packages):
+            if key == "node_modules/@tauri-apps/cli" or key.startswith("node_modules/@tauri-apps/cli-"):
+                del packages[key]
+    dependencies = lock.get("dependencies")
+    if isinstance(dependencies, dict):
+        dependencies.pop("@tauri-apps/cli", None)
+    _write_json(lock_path, lock)
+
+
+def _read_json_object(path: Path) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise GenerationError(f"Could not read generated JSON file {path}: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise GenerationError(f"Generated JSON file must contain an object: {path}")
+    return payload
+
+
+def _write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")

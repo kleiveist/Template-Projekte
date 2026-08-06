@@ -35,7 +35,7 @@ python tools/control.py install
 python tools/control.py run
 ```
 
-`doctor` checks runtimes, dependencies, project structure, and ports. `install` prepares the frontend and backend; it installs Playwright only when E2E tests are configured. `run` starts the enabled local services. In foreground mode, `Ctrl+C` stops those processes.
+`doctor` checks runtimes, dependencies, project structure, and ports. `install` prepares enabled frontend and backend dependencies. It also prepares a small `tools/.venv` for shared Python tests when Pytest is not available from the backend virtualenv, and installs Playwright only when E2E tests are configured. `run` starts the enabled local services. In foreground mode, `Ctrl+C` stops those processes.
 
 ## Command map
 
@@ -109,7 +109,7 @@ The console delegates to the same `tools/control.py` commands documented here. I
 ## Start and stop development services
 
 ```sh
-# Foreground; Ctrl+C stops both services
+# Foreground; Ctrl+C stops all enabled services
 python tools/control.py run
 
 # Background; PID and log files are stored under tools/.runtime
@@ -121,7 +121,7 @@ python tools/control.py stop
 
 Use `--frontend-port` and `--backend-port` for non-default ports. Run `python tools/control.py run --help` for every option.
 
-`run` starts only the services enabled by `project-profile.toml`. For example, `web-only` starts the frontend only, while `full-platform` starts frontend and backend together.
+`run` starts only the services enabled by `project-profile.toml`. For example, `web-only` starts the frontend only, while `full-platform` starts frontend and backend together. `stop` likewise inspects only the ports belonging to enabled services unless it is stopping processes already recorded by a detached run.
 
 ## Tests and reports
 

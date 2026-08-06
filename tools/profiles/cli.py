@@ -1,19 +1,22 @@
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 
 from tools import logger
-from tools.profiles.generator import GenerationError, build_scaffold_plan, scaffold_project
+from tools.profiles.generator import GenerationError, ScaffoldPlan, build_scaffold_plan, scaffold_project
 from tools.profiles.loader import load_catalog
 from tools.profiles.model import ProfileCatalog, ProfileDefinition
-from tools.profiles.validator import CatalogValidationError, ProfileError, ProfileLookupError
+from tools.profiles.validator import CatalogValidationError, ProfileLookupError
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def main(args) -> int:
+def main(args: argparse.Namespace) -> int:
     try:
-        catalog = load_catalog(ROOT / "profiles")
+        # Derived projects retain presets whose source modules may be absent.
+        # The selected plan validates its own source paths before generation.
+        catalog = load_catalog(ROOT / "profiles", validate_paths=False)
         profile = _resolve_profile_choice(catalog, getattr(args, "profile", None))
         target_dir = _resolve_target_dir(getattr(args, "target_dir", None), profile.id)
         plan = build_scaffold_plan(
@@ -30,7 +33,11 @@ def main(args) -> int:
         return 1
 
     _print_plan(plan)
-    scaffold_project(plan, dry_run=bool(getattr(args, "dry_run", False)))
+    try:
+        scaffold_project(plan, dry_run=bool(getattr(args, "dry_run", False)))
+    except (GenerationError, OSError) as exc:
+        logger.fail(str(exc))
+        return 1
 
     if getattr(args, "dry_run", False):
         logger.ok("Init dry-run completed; no files were written")
@@ -89,7 +96,7 @@ def _resolve_target_dir(explicit_target: str | None, profile_id: str) -> Path:
     return ROOT / ".generated" / profile_id
 
 
-def _print_plan(plan) -> None:
+def _print_plan(plan: ScaffoldPlan) -> None:
     logger.info(f"Profile: {plan.profile.name} ({plan.profile.profile_id})")
     logger.info(f"Description: {plan.profile.description}")
     logger.info(f"Enabled features: {', '.join(plan.profile.features)}")

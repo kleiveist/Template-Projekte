@@ -101,6 +101,17 @@ def _backend_python() -> Path:
     return windows_python if windows_python.exists() else unix_python
 
 
+def _tooling_python() -> Path:
+    windows_python = ROOT / "tools" / ".venv" / "Scripts" / "python.exe"
+    unix_python = ROOT / "tools" / ".venv" / "bin" / "python"
+    tooling_python = windows_python if windows_python.exists() else unix_python
+    if tooling_python.exists():
+        return tooling_python
+
+    backend_python = _backend_python()
+    return backend_python if backend_python.exists() else Path(sys.executable)
+
+
 def _needs_backend_runtime(selected_suites: list[str]) -> bool:
     if not profile_runtime.feature_enabled("backend", ROOT):
         return False
@@ -379,8 +390,7 @@ def _run_tools_suite() -> SuiteResult:
     if not tests_dir.exists():
         return SuiteResult("tools", "WARN", "tools/tests missing; suite skipped", time.monotonic() - started)
 
-    backend_python = _backend_python()
-    python = str(backend_python if backend_python.exists() else Path(sys.executable))
+    python = str(_tooling_python())
     command = [python, "-m", "pytest", "-q", str(tests_dir)]
     completed = _run(command, cwd=ROOT)
     return _result_from_completed(

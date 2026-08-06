@@ -58,7 +58,6 @@ python tools/control.py
 Then use the recommended sequence:
 
 ```sh
-python tools/control.py init
 python tools/control.py doctor
 python tools/control.py install
 python tools/control.py run
@@ -70,11 +69,12 @@ The default local endpoints are:
 - Backend: `http://127.0.0.1:8000`
 - API health check: `http://127.0.0.1:8000/api/health`
 
-The combined development command runs in the foreground. Press `Ctrl+C` to stop both processes.
+The development command starts only the services enabled by `project-profile.toml`. It runs in the foreground; press `Ctrl+C` to stop its processes.
 
 ## Central commands
 
 ```sh
+python tools/control.py init
 python tools/control.py doctor
 python tools/control.py install
 python tools/control.py run

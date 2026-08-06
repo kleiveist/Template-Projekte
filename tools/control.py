@@ -61,8 +61,8 @@ Need a derived project from the master template?
 
 Recommended workflow after returning to the project:
   1. doctor   Check tools, dependencies and occupied ports.
-  2. install  Install or repair frontend, backend and optional test dependencies.
-  3. run      Start the web frontend and API.
+  2. install  Install or repair dependencies for enabled features.
+  3. run      Start the enabled local development services.
   4. test     Select and run the relevant quality checks.
   5. build    Choose a web or desktop release.
 
@@ -181,6 +181,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     install_parser.add_argument("--skip-frontend", action="store_true", help="do not run npm install")
     install_parser.add_argument("--skip-backend", action="store_true", help="do not prepare the Python venv")
+    install_parser.add_argument("--skip-tooling", action="store_true", help="do not prepare the shared tooling test venv")
     install_parser.add_argument("--skip-playwright", action="store_true", help="do not install Playwright Chromium")
     _add_examples(
         install_parser,
@@ -299,8 +300,8 @@ More desktop commands:
 
     run_parser = subparsers.add_parser(
         "run",
-        help="start frontend and backend services",
-        description="Start Vite and FastAPI together. Foreground is the default; Ctrl+C stops both.",
+        help="start enabled development services",
+        description="Start the services enabled by project-profile.toml. Foreground is the default; Ctrl+C stops them.",
         formatter_class=HelpFormatter,
     )
     run_parser.add_argument("--frontend-port", type=int, default=5173, help="Vite port (default: 5173)")

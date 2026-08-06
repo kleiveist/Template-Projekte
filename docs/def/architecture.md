@@ -125,7 +125,7 @@ sequenceDiagram
     API-->>UI: status and service JSON
 ```
 
-`python tools/control.py run` starts Vite and Uvicorn as sibling foreground processes. The Vite server performs hot-module replacement. FastAPI serves the `/api` namespace and allows only configured development or desktop origins through CORS.
+For profiles with both `frontend` and `backend`, `python tools/control.py run` starts Vite and Uvicorn as sibling foreground processes. Reduced profiles start only their enabled services. The Vite server performs hot-module replacement. FastAPI serves the `/api` namespace and allows only configured development or desktop origins through CORS when the backend is enabled.
 
 `python tools/control.py tauri run --foreground` lets Tauri start Vite through `beforeDevCommand`. It does not start FastAPI. When a desktop feature requires the API during development, run the backend separately or use the combined web command before starting Tauri with an adjusted workflow.
 

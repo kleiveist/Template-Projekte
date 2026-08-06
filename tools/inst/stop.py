@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 
 from tools import logger
+from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
 RUNTIME_DIR = ROOT / "tools" / ".runtime"
@@ -279,8 +280,7 @@ def _stop_tracked_processes() -> tuple[set[int], int]:
     return stopped_pids, failures
 
 
-def _stop_port_processes(frontend_port: int, backend_port: int, ignored_pids: set[int]) -> int:
-    ports = {int(frontend_port), int(backend_port)}
+def _stop_port_processes(ports: set[int], ignored_pids: set[int]) -> int:
     owners = _port_owners(ports)
     if not owners:
         still_occupied = [port for port in sorted(ports) if not _port_is_free(port)]
@@ -319,7 +319,16 @@ def _stop_port_processes(frontend_port: int, backend_port: int, ignored_pids: se
 def main(args: argparse.Namespace) -> int:
     tracked_stopped, failures = _stop_tracked_processes()
     if not args.tracked_only:
-        failures += _stop_port_processes(args.frontend_port, args.backend_port, tracked_stopped)
+        profile = profile_runtime.active_profile(ROOT)
+        ports: set[int] = set()
+        if profile.has_feature("frontend"):
+            ports.add(int(args.frontend_port))
+        if profile.has_feature("backend"):
+            ports.add(int(args.backend_port))
+        if ports:
+            failures += _stop_port_processes(ports, tracked_stopped)
+        else:
+            logger.ok("Active profile has no development service ports to inspect")
 
     if failures == 0:
         logger.ok("Stop completed")

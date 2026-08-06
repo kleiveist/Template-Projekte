@@ -5,6 +5,7 @@
 /.dist/
 /.report/
 /.generated/
+tools/.runtime/
 
 # Local and editor files
 *.kate-swp

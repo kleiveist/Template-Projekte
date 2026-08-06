@@ -13,6 +13,8 @@ from tools import logger
 from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
+TOOLS_REQUIREMENTS = ROOT / "tools" / "requirements.txt"
+TOOLS_VENV = ROOT / "tools" / ".venv"
 
 
 @dataclass(slots=True)
@@ -299,6 +301,48 @@ def _install_backend() -> StepResult:
     return StepResult("backend", "FAIL", f"backend install failed without uv: {pip_msg}")
 
 
+def _runtime_imports(python: Path, modules: str) -> bool:
+    if not python.exists():
+        return False
+    completed = _run([str(python), "-c", f"import {modules}"], cwd=ROOT)
+    return completed.returncode == 0
+
+
+def _install_tooling_runtime() -> StepResult:
+    backend_python = _venv_python(ROOT / "backend" / ".venv")
+    if _runtime_imports(backend_python, "pytest"):
+        return StepResult("tooling", "OK", "pytest provided by backend virtualenv")
+
+    tooling_python = _venv_python(TOOLS_VENV)
+    if _runtime_imports(tooling_python, "pytest"):
+        return StepResult("tooling", "OK", "tools/.venv already provides pytest")
+
+    if not TOOLS_REQUIREMENTS.exists():
+        return StepResult("tooling", "FAIL", "missing tools/requirements.txt")
+
+    if not TOOLS_VENV.exists():
+        logger.info("Creating shared tooling virtualenv")
+        command = [_select_venv_seed_python(), "-m", "venv", str(TOOLS_VENV)]
+        created = _run(command, cwd=ROOT)
+        if created.returncode != 0:
+            details = _tail((created.stdout or "") + "\n" + (created.stderr or ""))
+            return StepResult("tooling", "FAIL", f"tooling venv creation failed: {details}")
+
+    tooling_python = _venv_python(TOOLS_VENV)
+    if not tooling_python.exists():
+        return StepResult("tooling", "FAIL", f"tooling venv python not found at {tooling_python}")
+
+    logger.info("Installing shared tooling test requirements")
+    completed = _run(
+        [str(tooling_python), "-m", "pip", "install", "-r", str(TOOLS_REQUIREMENTS)],
+        cwd=ROOT,
+    )
+    if completed.returncode != 0:
+        details = _tail((completed.stdout or "") + "\n" + (completed.stderr or ""))
+        return StepResult("tooling", "FAIL", f"tooling dependency install failed: {details}")
+    return StepResult("tooling", "OK", "installed shared tooling test requirements")
+
+
 def _install_playwright() -> StepResult:
     frontend_dir = ROOT / "frontend"
     if not (frontend_dir / "package.json").exists():
@@ -369,6 +413,11 @@ def main(args: argparse.Namespace) -> int:
         results.append(StepResult("backend", "OK", f"disabled by active profile '{profile.profile_id}'"))
     else:
         results.append(_install_backend())
+
+    if getattr(args, "skip_tooling", False):
+        results.append(StepResult("tooling", "OK", "skipped by flag"))
+    else:
+        results.append(_install_tooling_runtime())
 
     if args.skip_playwright:
         results.append(StepResult("playwright", "OK", "skipped by flag"))
