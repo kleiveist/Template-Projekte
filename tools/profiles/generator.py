@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from tools.config.loader import load_contract, render_env_example
 from tools.profiles.loader import resolve_profile
 from tools.profiles.model import ProfileCatalog, ProjectProfile
 
@@ -36,7 +37,7 @@ class ScaffoldPlan:
     target_dir: Path
     profile: ProjectProfile
     paths: tuple[Path, ...]
-    env_example: tuple[str, ...]
+    env_example: str
 
 
 def build_scaffold_plan(
@@ -52,7 +53,8 @@ def build_scaffold_plan(
     profile = resolve_profile(catalog, profile_id, optional_features=optional_features)
     relative_paths = _ordered_relative_paths(catalog, profile)
     source_paths = tuple(root / relative for relative in relative_paths)
-    env_example = _ordered_env_examples(catalog, profile)
+    contract = load_contract(root / "config" / "environment.toml")
+    env_example = render_env_example(contract, profile.features)
 
     _validate_sources(source_paths, root)
     _validate_target(root, target)
@@ -136,19 +138,6 @@ def _ordered_relative_paths(catalog: ProfileCatalog, profile: ProjectProfile) ->
             add(relative)
 
     return tuple(ordered)
-
-
-def _ordered_env_examples(catalog: ProfileCatalog, profile: ProjectProfile) -> tuple[str, ...]:
-    entries: list[str] = []
-    seen_keys: set[str] = set()
-    for feature_id in profile.features:
-        for entry in catalog.features[feature_id].env_example:
-            key = entry.split("=", 1)[0]
-            if key in seen_keys:
-                continue
-            entries.append(entry)
-            seen_keys.add(key)
-    return tuple(entries)
 
 
 def _validate_sources(source_paths: tuple[Path, ...], project_root: Path) -> None:
@@ -258,22 +247,8 @@ def _configure_frontend_dependencies(target_dir: Path, profile: ProjectProfile) 
     _write_json(lock_path, lock)
 
 
-def _configure_env_example(target_dir: Path, entries: tuple[str, ...]) -> None:
-    if not entries:
-        return
+def _configure_env_example(target_dir: Path, content: str) -> None:
     path = target_dir / ".env.example"
-    existing = path.read_text(encoding="utf-8") if path.exists() else ""
-    existing_keys = {
-        line.split("=", 1)[0]
-        for line in existing.splitlines()
-        if line and not line.startswith("#") and "=" in line
-    }
-    additions = [entry for entry in entries if entry.split("=", 1)[0] not in existing_keys]
-    if not additions:
-        return
-    separator = "" if not existing or existing.endswith("\n\n") else "\n"
-    additions_text = "\n".join(additions)
-    content = f"{existing}{separator}{additions_text}\n"
     path.write_text(content, encoding="utf-8", newline="\n")
 
 

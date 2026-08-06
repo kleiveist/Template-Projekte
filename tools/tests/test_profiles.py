@@ -399,6 +399,12 @@ def test_init_command_scaffolds_selected_profile(tmp_path: Path) -> None:
     package = json.loads((target / "frontend" / "package.json").read_text(encoding="utf-8"))
     assert package["scripts"]["tauri"] == "tauri"
     assert "@tauri-apps/cli" in package["devDependencies"]
+    env_example = (target / ".env.example").read_text(encoding="utf-8")
+    assert "APP_ENV=development" in env_example
+    assert "FRONTEND_HOST=127.0.0.1" in env_example
+    assert "BACKEND_HOST=" not in env_example
+    assert "VITE_API_BASE_URL=" not in env_example
+    assert "DATABASE_URL=" not in env_example
 
     active = loader.load_active_profile(target)
     assert active.profile_id == "desktop-local"
@@ -472,7 +478,12 @@ def test_web_only_scaffold_runs_profile_aware_commands(tmp_path: Path) -> None:
     assert "@tauri-apps/cli" not in lock_text
     assert not (target / "backend" / "app" / "db").exists()
     assert not (target / "backend" / "alembic.ini").exists()
-    assert "DATABASE_URL" not in (target / ".env.example").read_text(encoding="utf-8")
+    env_example = (target / ".env.example").read_text(encoding="utf-8")
+    assert "APP_ENV=development" in env_example
+    assert "FRONTEND_HOST=127.0.0.1" in env_example
+    assert "BACKEND_HOST=" not in env_example
+    assert "VITE_API_BASE_URL=" not in env_example
+    assert "DATABASE_URL=" not in env_example
 
     command = [sys.executable, str(target / "tools" / "control.py"), "build", "desktop", "--dry-run"]
     completed = subprocess.run(command, cwd=target, text=True, capture_output=True, check=False)
@@ -488,6 +499,11 @@ def test_web_only_scaffold_runs_profile_aware_commands(tmp_path: Path) -> None:
     assert "Database feature is not enabled for this project" in db_output
     assert "Traceback" not in db_output
 
+    config_command = [sys.executable, str(target / "tools" / "control.py"), "config", "doctor"]
+    config_completed = subprocess.run(config_command, cwd=target, text=True, capture_output=True, check=False)
+    assert config_completed.returncode == 0
+    assert "effective configuration is valid" in (config_completed.stdout + config_completed.stderr)
+
 
 @pytest.mark.skipif(not HAS_BACKEND_SOURCE, reason="Backend source is absent in this derived project")
 def test_web_cloud_without_database_omits_database_capability(tmp_path: Path) -> None:
@@ -500,11 +516,28 @@ def test_web_cloud_without_database_omits_database_capability(tmp_path: Path) ->
     assert not (target / "backend" / "alembic.ini").exists()
     assert not (target / "backend" / "requirements-database.txt").exists()
     assert not (target / "backend" / "requirements-postgres.txt").exists()
-    assert "DATABASE_URL" not in (target / ".env.example").read_text(encoding="utf-8")
+    env_example = (target / ".env.example").read_text(encoding="utf-8")
+    assert "BACKEND_HOST=127.0.0.1" in env_example
+    assert "BACKEND_PORT=8000" in env_example
+    assert "VITE_API_BASE_URL=http://127.0.0.1:8000" in env_example
+    assert "DATABASE_URL=" not in env_example
 
     active = loader.load_active_profile(target)
     assert active.features == ("frontend", "backend", "cloud")
     assert active.optional_features == ()
+
+
+@pytest.mark.skipif(not HAS_TAURI_SOURCE, reason="Tauri source is absent in this derived project")
+def test_desktop_cloud_scaffold_includes_public_api_config_only(tmp_path: Path) -> None:
+    target = tmp_path / "desktop-cloud-project"
+
+    assert control.main(["init", "--profile", "desktop-cloud", "--target-dir", str(target)]) == 0
+
+    env_example = (target / ".env.example").read_text(encoding="utf-8")
+    assert "FRONTEND_HOST=127.0.0.1" in env_example
+    assert "BACKEND_HOST=127.0.0.1" in env_example
+    assert "VITE_API_BASE_URL=http://127.0.0.1:8000" in env_example
+    assert "DATABASE_URL=" not in env_example
 
 
 @pytest.mark.skipif(not HAS_DATABASE_SOURCE, reason="Database sources are absent in this derived project")

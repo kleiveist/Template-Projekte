@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from tools import logger
+from tools.config import ConfigLoadError, resolve_configuration, validate_configuration
 from tools.inst import report as report_writer
 from tools.inst import stop as service_cleanup
 from tools.profiles import runtime as profile_runtime
@@ -19,8 +20,6 @@ from tools.profiles import runtime as profile_runtime
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE_TAIL_LINES = 12
 REPORT_TAIL_LINES = 80
-FRONTEND_PORT = 5173
-BACKEND_PORT = 8000
 
 
 @dataclass(slots=True)
@@ -118,7 +117,7 @@ def _needs_backend_runtime(selected_suites: list[str]) -> bool:
 
 
 def _backend_runtime_imports(selected_suites: list[str]) -> str:
-    modules = ["jsonschema", "pytest", "uvicorn"]
+    modules = ["jsonschema", "pydantic_settings", "pytest", "uvicorn"]
     profile = profile_runtime.active_profile(ROOT)
     if profile.has_feature("database") and {"database", "postgres"}.intersection(selected_suites):
         modules.extend(["sqlalchemy", "alembic"])
@@ -490,9 +489,30 @@ def _run_e2e_suite() -> SuiteResult:
 
 def _run_e2e_cleanup(started: float) -> SuiteResult | None:
     logger.info("Running cleanup before E2E tests")
+    profile = profile_runtime.active_profile(ROOT)
+    try:
+        resolved = resolve_configuration(profile, project_root=ROOT)
+    except ConfigLoadError as exc:
+        return SuiteResult(
+            "service-bootstrap",
+            "FAIL",
+            "configuration could not be loaded before E2E cleanup",
+            time.monotonic() - started,
+            detail=str(exc),
+        )
+    relevant = {"FRONTEND_PORT", "BACKEND_PORT"}
+    issues = [issue for issue in validate_configuration(resolved) if issue.name in relevant]
+    if issues:
+        return SuiteResult(
+            "service-bootstrap",
+            "FAIL",
+            "development ports are invalid",
+            time.monotonic() - started,
+            detail="; ".join(f"{issue.name}: {issue.message}" for issue in issues),
+        )
     cleanup_args = argparse.Namespace(
-        frontend_port=FRONTEND_PORT,
-        backend_port=BACKEND_PORT,
+        frontend_port=int(resolved.value("FRONTEND_PORT") or 0),
+        backend_port=int(resolved.value("BACKEND_PORT") or 0),
         tracked_only=False,
     )
     cleanup_code = service_cleanup.main(cleanup_args)

@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import SecretStr
 
+from app.config.settings import BackendSettings
 from app.db.config import DatabaseConfigurationError, load_database_settings, parse_database_url
 
 
 def test_load_database_settings_reads_database_url() -> None:
-    settings = load_database_settings({"DATABASE_URL": "sqlite+pysqlite:///:memory:"})
+    backend_settings = BackendSettings(database_url=SecretStr("sqlite+pysqlite:///:memory:"), _env_file=None)
+    settings = load_database_settings(backend_settings)
 
     assert settings.url.drivername == "sqlite+pysqlite"
     assert settings.url.database == ":memory:"
@@ -14,7 +17,7 @@ def test_load_database_settings_reads_database_url() -> None:
 
 def test_load_database_settings_rejects_missing_url() -> None:
     with pytest.raises(DatabaseConfigurationError, match="DATABASE_URL is required"):
-        load_database_settings({})
+        load_database_settings(BackendSettings(database_url=None, _env_file=None))
 
 
 def test_parse_database_url_rejects_invalid_value() -> None:

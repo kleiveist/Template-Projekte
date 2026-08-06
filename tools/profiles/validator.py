@@ -21,7 +21,6 @@ class ProfileLookupError(ProfileError):
 
 
 ID_PATTERN = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*")
-ENV_EXAMPLE_PATTERN = re.compile(r"[A-Z][A-Z0-9_]*=.*")
 
 
 def _validate_id(value: str, *, kind: str) -> str | None:
@@ -190,11 +189,6 @@ def validate_catalog(
                 errors.append(f"Feature '{feature.id}' requires unknown feature '{dependency}'.")
         if feature.selectable and not feature.optional:
             errors.append(f"Feature '{feature.id}' is selectable but is not marked optional.")
-        for entry in feature.env_example:
-            if not ENV_EXAMPLE_PATTERN.fullmatch(entry):
-                errors.append(
-                    f"Feature '{feature.id}' env example '{entry}' must use the form UPPER_CASE_NAME=value."
-                )
         for relative in feature.paths:
             path_error = _validate_relative_path(relative, context=f"Feature '{feature.id}'")
             if path_error:

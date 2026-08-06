@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import os
-from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy.engine import URL, make_url
 from sqlalchemy.exc import ArgumentError
+
+from app.config.settings import BackendSettings, BackendSettingsError, load_backend_settings
 
 
 class DatabaseConfigurationError(ValueError):
@@ -34,15 +34,11 @@ def parse_database_url(value: str) -> DatabaseSettings:
     return DatabaseSettings(url=url)
 
 
-def load_database_settings(
-    environ: Mapping[str, str] | None = None,
-    *,
-    variable_name: str = "DATABASE_URL",
-) -> DatabaseSettings:
-    source = os.environ if environ is None else environ
-    value = source.get(variable_name)
-    if value is None:
-        raise DatabaseConfigurationError(
-            f"{variable_name} is required when the database feature is enabled."
-        )
-    return parse_database_url(value)
+def load_database_settings(settings: BackendSettings | None = None) -> DatabaseSettings:
+    try:
+        backend_settings = settings or load_backend_settings(require_database=True)
+    except BackendSettingsError as exc:
+        raise DatabaseConfigurationError(str(exc)) from exc
+    if backend_settings.database_url is None:
+        raise DatabaseConfigurationError("DATABASE_URL is required when the database feature is enabled.")
+    return parse_database_url(backend_settings.database_url.get_secret_value())

@@ -3,11 +3,17 @@ export interface HealthResponse {
   service: string;
 }
 
-const DEFAULT_API_BASE_URL = "http://127.0.0.1:8000";
+function configuredApiBaseUrl(): string {
+  const value = import.meta.env.VITE_API_BASE_URL;
+  if (!value) {
+    throw new Error("VITE_API_BASE_URL is required when the backend feature is enabled");
+  }
+  return value;
+}
 
 export async function fetchBackendHealth(
   fetcher: typeof fetch = fetch,
-  baseUrl = import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL
+  baseUrl = configuredApiBaseUrl()
 ): Promise<HealthResponse> {
   const response = await fetcher(`${baseUrl.replace(/\/$/, "")}/api/health`);
   if (!response.ok) {

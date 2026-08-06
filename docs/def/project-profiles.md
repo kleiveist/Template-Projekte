@@ -41,6 +41,8 @@ This document defines how the repository models project profiles. A profile is a
 | Optional capability | An additive feature selected with `--with` after choosing a platform profile |
 | Active project profile | The machine-readable manifest at `project-profile.toml` used by tooling inside the current project root |
 
+Profiles define project structure, not runtime environments. `development`, `test`, and `production` use the same profile with different environment values. Ports, hosts, URLs, and secrets never belong in `project-profile.toml`.
+
 ## Single-repository strategy
 
 The repository remains one master template. It does not branch into separate template repositories for web, desktop, or cloud variants.
@@ -177,5 +179,6 @@ python tools/control.py test --suite tools
 
 - [Framework architecture](architecture.md)
 - [Database feature](database-feature.md)
+- [Runtime configuration](configuration.md)
 - [Tooling Guide](../tools/tooling.md)
 - [Project README](../../README.md)

@@ -84,6 +84,9 @@ profiles/
 └── *.toml               Named profile presets
 
 project-profile.toml     Active profile manifest for the current project root
+
+config/
+└── environment.toml     Shared environment variable contract
 ```
 
 Feature folders should be introduced only when the first real feature exists. Keep a feature's UI, state and tests close together, while reusable infrastructure remains at the framework boundary.
@@ -140,6 +143,36 @@ flowchart LR
 ```
 
 Only the backend and explicit migration commands may access PostgreSQL. Engine creation is lazy and never opens a connection during module import. Application startup does not create, drop or migrate schemas; operators run Alembic explicitly through `python tools/control.py db`.
+
+## Configuration architecture
+
+```mermaid
+flowchart LR
+    Profile[project-profile.toml]
+    Contract[config/environment.toml]
+    Local[Local .env]
+    Process[Process environment]
+    CLI[CLI overrides]
+    Resolver[Profile-aware resolver]
+    Public[Public VITE configuration]
+    Server[Backend settings and secrets]
+    Tools[Tooling configuration]
+    Tauri[Tauri client configuration]
+
+    Profile --> Resolver
+    Contract --> Resolver
+    Local --> Resolver
+    Process --> Resolver
+    CLI --> Resolver
+    Resolver --> Public
+    Resolver --> Server
+    Resolver --> Tools
+    Public --> Tauri
+```
+
+Project structure and runtime environment are independent axes. The profile answers what the project contains. Environment values answer how that project runs in development, test, or production. Resolution priority is CLI override, process environment, local `.env`, then contract default.
+
+Frontend code receives only explicitly public `VITE_` values. Backend Settings consume server runtime values and secrets. Tooling reads the shared contract directly, while each application runtime keeps a technology-specific adapter instead of depending on a global Python settings module.
 
 ## Development interaction
 
@@ -228,6 +261,8 @@ That decision changes packaging, updates, observability and the security model, 
 7. Every cross-container contract change includes consumer tests and an ATP update.
 8. `postgres` requires `database`, and `database` requires `backend`; invalid capability combinations fail before scaffolding.
 9. Frontend and Tauri code never connect directly to PostgreSQL or receive `DATABASE_URL`.
+10. `project-profile.toml` never stores runtime environment values or secrets.
+11. Client configuration is explicitly public; non-`VITE_` server values never enter the frontend application API.
 
 ## Security boundaries
 
@@ -275,6 +310,7 @@ python tools/control.py build desktop
 - [Project README](../../README.md)
 - [Project profiles](project-profiles.md)
 - [Optional database feature](database-feature.md)
+- [Runtime configuration](configuration.md)
 - [Documentation standard](../README.md)
 - [ATP workflow](../atp/README.md)
 - [Tooling guide](../tools/tooling.md)

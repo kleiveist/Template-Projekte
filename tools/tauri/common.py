@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Iterable
 
 from tools import logger
+from tools.config import is_server_only_name
 from tools.tauri import paths
 
 TAURI_CLI_PACKAGE = "@tauri-apps/cli@2.10.1"
@@ -98,6 +99,7 @@ def run_command(
     cwd: Path | None = None,
     dry_run: bool = False,
     env: dict[str, str] | None = None,
+    remove_env: set[str] | None = None,
 ) -> CommandResult:
     resolved_cwd = cwd or paths.ROOT
     if dry_run:
@@ -105,10 +107,18 @@ def run_command(
         return CommandResult(command=command, cwd=resolved_cwd, returncode=0, dry_run=True)
 
     try:
+        environment = {
+            name: value
+            for name, value in os.environ.items()
+            if not is_server_only_name(name)
+        }
+        for name in remove_env or set():
+            environment.pop(name, None)
+        environment.update(env or {})
         completed = subprocess.run(
             command,
             cwd=resolved_cwd,
-            env={**os.environ, **(env or {})},
+            env=environment,
             text=True,
             capture_output=True,
             check=False,

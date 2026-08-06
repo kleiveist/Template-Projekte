@@ -35,7 +35,7 @@ python tools/control.py install
 python tools/control.py run
 ```
 
-`doctor` checks runtimes, dependencies, project structure, and ports. `install` prepares enabled frontend and backend dependencies. It also prepares a small `tools/.venv` for shared Python tests when Pytest is not available from the backend virtualenv, and installs Playwright only when E2E tests are configured. `run` starts the enabled local services. In foreground mode, `Ctrl+C` stops those processes.
+`doctor` checks runtimes, dependencies, the active profile, effective configuration, and configured ports. `install` prepares enabled frontend and backend dependencies without creating or changing `.env`. It also prepares a small `tools/.venv` for shared Python tests when Pytest is not available from the backend virtualenv, and installs Playwright only when E2E tests are configured. `run` starts the enabled local services. In foreground mode, `Ctrl+C` stops those processes.
 
 ## Command map
 
@@ -49,6 +49,7 @@ python tools/control.py run
 | `stop` | Stop tracked development services | `python tools/control.py stop --help` |
 | `test` | Select test suites and reports | `python tools/control.py test` |
 | `build` | Select a web or desktop build | `python tools/control.py build` |
+| `config` | Show or validate effective runtime configuration | `python tools/control.py config` |
 | `db` | Diagnose optional database configuration and run Alembic | `python tools/control.py db` |
 | `docs` | Maintain navigation with PyGitIndex | `python tools/control.py docs` |
 | `tauri` | Manage desktop diagnostics, development, and artifacts | `python tools/control.py tauri` |
@@ -57,6 +58,7 @@ Group commands display the next level of help when called without an action:
 
 ```sh
 python tools/control.py build
+python tools/control.py config
 python tools/control.py db
 python tools/control.py docs
 python tools/control.py test
@@ -84,7 +86,7 @@ python tools/control.py init --profile web-cloud --with postgres
 
 The command writes into `.generated/<profile-id>` by default, or `.generated/<profile-id>-<capability>` when `--with` is used, so the master template is not modified accidentally. Repeat `--with` or pass comma-separated feature IDs for multiple capabilities. Use `--target-dir` for a real destination outside the template workspace.
 
-Profile definitions live under `profiles/`. The generated project receives an active `project-profile.toml` manifest, and the shared tooling reads that file to skip disabled runtime layers cleanly.
+Profile definitions live under `profiles/`. The generated project receives an active `project-profile.toml` manifest and a profile-aware `.env.example`. The shared tooling reads the manifest to skip disabled runtime layers and renders only relevant environment variables.
 
 ## Interactive console
 
@@ -122,9 +124,29 @@ python tools/control.py run --detach
 python tools/control.py stop
 ```
 
-Use `--frontend-port` and `--backend-port` for non-default ports. Run `python tools/control.py run --help` for every option.
+Use `.env` for persistent local overrides. Use `--frontend-host`, `--frontend-port`, `--backend-host`, and `--backend-port` for one command invocation. CLI values have the highest priority. Run `python tools/control.py run --help` for every option.
 
 `run` starts only the services enabled by `project-profile.toml`. For example, `web-only` starts the frontend only, while `full-platform` starts frontend and backend together. `stop` likewise inspects only the ports belonging to enabled services unless it is stopping processes already recorded by a detached run.
+
+## Runtime configuration
+
+Inspect effective values and their source:
+
+```sh
+python tools/control.py config show
+python tools/control.py config doctor
+```
+
+Values resolve in this order:
+
+1. CLI override;
+2. process environment;
+3. root `.env`;
+4. template default from `config/environment.toml`.
+
+`config show` displays only variables applicable to the active features and masks secrets. `config doctor` validates environment names, hosts, ports, public URLs, CORS origins, and feature-required values without opening connections or changing files. The general `doctor` includes this validation. Use `db doctor --connect` only for the optional read-only database connection probe.
+
+The root `.env.example` is safe to commit. Local `.env` files are ignored and are never generated or overwritten by `install`. See [Runtime Configuration](../def/configuration.md) for the complete variable table and runtime boundaries.
 
 ## Tests and reports
 
@@ -155,7 +177,7 @@ When the active project profile disables the backend or desktop layer, the affec
 
 Database commands require the optional `database` capability. A project without it receives `Database feature is not enabled for this project.` and no traceback.
 
-Set `DATABASE_URL` in the server process environment, then run the read-only diagnostics:
+Set `DATABASE_URL` in the server process environment or root `.env`, then run the read-only diagnostics:
 
 ```sh
 python tools/control.py db doctor
@@ -273,5 +295,6 @@ python tools/control.py build desktop --dry-run --no-clean
 - [Documentation Standard](../README.md)
 - [Framework Architecture](../def/architecture.md)
 - [Database Feature](../def/database-feature.md)
+- [Runtime Configuration](../def/configuration.md)
 - [Project Profiles](../def/project-profiles.md)
 - [ATP Workflow](../atp/README.md)

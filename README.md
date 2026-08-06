@@ -14,6 +14,7 @@
 ## 📁 DEF
 - 🗂️ [Overview](docs/def/def.md)
 - 📝 [Framework architecture](docs/def/architecture.md)
+- 📝 [Runtime configuration](docs/def/configuration.md)
 - 📝 [Database feature](docs/def/database-feature.md)
 - 📝 [Project profiles](docs/def/project-profiles.md)
 
@@ -83,13 +84,14 @@ python tools/control.py run
 python tools/control.py stop
 python tools/control.py test
 python tools/control.py build
+python tools/control.py config
 python tools/control.py db
 python tools/control.py docs
 python tools/control.py tauri
 python tools/control.py console
 ```
 
-`build`, `docs`, `test`, and `tauri` display their own command map when called without a subcommand. Every command also supports `--help`.
+`build`, `config`, `db`, `docs`, `test`, and `tauri` display their own command map when called without a subcommand. Every command also supports `--help`.
 
 Examples:
 
@@ -97,6 +99,8 @@ Examples:
 python tools/control.py init --profile web-only --dry-run
 python tools/control.py init --profile desktop-cloud --target-dir ../desktop-cloud-app
 python tools/control.py init --profile web-cloud --with postgres --dry-run
+python tools/control.py config show
+python tools/control.py config doctor
 python tools/control.py test --suite api
 python tools/control.py test --suite frontend
 python tools/control.py test --suite tools
@@ -137,10 +141,17 @@ See [Project Profiles](docs/def/project-profiles.md) for the architecture and pr
 
 Optional capabilities extend a profile without creating new profile families. PostgreSQL support is selected with `--with postgres`; it adds generic SQLAlchemy/Alembic infrastructure transitively and remains entirely absent from projects that do not select it. See [Database Feature](docs/def/database-feature.md).
 
+## Runtime configuration
+
+The template uses one environment contract with profile-aware `.env.example` files and separate adapters for tooling, FastAPI, Vite, and Tauri. Project profiles define structure; `development`, `test`, and `production` environment values define runtime behavior. Process environment values override local `.env`, and only explicit `VITE_` variables enter frontend code.
+
+Use `python tools/control.py config show` to inspect masked effective values and `python tools/control.py config doctor` to validate them. See [Runtime Configuration](docs/def/configuration.md) for the variable contract, priority, and security boundaries.
+
 ## Project structure
 
 ```text
 backend/             FastAPI application and API tests
+config/              Declarative runtime environment contract
 docs/                Documentation rules, templates, architecture, and ATPs
 frontend/            Vite and TypeScript application with frontend tests
 profiles/            Declarative feature and profile definitions
@@ -179,6 +190,7 @@ English is the only documentation language for this repository and all projects 
 - [Documentation Template](docs/DOCUMENT-TEMPLATE.md)
 - [Framework Architecture](docs/def/architecture.md)
 - [Database Feature](docs/def/database-feature.md)
+- [Runtime Configuration](docs/def/configuration.md)
 - [Project Profiles](docs/def/project-profiles.md)
 - [ATP Workflow](docs/atp/README.md)
 - [ATP Template](docs/atp/ATP-TEMPLATE.md)

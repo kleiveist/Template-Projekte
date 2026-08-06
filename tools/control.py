@@ -12,7 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools import logger
-from tools.inst import build, console, db, docs_index, doctor, install, run, run_test, stop
+from tools.inst import build, configuration, console, db, docs_index, doctor, install, run, run_test, stop
 from tools.profiles import cli as profile_cli
 from tools.profiles import runtime as profile_runtime
 from tools.tauri import build as tauri_build
@@ -71,6 +71,7 @@ Prefer a menu? Start the optional interactive console:
 
 Groups with their own command maps:
   python tools/control.py build
+  python tools/control.py config
   python tools/control.py db
   python tools/control.py docs
   python tools/control.py tauri
@@ -86,6 +87,7 @@ examples:
   python tools/control.py stop
   python tools/control.py test --suite all --report
   python tools/control.py build web
+  python tools/control.py config doctor
   python tools/control.py db doctor
   python tools/control.py docs index --dry-run
   python tools/control.py tauri
@@ -282,6 +284,21 @@ More desktop commands:
   python tools/control.py db revision --message 'add widgets'""",
     )
 
+    config_parser = subparsers.add_parser(
+        "config",
+        help="show and validate effective runtime configuration",
+        description="Configuration command map. Values resolve from CLI, process environment, .env, and defaults.",
+        formatter_class=HelpFormatter,
+    )
+    configuration.configure_parser(config_parser)
+    _add_examples(
+        config_parser,
+        """examples:
+  python tools/control.py config show
+  python tools/control.py config doctor
+  python tools/control.py config show --backend-port 9000""",
+    )
+
     docs_parser = subparsers.add_parser(
         "docs",
         help="manage documentation navigation with PyGitIndex",
@@ -332,8 +349,10 @@ More desktop commands:
         description="Start the services enabled by project-profile.toml. Foreground is the default; Ctrl+C stops them.",
         formatter_class=HelpFormatter,
     )
-    run_parser.add_argument("--frontend-port", type=int, default=5173, help="Vite port (default: 5173)")
-    run_parser.add_argument("--backend-port", type=int, default=8000, help="FastAPI port (default: 8000)")
+    run_parser.add_argument("--frontend-host", help="override FRONTEND_HOST")
+    run_parser.add_argument("--frontend-port", type=int, help="override FRONTEND_PORT")
+    run_parser.add_argument("--backend-host", help="override BACKEND_HOST")
+    run_parser.add_argument("--backend-port", type=int, help="override BACKEND_PORT")
     run_parser.add_argument("--detach", action="store_true", help="run in background and write logs to tools/.runtime")
     _add_examples(
         run_parser,
@@ -349,8 +368,8 @@ More desktop commands:
         description="Stop services recorded by detached runs and optionally clean stale project ports.",
         formatter_class=HelpFormatter,
     )
-    stop_parser.add_argument("--frontend-port", type=int, default=5173, help="frontend cleanup port (default: 5173)")
-    stop_parser.add_argument("--backend-port", type=int, default=8000, help="backend cleanup port (default: 8000)")
+    stop_parser.add_argument("--frontend-port", type=int, help="override FRONTEND_PORT for stale-listener cleanup")
+    stop_parser.add_argument("--backend-port", type=int, help="override BACKEND_PORT for stale-listener cleanup")
     stop_parser.add_argument("--tracked-only", action="store_true", help="do not inspect stale listeners")
     _add_examples(stop_parser, "examples:\n  python tools/control.py stop\n  python tools/control.py stop --tracked-only")
 
@@ -453,6 +472,7 @@ def _handlers() -> dict[str, Handler]:
         "install": install.main,
         "console": _handle_console,
         "build": _handle_build,
+        "config": configuration.main,
         "db": db.main,
         "docs": _handle_docs,
         "run": run.run_command,

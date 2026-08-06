@@ -12,7 +12,6 @@ class FeatureDefinition:
     requires: tuple[str, ...] = ()
     optional: bool = False
     selectable: bool = False
-    env_example: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

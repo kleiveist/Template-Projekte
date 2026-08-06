@@ -828,6 +828,24 @@ def test_tauri_cli_fallback_uses_tauri_apps_cli_package(monkeypatch) -> None:
     assert command[-2:] == ["tauri", "dev"]
 
 
+def test_tauri_commands_remove_server_only_environment(monkeypatch) -> None:
+    captured: dict[str, str] = {}
+    monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://app:secret@localhost/app")
+    monkeypatch.setenv("SECRET_KEY", "application-secret")
+    monkeypatch.setenv("CARGO_REGISTRY_TOKEN", "tooling-token")
+
+    def fake_run(command: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
+        captured.update(kwargs["env"])
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    monkeypatch.setattr(common.subprocess, "run", fake_run)
+
+    assert common.run_command(["tauri", "--version"]).returncode == 0
+    assert "DATABASE_URL" not in captured
+    assert "SECRET_KEY" not in captured
+    assert captured["CARGO_REGISTRY_TOKEN"] == "tooling-token"
+
+
 def test_tauri_run_override_uses_frontend_cwd_command() -> None:
     payload = json.loads(run._dev_config_override(5174))
 
@@ -839,7 +857,11 @@ def test_tauri_run_defaults_to_detached(monkeypatch, capsys) -> None:
     started: list[list[str]] = []
 
     monkeypatch.setattr(common, "tauri_cli_command", lambda *args: ["tauri", *args])
-    monkeypatch.setattr(run, "_run_detached", lambda command, follow=True: started.append([*command, f"follow={follow}"]) or 0)
+    monkeypatch.setattr(
+        run,
+        "_run_detached",
+        lambda command, follow=True, **_kwargs: started.append([*command, f"follow={follow}"]) or 0,
+    )
 
     code = control.main(["tauri", "run"])
 
@@ -852,7 +874,11 @@ def test_tauri_run_no_follow_returns_after_background_start(monkeypatch) -> None
     started: list[list[str]] = []
 
     monkeypatch.setattr(common, "tauri_cli_command", lambda *args: ["tauri", *args])
-    monkeypatch.setattr(run, "_run_detached", lambda command, follow=True: started.append([*command, f"follow={follow}"]) or 0)
+    monkeypatch.setattr(
+        run,
+        "_run_detached",
+        lambda command, follow=True, **_kwargs: started.append([*command, f"follow={follow}"]) or 0,
+    )
 
     code = control.main(["tauri", "run", "--no-follow"])
 

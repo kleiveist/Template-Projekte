@@ -10,12 +10,36 @@ from datetime import datetime
 from pathlib import Path
 
 from tools import logger
+from tools.config import ConfigLoadError, resolve_configuration, validate_configuration
+from tools.profiles import runtime as profile_runtime
 from tools.tauri import common, paths
 from tools.tauri.build import appimage
 from tools.tauri.common import CheckResult
 
 
-def collect_checks(frontend_port: int = 5173) -> tuple[list[CheckResult], str]:
+def collect_checks(frontend_port: int | None = None) -> tuple[list[CheckResult], str]:
+    configuration_check: CheckResult | None = None
+    frontend_host = "127.0.0.1"
+    if frontend_port is None:
+        profile = profile_runtime.active_profile(paths.ROOT)
+        try:
+            resolved = resolve_configuration(profile, project_root=paths.ROOT)
+        except ConfigLoadError as exc:
+            configuration_check = CheckResult("configuration", "FAIL", str(exc))
+            frontend_port = 0
+        else:
+            relevant = {"FRONTEND_HOST", "FRONTEND_PORT"}
+            issues = [issue for issue in validate_configuration(resolved) if issue.name in relevant]
+            if issues:
+                configuration_check = CheckResult(
+                    "configuration",
+                    "FAIL",
+                    "; ".join(f"{issue.name}: {issue.message}" for issue in issues),
+                )
+                frontend_port = 0
+            else:
+                frontend_host = resolved.value("FRONTEND_HOST") or frontend_host
+                frontend_port = int(resolved.value("FRONTEND_PORT") or 0)
     checks: list[CheckResult] = [
         _check_binary("git", "Git", ["git", "--version"]),
         _check_binary("curl", "curl", ["curl", "--version"]),
@@ -32,8 +56,11 @@ def collect_checks(frontend_port: int = 5173) -> tuple[list[CheckResult], str]:
         _check_path("tauri-config", paths.TAURI_CONFIG, required=True),
         _check_path("frontend-package", paths.FRONTEND_PACKAGE_JSON, required=True),
         _check_path("frontend-dist", paths.FRONTEND_DIR / "dist", required=False),
-        _check_port(frontend_port),
     ]
+    if configuration_check is not None:
+        checks.append(configuration_check)
+    else:
+        checks.append(_check_port(frontend_host, frontend_port))
 
     checks.extend(_platform_checks())
     overall = common.overall_status(checks)
@@ -117,13 +144,21 @@ def _check_path(name: str, path: Path, *, required: bool) -> CheckResult:
     return CheckResult(name, status, message)
 
 
-def _check_port(port: int) -> CheckResult:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.settimeout(0.3)
-        occupied = sock.connect_ex(("127.0.0.1", port)) == 0
+def _check_port(host: str, port: int) -> CheckResult:
+    occupied = False
+    try:
+        addresses = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+    except OSError:
+        addresses = []
+    for family, socktype, protocol, _, address in addresses:
+        with socket.socket(family, socktype, protocol) as sock:
+            sock.settimeout(0.3)
+            if sock.connect_ex(address) == 0:
+                occupied = True
+                break
     if occupied:
-        return CheckResult(f"port:{port}", "WARN", "occupied on 127.0.0.1")
-    return CheckResult(f"port:{port}", "OK", "free")
+        return CheckResult(f"port:{port}", "WARN", f"occupied on {host}")
+    return CheckResult(f"port:{port}", "OK", f"free on {host}")
 
 
 def _platform_checks() -> list[CheckResult]:

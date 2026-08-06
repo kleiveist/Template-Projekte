@@ -7,6 +7,7 @@
 
 ## 📄 Pages
 - 📝 [Framework architecture](architecture.md)
+- 📝 [Runtime configuration](configuration.md)
 - 📝 [Database feature](database-feature.md)
 - 📝 [Project profiles](project-profiles.md)
 

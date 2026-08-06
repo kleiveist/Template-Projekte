@@ -121,7 +121,6 @@ def load_catalog(
             requires=_optional_str_list(raw.get("requires")),
             optional=_optional_bool(raw, "optional"),
             selectable=_optional_bool(raw, "selectable"),
-            env_example=_optional_str_list(raw.get("env_example")),
         )
 
     profiles: dict[str, ProfileDefinition] = {}

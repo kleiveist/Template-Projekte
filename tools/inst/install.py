@@ -43,11 +43,13 @@ def _ensure_env_file() -> StepResult:
         return StepResult("env", "OK", ".env already exists (not modified)")
 
     if example.exists():
-        shutil.copy2(example, env)
-        return StepResult("env", "OK", "created .env from .env.example")
+        return StepResult(
+            "env",
+            "WARN",
+            ".env is absent and was not created. Copy .env.example manually when local overrides are needed.",
+        )
 
-    env.write_text("FRONTEND_PORT=5173\nBACKEND_PORT=8000\nBACKEND_HOST=127.0.0.1\n", encoding="utf-8")
-    return StepResult("env", "WARN", "created .env with fallback defaults (.env.example was missing)")
+    return StepResult("env", "WARN", ".env and .env.example are absent; template defaults remain active")
 
 
 def _install_frontend() -> StepResult:

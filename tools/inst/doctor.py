@@ -13,6 +13,8 @@ from datetime import datetime
 from pathlib import Path
 
 from tools import logger
+from tools.config import ConfigLoadError, resolve_configuration, validate_configuration
+from tools.inst import configuration
 from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -84,21 +86,28 @@ def _backend_python() -> Path:
     return candidates[0] if sys.platform == "win32" else candidates[1]
 
 
-def _port_is_occupied(port: int) -> bool:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.settimeout(0.3)
-        return sock.connect_ex(("127.0.0.1", port)) == 0
+def _port_is_occupied(host: str, port: int) -> bool:
+    try:
+        addresses = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+    except OSError:
+        return False
+    for family, socktype, protocol, _, address in addresses:
+        with socket.socket(family, socktype, protocol) as sock:
+            sock.settimeout(0.3)
+            if sock.connect_ex(address) == 0:
+                return True
+    return False
 
 
-def _check_port(port: int) -> CheckResult:
-    occupied = _port_is_occupied(port)
+def _check_port(host: str, port: int) -> CheckResult:
+    occupied = _port_is_occupied(host, port)
     if occupied:
         return CheckResult(
             name=f"port:{port}",
             status="WARN",
-            message="occupied on 127.0.0.1 (may be expected if services are already running)",
+            message=f"occupied on {host} (may be expected if services are already running)",
         )
-    return CheckResult(name=f"port:{port}", status="OK", message="free")
+    return CheckResult(name=f"port:{port}", status="OK", message=f"free on {host}")
 
 
 def _check_project_structure() -> list[CheckResult]:
@@ -174,14 +183,18 @@ def _check_backend_runtime() -> CheckResult:
         [
             str(backend_python),
             "-c",
-            "import fastapi, jsonschema, pytest, uvicorn; print('runtime-ok')",
+            "import fastapi, jsonschema, pydantic_settings, pytest, uvicorn; print('runtime-ok')",
         ],
         capture_output=True,
         text=True,
         check=False,
     )
     if check.returncode == 0:
-        return CheckResult(name="backend-runtime", status="OK", message="fastapi/jsonschema/pytest/uvicorn importable")
+        return CheckResult(
+            name="backend-runtime",
+            status="OK",
+            message="fastapi/jsonschema/pydantic-settings/pytest/uvicorn importable",
+        )
 
     details = (check.stdout or check.stderr).strip() or f"exit code {check.returncode}"
     return CheckResult(
@@ -283,11 +296,25 @@ def run_checks() -> tuple[list[CheckResult], str]:
         _check_binary("npm", "npm", ["npm", "--version"]),
         _check_binary("npx", "npm (includes npx)", ["npx", "--version"]),
         _check_optional_binary("uv", "uv for faster Python installs", ["uv", "--version"]),
+        CheckResult("project-profile", "OK", f"active profile '{profile.profile_id}' loaded"),
     ]
-    if profile.has_feature("frontend"):
-        checks.append(_check_port(5173))
-    if profile.has_feature("backend"):
-        checks.append(_check_port(8000))
+    checks.extend(CheckResult(item.name, item.status, item.message) for item in configuration.collect_checks())
+    try:
+        resolved = resolve_configuration(profile, project_root=ROOT)
+    except ConfigLoadError:
+        resolved = None
+    if resolved is not None:
+        invalid_names = {issue.name for issue in validate_configuration(resolved)}
+        if profile.has_feature("frontend") and not {"FRONTEND_HOST", "FRONTEND_PORT"}.intersection(invalid_names):
+            frontend_host = resolved.value("FRONTEND_HOST")
+            frontend_port = resolved.value("FRONTEND_PORT")
+            assert frontend_host is not None and frontend_port is not None
+            checks.append(_check_port(frontend_host, int(frontend_port)))
+        if profile.has_feature("backend") and not {"BACKEND_HOST", "BACKEND_PORT"}.intersection(invalid_names):
+            backend_host = resolved.value("BACKEND_HOST")
+            backend_port = resolved.value("BACKEND_PORT")
+            assert backend_host is not None and backend_port is not None
+            checks.append(_check_port(backend_host, int(backend_port)))
     checks.extend(_check_project_structure())
     checks.append(_check_backend_runtime())
     checks.append(_check_tooling_runtime())

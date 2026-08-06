@@ -3,8 +3,8 @@ schema_version = 1
 [core]
 paths = [
   "README.md",
-  ".env.example",
   ".gitignore",
+  "config",
   "docs",
   "profiles",
   "shared",
@@ -22,10 +22,12 @@ description = "FastAPI backend service"
 paths = [
   "backend/app/__init__.py",
   "backend/app/api",
+  "backend/app/config",
   "backend/app/main.py",
   "backend/pytest.ini",
   "backend/requirements.txt",
   "backend/tests/api",
+  "backend/tests/config",
 ]
 
 [features.tauri]
@@ -63,4 +65,3 @@ paths = [
 requires = ["database"]
 optional = true
 selectable = true
-env_example = ["DATABASE_URL=postgresql+psycopg://app:change-me@127.0.0.1:5432/app"]

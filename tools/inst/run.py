@@ -14,6 +14,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from tools import logger
+from tools.config import (
+    ConfigLoadError,
+    ConfigValidationError,
+    RuntimeConfig,
+    is_server_only_name,
+    load_runtime_config,
+)
 from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -39,16 +46,24 @@ class ServiceDef:
     command: list[str]
     cwd: Path
     port: int
+    host: str
+    env: dict[str, str]
 
 
-def _port_is_free(port: int) -> bool:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        try:
-            sock.bind(("127.0.0.1", port))
-            return True
-        except OSError:
-            return False
+def _port_is_free(host: str, port: int) -> bool:
+    try:
+        addresses = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+    except OSError:
+        return False
+    for family, socktype, protocol, _, address in addresses:
+        with socket.socket(family, socktype, protocol) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                sock.bind(address)
+                return True
+            except OSError:
+                continue
+    return False
 
 
 def _is_process_alive(pid: int) -> bool:
@@ -80,7 +95,19 @@ def _clear_state() -> None:
         pass
 
 
-def _build_service_defs(frontend_port: int, backend_port: int) -> tuple[list[ServiceDef], list[str]]:
+def _frontend_process_environment(config: RuntimeConfig) -> dict[str, str]:
+    environment = {key: value for key, value in os.environ.items() if not is_server_only_name(key)}
+    environment.update(config.frontend_environment())
+    return environment
+
+
+def _backend_process_environment(config: RuntimeConfig) -> dict[str, str]:
+    environment = os.environ.copy()
+    environment.update(config.backend_environment())
+    return environment
+
+
+def _build_service_defs(config: RuntimeConfig) -> tuple[list[ServiceDef], list[str]]:
     errors: list[str] = []
     services: list[ServiceDef] = []
     profile = profile_runtime.active_profile(ROOT)
@@ -89,6 +116,8 @@ def _build_service_defs(frontend_port: int, backend_port: int) -> tuple[list[Ser
     backend_dir = ROOT / "backend"
 
     if profile.has_feature("frontend"):
+        assert config.frontend_host is not None
+        assert config.frontend_port is not None
         if not (frontend_dir / "package.json").exists():
             errors.append("Missing frontend/package.json")
 
@@ -99,13 +128,26 @@ def _build_service_defs(frontend_port: int, backend_port: int) -> tuple[list[Ser
             services.append(
                 ServiceDef(
                     name="frontend",
-                    command=[npm, "run", "dev", "--", "--host", "127.0.0.1", "--port", str(frontend_port)],
+                    command=[
+                        npm,
+                        "run",
+                        "dev",
+                        "--",
+                        "--host",
+                        config.frontend_host,
+                        "--port",
+                        str(config.frontend_port),
+                    ],
                     cwd=frontend_dir,
-                    port=frontend_port,
+                    port=config.frontend_port,
+                    host=config.frontend_host,
+                    env=_frontend_process_environment(config),
                 )
             )
 
     if profile.has_feature("backend"):
+        assert config.backend_host is not None
+        assert config.backend_port is not None
         if not (backend_dir / "app" / "main.py").exists():
             errors.append("Missing backend/app/main.py")
 
@@ -116,7 +158,7 @@ def _build_service_defs(frontend_port: int, backend_port: int) -> tuple[list[Ser
             errors.append("Python executable not found for backend service.")
         else:
             probe = subprocess.run(
-                [str(backend_python), "-c", "import uvicorn"],
+                [str(backend_python), "-c", "import pydantic_settings, uvicorn"],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -140,12 +182,14 @@ def _build_service_defs(frontend_port: int, backend_port: int) -> tuple[list[Ser
                             "uvicorn",
                             "app.main:app",
                             "--host",
-                            "127.0.0.1",
+                            config.backend_host,
                             "--port",
-                            str(backend_port),
+                            str(config.backend_port),
                         ],
                         cwd=backend_dir,
-                        port=backend_port,
+                        port=config.backend_port,
+                        host=config.backend_host,
+                        env=_backend_process_environment(config),
                     )
                 )
 
@@ -220,22 +264,26 @@ def _state_has_live_processes() -> bool:
     return False
 
 
-def _preflight(frontend_port: int, backend_port: int) -> list[str]:
+def _preflight(config: RuntimeConfig) -> list[str]:
     errors: list[str] = []
     profile = profile_runtime.active_profile(ROOT)
 
     if _state_has_live_processes():
         errors.append("Tracked services are already running. Use 'python tools/control.py stop' first.")
 
-    ports: list[int] = []
+    endpoints: list[tuple[str, int]] = []
     if profile.has_feature("frontend"):
-        ports.append(frontend_port)
+        assert config.frontend_host is not None
+        assert config.frontend_port is not None
+        endpoints.append((config.frontend_host, config.frontend_port))
     if profile.has_feature("backend"):
-        ports.append(backend_port)
+        assert config.backend_host is not None
+        assert config.backend_port is not None
+        endpoints.append((config.backend_host, config.backend_port))
 
-    for port in ports:
-        if not _port_is_free(port):
-            errors.append(f"Port {port} is already occupied.")
+    for host, port in endpoints:
+        if not _port_is_free(host, port):
+            errors.append(f"Port {host}:{port} is already occupied.")
 
     return errors
 
@@ -253,6 +301,7 @@ def _start_detached(services: list[ServiceDef]) -> tuple[list[subprocess.Popen],
         process = subprocess.Popen(
             service.command,
             cwd=service.cwd,
+            env=service.env,
             stdout=log_file,
             stderr=subprocess.STDOUT,
             text=True,
@@ -282,6 +331,7 @@ def _start_foreground(services: list[ServiceDef]) -> tuple[list[subprocess.Popen
         process = subprocess.Popen(
             service.command,
             cwd=service.cwd,
+            env=service.env,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -337,16 +387,29 @@ def _stream_foreground(payload: dict, processes: list[subprocess.Popen]) -> int:
 
 
 def run_command(args: argparse.Namespace) -> int:
-    frontend_port = int(args.frontend_port)
-    backend_port = int(args.backend_port)
+    profile = profile_runtime.active_profile(ROOT)
+    try:
+        config = load_runtime_config(
+            profile,
+            project_root=ROOT,
+            cli_overrides={
+                "FRONTEND_HOST": getattr(args, "frontend_host", None),
+                "FRONTEND_PORT": getattr(args, "frontend_port", None),
+                "BACKEND_HOST": getattr(args, "backend_host", None),
+                "BACKEND_PORT": getattr(args, "backend_port", None),
+            },
+        )
+    except (ConfigLoadError, ConfigValidationError) as exc:
+        logger.fail(f"Invalid runtime configuration: {exc}")
+        return 1
 
-    preflight_errors = _preflight(frontend_port, backend_port)
+    preflight_errors = _preflight(config)
     if preflight_errors:
         for err in preflight_errors:
             logger.fail(err)
         return 1
 
-    services, errors = _build_service_defs(frontend_port, backend_port)
+    services, errors = _build_service_defs(config)
     if errors:
         for err in errors:
             logger.fail(err)

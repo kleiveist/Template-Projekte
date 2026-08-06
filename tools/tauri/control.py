@@ -104,7 +104,8 @@ Use '<command> --help' before an unfamiliar or destructive operation.
     run_parser.add_argument("--detach", action="store_true", help="compatibility flag; background is already the default")
     run_parser.add_argument("--foreground", action="store_true", help="run directly in the current terminal")
     run_parser.add_argument("--no-follow", action="store_true", help="return after background start without following logs")
-    run_parser.add_argument("--frontend-port", type=int, default=5173, help="Vite port (default: 5173)")
+    run_parser.add_argument("--frontend-host", help="override FRONTEND_HOST")
+    run_parser.add_argument("--frontend-port", type=int, help="override FRONTEND_PORT")
     run_parser.epilog = (
         "examples:\n"
         "  python tools/control.py tauri run --foreground\n"

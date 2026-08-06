@@ -2,19 +2,25 @@ from __future__ import annotations
 
 import argparse
 import os
-import re
 import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import urlsplit
 
 from tools import logger
+from tools.config import (
+    ConfigLoadError,
+    ConfigValidationError,
+    load_runtime_config,
+    redact_text,
+    resolve_configuration,
+    validate_configuration,
+)
 from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
 BACKEND_DIR = ROOT / "backend"
-URL_CREDENTIAL_PATTERN = re.compile(r"([a-z][a-z0-9+.-]*://[^:/\s@]+:)[^@\s/]+@", re.IGNORECASE)
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,9 +62,17 @@ def _run_probe(script: str) -> subprocess.CompletedProcess[str]:
     python = _backend_python()
     if not python.exists():
         return subprocess.CompletedProcess([str(python)], 127, "", "backend virtualenv is missing")
+    environment = os.environ.copy()
+    try:
+        profile = profile_runtime.active_profile(ROOT)
+        config = load_runtime_config(profile, project_root=ROOT)
+        environment.update(config.backend_environment())
+    except (ConfigLoadError, ConfigValidationError):
+        pass
     return subprocess.run(
         [str(python), "-c", script],
         cwd=BACKEND_DIR,
+        env=environment,
         text=True,
         capture_output=True,
         check=False,
@@ -73,18 +87,14 @@ def _feature_error() -> str | None:
 
 
 def _redact_database_url(text: str) -> str:
-    database_url = os.getenv("DATABASE_URL", "")
-    redacted = text.replace(database_url, "<redacted DATABASE_URL>") if database_url else text
-    if database_url:
+    database_url = os.getenv("DATABASE_URL")
+    if database_url is None:
         try:
-            password = urlsplit(database_url).password
-        except ValueError:
-            password = None
-        if password:
-            for secret in {password, unquote(password)}:
-                if secret:
-                    redacted = redacted.replace(secret, "<redacted>")
-    return URL_CREDENTIAL_PATTERN.sub(r"\1<redacted>@", redacted)
+            profile = profile_runtime.active_profile(ROOT)
+            database_url = load_runtime_config(profile, project_root=ROOT).database_url
+        except (ConfigLoadError, ConfigValidationError):
+            database_url = None
+    return redact_text(text, {"DATABASE_URL": database_url})
 
 
 def _configuration_checks(*, connect: bool) -> list[DatabaseCheck]:
@@ -94,7 +104,26 @@ def _configuration_checks(*, connect: bool) -> list[DatabaseCheck]:
         return [DatabaseCheck("feature", "FAIL", feature_error)]
     checks.append(DatabaseCheck("feature", "OK", "database feature enabled"))
 
-    database_url = os.getenv("DATABASE_URL", "").strip()
+    profile = profile_runtime.active_profile(ROOT)
+    try:
+        resolved = resolve_configuration(profile, project_root=ROOT)
+    except ConfigLoadError as exc:
+        checks.append(DatabaseCheck("configuration", "FAIL", str(exc)))
+        return checks
+    non_database_issues = [
+        issue for issue in validate_configuration(resolved) if issue.name != "DATABASE_URL"
+    ]
+    if non_database_issues:
+        checks.append(
+            DatabaseCheck(
+                "configuration",
+                "FAIL",
+                "; ".join(f"{issue.name}: {issue.message}" for issue in non_database_issues),
+            )
+        )
+        return checks
+
+    database_url = (resolved.value("DATABASE_URL") or "").strip()
     if not database_url:
         checks.append(DatabaseCheck("DATABASE_URL", "FAIL", "not set in the process environment"))
         return checks
@@ -109,7 +138,6 @@ def _configuration_checks(*, connect: bool) -> list[DatabaseCheck]:
         checks.append(DatabaseCheck("DATABASE_URL", "FAIL", "missing SQLAlchemy driver scheme"))
         return checks
 
-    profile = profile_runtime.active_profile(ROOT)
     if profile.has_feature("postgres") and parsed.scheme != "postgresql+psycopg":
         checks.append(
             DatabaseCheck(
@@ -179,15 +207,24 @@ def _run_alembic(arguments: list[str]) -> int:
         return 1
 
     command = [str(_backend_python()), "-m", "alembic", "-c", "alembic.ini", *arguments]
+    environment = os.environ.copy()
+    try:
+        profile = profile_runtime.active_profile(ROOT)
+        environment.update(load_runtime_config(profile, project_root=ROOT).backend_environment())
+    except (ConfigLoadError, ConfigValidationError) as exc:
+        logger.fail(f"Invalid database configuration: {exc}")
+        return 1
     completed = subprocess.run(
         command,
         cwd=BACKEND_DIR,
+        env=environment,
         text=True,
         capture_output=True,
         check=False,
     )
     if completed.stdout:
-        print(completed.stdout, end="" if completed.stdout.endswith("\n") else "\n")
+        safe_stdout = _redact_database_url(completed.stdout)
+        print(safe_stdout, end="" if safe_stdout.endswith("\n") else "\n")
     if completed.returncode != 0:
         detail = (completed.stderr or "").strip() or f"exit code {completed.returncode}"
         detail = _redact_database_url(detail)

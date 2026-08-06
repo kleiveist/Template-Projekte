@@ -90,7 +90,7 @@ A generated PostgreSQL project adds this safe placeholder to `.env.example`:
 DATABASE_URL=postgresql+psycopg://app:change-me@127.0.0.1:5432/app
 ```
 
-The application reads `DATABASE_URL` from the process environment. Environment loading remains deliberately minimal until the separate configuration-unification change.
+Backend Settings read `DATABASE_URL` from the process environment or root `.env`, with the process environment taking priority. The value uses Pydantic `SecretStr`; database configuration unwraps it only when creating an engine. Tooling uses the same environment contract and masks credentials in output.
 
 ## SQLAlchemy baseline
 
@@ -143,5 +143,6 @@ python tools/control.py test --suite postgres
 
 - [Framework architecture](architecture.md)
 - [Project profiles](project-profiles.md)
+- [Runtime configuration](configuration.md)
 - [Tooling Guide](../tools/tooling.md)
 - [Documentation Standard](../README.md)

@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 
 from tools import logger
+from tools.config import ConfigLoadError, resolve_configuration, validate_configuration
 from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -320,11 +321,33 @@ def main(args: argparse.Namespace) -> int:
     tracked_stopped, failures = _stop_tracked_processes()
     if not args.tracked_only:
         profile = profile_runtime.active_profile(ROOT)
+        try:
+            resolved = resolve_configuration(
+                profile,
+                project_root=ROOT,
+                cli_overrides={
+                    "FRONTEND_PORT": getattr(args, "frontend_port", None),
+                    "BACKEND_PORT": getattr(args, "backend_port", None),
+                },
+            )
+        except ConfigLoadError as exc:
+            logger.fail(f"Could not load development ports: {exc}")
+            return 1
+        relevant_names = {"FRONTEND_PORT", "BACKEND_PORT"}
+        relevant_issues = [issue for issue in validate_configuration(resolved) if issue.name in relevant_names]
+        if relevant_issues:
+            for issue in relevant_issues:
+                logger.fail(f"{issue.name}: {issue.message}")
+            return 1
         ports: set[int] = set()
         if profile.has_feature("frontend"):
-            ports.add(int(args.frontend_port))
+            frontend_port = resolved.value("FRONTEND_PORT")
+            assert frontend_port is not None
+            ports.add(int(frontend_port))
         if profile.has_feature("backend"):
-            ports.add(int(args.backend_port))
+            backend_port = resolved.value("BACKEND_PORT")
+            assert backend_port is not None
+            ports.add(int(backend_port))
         if ports:
             failures += _stop_port_processes(ports, tracked_stopped)
         else:
