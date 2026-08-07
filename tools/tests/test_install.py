@@ -75,3 +75,36 @@ def test_backend_install_rebuilds_venv_when_python_is_missing(monkeypatch, tmp_p
     assert ok is True
     assert message == "pip/venv backend install completed"
     assert rebuild_reasons == [f"venv python is missing at {python}"]
+
+
+def test_tooling_install_rebuilds_inconsistent_existing_venv(monkeypatch, tmp_path: Path) -> None:
+    tools_dir = tmp_path / "tools"
+    tooling_venv = tools_dir / ".venv"
+    tooling_python = tooling_venv / "bin" / "python"
+    tooling_venv.mkdir(parents=True)
+    requirements = tools_dir / "requirements.txt"
+    requirements.write_text("pytest==8.2.2\n", encoding="utf-8")
+    rebuilds: list[tuple[Path, bool]] = []
+
+    def fake_create(venv_dir: Path, clear: bool) -> tuple[bool, str]:
+        rebuilds.append((venv_dir, clear))
+        tooling_python.parent.mkdir(parents=True, exist_ok=True)
+        tooling_python.touch()
+        return True, "venv rebuilt"
+
+    monkeypatch.setattr(install, "ROOT", tmp_path)
+    monkeypatch.setattr(install, "TOOLS_VENV", tooling_venv)
+    monkeypatch.setattr(install, "TOOLS_REQUIREMENTS", requirements)
+    monkeypatch.setattr(install, "_runtime_imports", lambda _python, _modules: False)
+    monkeypatch.setattr(install, "_inspect_backend_venv", lambda _python, _venv: (False, "interpreter mismatch"))
+    monkeypatch.setattr(install, "_create_backend_venv", fake_create)
+    monkeypatch.setattr(
+        install,
+        "_run",
+        lambda command, cwd=None: subprocess.CompletedProcess(command, 0, stdout="", stderr=""),
+    )
+
+    result = install._install_tooling_runtime()
+
+    assert result.status == "OK"
+    assert rebuilds == [(tooling_venv, True)]

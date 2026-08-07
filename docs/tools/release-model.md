@@ -7,7 +7,7 @@
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
-| Last review | 2026-08-06 |
+| Last review | 2026-08-07 |
 | Audience | Release operators and desktop developers |
 | Related ATP | N/A — template-level release baseline |
 
@@ -101,7 +101,7 @@ Run the non-publishing gate before a release:
 python tools/control.py release check
 ```
 
-The gate fails for inconsistent versions, a version tag that differs from `v<VERSION>`, a dirty Git tree, unreadable metadata, or known template identities such as `com.example.templateproject`. It checks the Tauri CSP and capabilities and warns when signing configuration is absent. A warning preserves unsigned CI verification; it does not certify a production release.
+In the template source repository, the gate recognizes the profile-matrix workflow as the master marker and accepts the intentional canonical scaffold identity. Generated projects do not contain that workflow marker: their gate fails for known template identities such as `com.example.templateproject` until product identity is configured. In both repository types, the gate fails for inconsistent versions, a version tag that differs from `v<VERSION>`, a dirty Git tree, or unreadable metadata. It checks the Tauri CSP and capabilities and warns when signing configuration is absent. A warning preserves unsigned CI verification; it does not certify a production release.
 
 ## Signing and notarization preparation
 

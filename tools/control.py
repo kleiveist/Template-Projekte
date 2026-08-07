@@ -93,6 +93,7 @@ examples:
   python tools/control.py build container
   python tools/control.py config doctor
   python tools/control.py db doctor
+  python tools/control.py db current
   python tools/control.py docs index --dry-run
   python tools/control.py tauri
 
@@ -336,6 +337,7 @@ More desktop commands:
         """examples:
   python tools/control.py db doctor
   python tools/control.py db doctor --connect
+  python tools/control.py db current
   python tools/control.py db upgrade
   python tools/control.py db downgrade
   python tools/control.py db revision --message 'add widgets'""",

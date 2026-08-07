@@ -23,6 +23,7 @@ def test_db_parser_recognizes_commands() -> None:
     parser = control._build_parser()
 
     assert parser.parse_args(["db", "doctor", "--connect"]).db_command == "doctor"
+    assert parser.parse_args(["db", "current"]).db_command == "current"
     assert parser.parse_args(["db", "upgrade"]).revision == "head"
     assert parser.parse_args(["db", "downgrade"]).revision == "-1"
     assert parser.parse_args(["db", "revision", "--message", "add widgets"]).message == "add widgets"
@@ -108,10 +109,12 @@ def test_db_migration_commands_delegate_to_alembic(monkeypatch) -> None:
     calls: list[list[str]] = []
     monkeypatch.setattr(db, "_run_alembic", lambda arguments: calls.append(arguments) or 0)
 
+    assert db.main(argparse.Namespace(db_command="current")) == 0
     assert db.main(argparse.Namespace(db_command="upgrade", revision="head")) == 0
     assert db.main(argparse.Namespace(db_command="downgrade", revision="-1")) == 0
     assert db.main(argparse.Namespace(db_command="revision", message="add widgets")) == 0
     assert calls == [
+        ["current"],
         ["upgrade", "head"],
         ["downgrade", "-1"],
         ["revision", "--autogenerate", "-m", "add widgets"],

@@ -16,6 +16,7 @@ from tools import logger
 from tools.config import ConfigLoadError, resolve_configuration, validate_configuration
 from tools.inst import report as report_writer
 from tools.inst import stop as service_cleanup
+from tools.process import prepare_command
 from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -86,7 +87,7 @@ def _format_command(command: list[str] | None, *, max_chars: int | None = None) 
 
 def _run(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
     try:
-        return subprocess.run(cmd, cwd=cwd, text=True, capture_output=True, check=False)
+        return subprocess.run(prepare_command(cmd), cwd=cwd, text=True, capture_output=True, check=False)
     except OSError as exc:
         return subprocess.CompletedProcess(cmd, 127, stdout="", stderr=str(exc))
 

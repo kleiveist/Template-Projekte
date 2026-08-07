@@ -103,6 +103,18 @@ def collect_version_checks() -> list[ReleaseCheck]:
 
 
 def _placeholder_checks() -> list[ReleaseCheck]:
+    # The source repository intentionally owns the canonical scaffold identity.
+    # Generated projects do not include CI workflow sources and must still replace
+    # every known placeholder before their first release.
+    if (ROOT / ".github" / "workflows" / "profiles.yml").is_file():
+        return [
+            ReleaseCheck(
+                "template-identity",
+                "OK",
+                "canonical template identity is expected in the template source repository",
+            )
+        ]
+
     profile = profile_runtime.active_profile(ROOT)
     targets: list[tuple[Path, tuple[str, ...]]] = []
     if profile.has_feature("frontend"):

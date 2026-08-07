@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from tools import logger
+from tools.process import prepare_command
 from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -25,7 +26,7 @@ class StepResult:
 
 
 def _run(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, cwd=cwd, text=True, capture_output=True, check=False)
+    return subprocess.run(prepare_command(cmd), cwd=cwd, text=True, capture_output=True, check=False)
 
 
 def _tail(text: str, limit: int = 8) -> str:
@@ -357,7 +358,14 @@ def _install_tooling_runtime() -> StepResult:
     if not TOOLS_REQUIREMENTS.exists():
         return StepResult("tooling", "FAIL", "missing tools/requirements.txt")
 
-    if not TOOLS_VENV.exists():
+    if TOOLS_VENV.exists():
+        consistent, reason = _inspect_backend_venv(tooling_python, TOOLS_VENV)
+        if not consistent:
+            logger.info(f"Rebuilding shared tooling virtualenv because {reason}")
+            rebuilt, rebuild_message = _create_backend_venv(TOOLS_VENV, clear=True)
+            if not rebuilt:
+                return StepResult("tooling", "FAIL", f"tooling venv rebuild failed: {rebuild_message}")
+    else:
         logger.info("Creating shared tooling virtualenv")
         command = [_select_venv_seed_python(), "-m", "venv", str(TOOLS_VENV)]
         created = _run(command, cwd=ROOT)

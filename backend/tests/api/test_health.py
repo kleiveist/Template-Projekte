@@ -33,7 +33,11 @@ def test_readiness_without_database_dependency() -> None:
     assert response.json() == {"status": "ready"}
 
 
-def test_readiness_fails_closed_when_database_is_enabled_without_url() -> None:
+def test_readiness_fails_closed_when_database_is_enabled_without_url(monkeypatch) -> None:
+    # PostgreSQL integration runs export DATABASE_URL for the process. This test
+    # verifies the missing-value branch, so it must not inherit that external
+    # configuration.
+    monkeypatch.delenv("DATABASE_URL", raising=False)
     application = create_app(BackendSettings(_env_file=None), database_enabled=True)
 
     async def request() -> httpx.Response:

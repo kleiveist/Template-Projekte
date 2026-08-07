@@ -21,6 +21,7 @@ from tools.config import (
     is_server_only_name,
     load_runtime_config,
 )
+from tools.process import prepare_command
 from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -299,7 +300,7 @@ def _start_detached(services: list[ServiceDef]) -> tuple[list[subprocess.Popen],
         log_path = LOG_DIR / f"{service.name}.log"
         log_file = log_path.open("a", encoding="utf-8")
         process = subprocess.Popen(
-            service.command,
+            prepare_command(service.command),
             cwd=service.cwd,
             env=service.env,
             stdout=log_file,
@@ -329,7 +330,7 @@ def _start_foreground(services: list[ServiceDef]) -> tuple[list[subprocess.Popen
 
     for service in services:
         process = subprocess.Popen(
-            service.command,
+            prepare_command(service.command),
             cwd=service.cwd,
             env=service.env,
             stdout=subprocess.PIPE,

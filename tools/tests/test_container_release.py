@@ -42,6 +42,26 @@ def test_container_baseline_is_non_root_and_profiled() -> None:
     assert "secrets:" not in compose
 
 
+def test_production_locks_match_container_python_runtime() -> None:
+    profile = container.profile_runtime.active_profile(ROOT)
+    if not profile.has_feature("backend"):
+        pytest.skip("Backend production locks are absent from this derived project")
+
+    lock_names = ["requirements-production.lock"]
+    if profile.has_feature("database"):
+        lock_names.append("requirements-database-production.lock")
+    if profile.has_feature("postgres"):
+        lock_names.append("requirements-postgres-production.lock")
+    locks = {
+        name: (ROOT / "backend" / name).read_text(encoding="utf-8")
+        for name in lock_names
+    }
+
+    assert all("pip-compile with Python 3.11" in content for content in locks.values())
+    if profile.has_feature("database"):
+        assert "greenlet==" in locks["requirements-database-production.lock"]
+
+
 def test_container_build_is_rejected_for_non_cloud_profile(monkeypatch) -> None:
     monkeypatch.setattr(container.profile_runtime, "active_profile", lambda _root: _profile("frontend"))
 
@@ -60,6 +80,26 @@ def test_container_doctor_reports_missing_docker_as_actionable_failure(monkeypat
     docker = next(check for check in checks if check.name == "docker")
     assert docker.status == "FAIL"
     assert docker.message == "Docker is required for container builds but was not found."
+
+
+def test_general_doctor_treats_missing_compose_as_optional_warning(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(container, "ROOT", tmp_path)
+    monkeypatch.setattr(container, "DEPLOYMENT_DIR", tmp_path / "deployment")
+    monkeypatch.setattr(container, "COMPOSE_FILE", tmp_path / "deployment" / "compose.yaml")
+    monkeypatch.setattr(container.profile_runtime, "active_profile", lambda _root: _profile("backend", "cloud"))
+    monkeypatch.setattr(container, "_docker", lambda: "/usr/bin/docker")
+
+    def fake_run(command: list[str]) -> subprocess.CompletedProcess[str]:
+        if command[1:] == ["--version"]:
+            return subprocess.CompletedProcess(command, 0, stdout="Docker version fixture", stderr="")
+        return subprocess.CompletedProcess(command, 1, stdout="", stderr="compose unavailable")
+
+    monkeypatch.setattr(container, "_run", fake_run)
+
+    checks = container.collect_checks(require_docker=False)
+
+    compose = next(check for check in checks if check.name == "compose")
+    assert compose.status == "WARN"
 
 
 def test_container_build_dispatches_profile_components(monkeypatch, tmp_path: Path) -> None:
@@ -125,12 +165,41 @@ def test_version_sync_updates_frontend_metadata(monkeypatch, tmp_path: Path) -> 
     assert package_lock["packages"][""]["version"] == "2.3.4"
 
 
-def test_release_check_detects_master_template_identifiers() -> None:
+def test_release_check_accepts_canonical_master_template_identity() -> None:
+    if not (ROOT / ".github" / "workflows" / "profiles.yml").is_file():
+        pytest.skip("Canonical template master marker is absent from this derived project")
     if not (ROOT / "src-tauri" / "tauri.conf.json").exists():
         pytest.skip("Tauri source is absent from this derived project")
     tauri = json.loads((ROOT / "src-tauri" / "tauri.conf.json").read_text(encoding="utf-8"))
     if tauri.get("identifier") != "com.example.templateproject":
         pytest.skip("Known template identity is already customized in this derived project")
+
+    checks = release._placeholder_checks()
+
+    assert checks == [
+        release.ReleaseCheck(
+            "template-identity",
+            "OK",
+            "canonical template identity is expected in the template source repository",
+        )
+    ]
+
+
+def test_release_check_rejects_default_generated_identity(monkeypatch, tmp_path: Path) -> None:
+    if not (ROOT / "src-tauri" / "tauri.conf.json").exists():
+        pytest.skip("Tauri source is absent from this derived project")
+    profile = container.profile_runtime.active_profile(ROOT)
+    target = tmp_path / "default-app"
+    assert control.main(
+        [
+            "init",
+            "--profile",
+            profile.profile_id,
+            "--target-dir",
+            str(target),
+        ]
+    ) == 0
+    monkeypatch.setattr(release, "ROOT", target)
 
     checks = release._placeholder_checks()
 

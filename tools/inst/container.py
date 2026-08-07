@@ -93,10 +93,11 @@ def collect_checks(
     )
 
     compose = _run([docker, "compose", "version"])
+    compose_status = "OK" if compose.returncode == 0 else ("FAIL" if require_docker else "WARN")
     checks.append(
         ContainerCheck(
             "compose",
-            "OK" if compose.returncode == 0 else "FAIL",
+            compose_status,
             (compose.stdout or compose.stderr).strip() or "Docker Compose plugin is unavailable",
         )
     )

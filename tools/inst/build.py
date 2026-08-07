@@ -9,6 +9,7 @@ import zipfile
 from pathlib import Path
 
 from tools import logger
+from tools.process import prepare_command
 from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -19,7 +20,7 @@ WEB_ZIP_PATH = WEB_ARTIFACT_DIR / "template-project-web.zip"
 
 
 def _run(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, cwd=cwd, text=True, capture_output=True, check=False)
+    return subprocess.run(prepare_command(cmd), cwd=cwd, text=True, capture_output=True, check=False)
 
 
 def _tail_lines(text: str, limit: int = 12) -> list[str]:

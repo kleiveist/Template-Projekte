@@ -53,16 +53,16 @@ The Compose procedure and migration order are defined in [Deployment architectur
 
 ## Updating production dependency locks
 
-The `*-production.txt` files are reviewed direct inputs. The matching `.lock` files pin the complete dependency graph and hashes used by Docker. After intentionally changing an input, regenerate all affected locks with `pip-tools` from the repository root:
+The `*-production.txt` files are reviewed direct inputs. The matching `.lock` files pin the complete dependency graph and hashes used by Docker. Because conditional dependencies differ by interpreter version, regenerate all affected locks with `pip-tools` under Python 3.11, matching the backend container, from the repository root:
 
 ```sh
-pip-compile --generate-hashes \
+python3.11 -m piptools compile --generate-hashes \
   --output-file backend/requirements-production.lock \
   backend/requirements-production.txt
-pip-compile --generate-hashes \
+python3.11 -m piptools compile --generate-hashes \
   --output-file backend/requirements-database-production.lock \
   backend/requirements-database-production.txt
-pip-compile --generate-hashes \
+python3.11 -m piptools compile --generate-hashes \
   --output-file backend/requirements-postgres-production.lock \
   backend/requirements-postgres-production.txt
 ```

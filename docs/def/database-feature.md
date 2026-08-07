@@ -107,12 +107,13 @@ Set `DATABASE_URL` in the process environment, then use explicit commands:
 ```sh
 python tools/control.py db doctor
 python tools/control.py db doctor --connect
+python tools/control.py db current
 python tools/control.py db upgrade
 python tools/control.py db downgrade
 python tools/control.py db revision --message "add example"
 ```
 
-`db doctor` is read-only. The connection probe runs only with `--connect` and executes `SELECT 1`. Migration commands delegate to Alembic. FastAPI startup never invokes Alembic automatically.
+`db doctor` is read-only. The connection probe runs only with `--connect` and executes `SELECT 1`. `db current` reports the applied Alembic revision without changing the schema. Migration commands delegate to Alembic. FastAPI startup never invokes Alembic automatically.
 
 No initial migration exists because the template contains no business models.
 

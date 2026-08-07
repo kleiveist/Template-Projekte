@@ -15,6 +15,7 @@ from pathlib import Path
 from tools import logger
 from tools.config import ConfigLoadError, resolve_configuration, validate_configuration
 from tools.inst import configuration, container
+from tools.process import prepare_command
 from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -34,7 +35,9 @@ def _status_priority(status: str) -> int:
 
 def _command_version(command: list[str], cwd: Path | None = None) -> tuple[bool, str]:
     try:
-        completed = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False)
+        completed = subprocess.run(
+            prepare_command(command), cwd=cwd, capture_output=True, text=True, check=False
+        )
     except OSError as exc:
         return False, str(exc)
 

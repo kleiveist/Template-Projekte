@@ -37,6 +37,8 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     doctor = subparsers.add_parser("doctor", help="validate database configuration without changing data")
     doctor.add_argument("--connect", action="store_true", help="also execute a read-only SELECT 1 connection probe")
 
+    subparsers.add_parser("current", help="show the current Alembic revision")
+
     upgrade = subparsers.add_parser("upgrade", help="apply Alembic migrations")
     upgrade.add_argument("revision", nargs="?", default="head", help="target revision (default: head)")
 
@@ -245,6 +247,8 @@ def main(args: argparse.Namespace) -> int:
         return 0
     if command == "doctor":
         return _doctor(connect=bool(args.connect))
+    if command == "current":
+        return _run_alembic(["current"])
     if command == "upgrade":
         return _run_alembic(["upgrade", args.revision])
     if command == "downgrade":

@@ -189,6 +189,7 @@ Set `DATABASE_URL` in the server process environment or root `.env`, then run th
 ```sh
 python tools/control.py db doctor
 python tools/control.py db doctor --connect
+python tools/control.py db current
 ```
 
 The normal doctor validates configuration and imports only. `--connect` additionally opens a connection, executes `SELECT 1`, and closes it without modifying data.

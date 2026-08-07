@@ -10,6 +10,7 @@ from typing import Iterable
 
 from tools import logger
 from tools.config import is_server_only_name
+from tools.process import prepare_command
 from tools.tauri import paths
 
 TAURI_CLI_PACKAGE = "@tauri-apps/cli@2.10.1"
@@ -116,7 +117,7 @@ def run_command(
             environment.pop(name, None)
         environment.update(env or {})
         completed = subprocess.run(
-            command,
+            prepare_command(command),
             cwd=resolved_cwd,
             env=environment,
             text=True,
@@ -136,7 +137,9 @@ def run_command(
 
 def command_output(command: list[str], *, cwd: Path | None = None) -> tuple[bool, str]:
     try:
-        completed = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False)
+        completed = subprocess.run(
+            prepare_command(command), cwd=cwd, capture_output=True, text=True, check=False
+        )
     except OSError as exc:
         return False, str(exc)
     output = (completed.stdout or completed.stderr or "").strip()
