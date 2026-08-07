@@ -7,6 +7,8 @@
 
 ## 📄 Pages
 - 📝 [Continuous Integration](ci.md)
+- 📝 [Container builds and local production simulation](container-builds.md)
+- 📝 [Release and desktop packaging model](release-model.md)
 - 📝 [Tooling Guide](tooling.md)
 
 ## 📁 Tauri

@@ -48,7 +48,10 @@ python tools/control.py run
 | `run` | Start the enabled local services | `python tools/control.py run --help` |
 | `stop` | Stop tracked development services | `python tools/control.py stop --help` |
 | `test` | Select test suites and reports | `python tools/control.py test` |
-| `build` | Select a web or desktop build | `python tools/control.py build` |
+| `build` | Select a web, desktop, or container build | `python tools/control.py build` |
+| `container` | Diagnose and validate Docker/Compose deployment files | `python tools/control.py container` |
+| `version` | Show, synchronize, or check the application version | `python tools/control.py version` |
+| `release` | Run the non-publishing release gate | `python tools/control.py release` |
 | `config` | Show or validate effective runtime configuration | `python tools/control.py config` |
 | `db` | Diagnose optional database configuration and run Alembic | `python tools/control.py db` |
 | `docs` | Maintain navigation with PyGitIndex | `python tools/control.py docs` |
@@ -58,11 +61,13 @@ Group commands display the next level of help when called without an action:
 
 ```sh
 python tools/control.py build
+python tools/control.py container
 python tools/control.py config
 python tools/control.py db
 python tools/control.py docs
 python tools/control.py test
 python tools/control.py tauri
+python tools/control.py release
 ```
 
 An unknown command displays the relevant help map, explains the error, and provides the next `--help` command.
@@ -82,6 +87,7 @@ python tools/control.py init --profile web-only
 python tools/control.py init --profile desktop-cloud --target-dir ../desktop-cloud-app
 python tools/control.py init --profile full-platform --dry-run
 python tools/control.py init --profile web-cloud --with postgres
+python tools/control.py init --profile desktop-cloud --name CustomerApp --identifier com.customer.app
 ```
 
 The command writes into `.generated/<profile-id>` by default, or `.generated/<profile-id>-<capability>` when `--with` is used, so the master template is not modified accidentally. Repeat `--with` or pass comma-separated feature IDs for multiple capabilities. Use `--target-dir` for a real destination outside the template workspace.
@@ -230,6 +236,26 @@ The Tauri map also provides prerequisite setup, development mode, local AppImage
 
 Desktop build and `tauri` commands require the active profile to enable `tauri`. Otherwise they fail with a clear profile-based message.
 
+Cloud-enabled profiles additionally support provider-neutral image builds:
+
+```sh
+python tools/control.py container doctor
+python tools/control.py container validate
+python tools/control.py build container
+python tools/control.py build container --component backend
+```
+
+Version and release validation remain separate from publication:
+
+```sh
+python tools/control.py version
+python tools/control.py version sync
+python tools/control.py version check
+python tools/control.py release check
+```
+
+See [Container Builds](container-builds.md) and [Release Model](release-model.md) for production boundaries, migrations, signing, and platform artifacts.
+
 ## Documentation indexing with PyGitIndex
 
 Preview index and backlink changes before writing:
@@ -299,4 +325,6 @@ python tools/control.py build desktop --dry-run --no-clean
 - [Runtime Configuration](../def/configuration.md)
 - [Project Profiles](../def/project-profiles.md)
 - [Continuous Integration](ci.md)
+- [Container Builds](container-builds.md)
+- [Release Model](release-model.md)
 - [ATP Workflow](../atp/README.md)

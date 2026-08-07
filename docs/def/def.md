@@ -9,6 +9,7 @@
 - 📝 [Framework architecture](architecture.md)
 - 📝 [Runtime configuration](configuration.md)
 - 📝 [Database feature](database-feature.md)
+- 📝 [Deployment architecture](deployment-architecture.md)
 - 📝 [Project profiles](project-profiles.md)
 
 <!-- AUTO-GENERATED:docs-index END -->

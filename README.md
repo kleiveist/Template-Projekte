@@ -16,6 +16,7 @@
 - 📝 [Framework architecture](docs/def/architecture.md)
 - 📝 [Runtime configuration](docs/def/configuration.md)
 - 📝 [Database feature](docs/def/database-feature.md)
+- 📝 [Deployment architecture](docs/def/deployment-architecture.md)
 - 📝 [Project profiles](docs/def/project-profiles.md)
 
 ## 📁 DEV
@@ -24,6 +25,8 @@
 ## 📁 Tools
 - 🗂️ [Overview](docs/tools/tools.md)
 - 📝 [Continuous Integration](docs/tools/ci.md)
+- 📝 [Container builds and local production simulation](docs/tools/container-builds.md)
+- 📝 [Release and desktop packaging model](docs/tools/release-model.md)
 - 📝 [Tooling Guide](docs/tools/tooling.md)
 
 ## 📁 USR
@@ -72,6 +75,7 @@ The default local endpoints are:
 - Frontend: `http://127.0.0.1:5173`
 - Backend: `http://127.0.0.1:8000`
 - API health check: `http://127.0.0.1:8000/api/health`
+- API readiness check: `http://127.0.0.1:8000/api/ready`
 
 The development command starts only the services enabled by `project-profile.toml`. It runs in the foreground; press `Ctrl+C` to stop its processes.
 
@@ -85,10 +89,13 @@ python tools/control.py run
 python tools/control.py stop
 python tools/control.py test
 python tools/control.py build
+python tools/control.py container
 python tools/control.py config
 python tools/control.py db
 python tools/control.py docs
 python tools/control.py tauri
+python tools/control.py version
+python tools/control.py release
 python tools/control.py console
 ```
 
@@ -100,6 +107,7 @@ Examples:
 python tools/control.py init --profile web-only --dry-run
 python tools/control.py init --profile desktop-cloud --target-dir ../desktop-cloud-app
 python tools/control.py init --profile web-cloud --with postgres --dry-run
+python tools/control.py init --profile desktop-cloud --name CustomerApp --identifier com.customer.app
 python tools/control.py config show
 python tools/control.py config doctor
 python tools/control.py test --suite api
@@ -108,6 +116,10 @@ python tools/control.py test --suite tools
 python tools/control.py test --suite all --report
 python tools/control.py build web
 python tools/control.py build desktop --dry-run
+python tools/control.py container validate
+python tools/control.py build container
+python tools/control.py version check
+python tools/control.py release check
 python tools/control.py docs index --dry-run
 python tools/control.py tauri doctor
 ```
@@ -152,15 +164,21 @@ Use `python tools/control.py config show` to inspect masked effective values and
 
 Pull requests and pushes to `main` run automated core tests, all five generated project profiles, PostgreSQL integration and Alembic migration checks, Tauri/Rust checks, and production web builds. CI delegates project behavior to the same `tools/control.py` interface used locally and requires no production secrets. See [Continuous Integration](docs/tools/ci.md) for workflows, runtimes, caching, security, and branch protection guidance.
 
+Cloud-enabled profiles include a provider-neutral Docker boundary for the FastAPI backend and optional static frontend server. PostgreSQL remains an explicit Compose profile, and migrations run as a controlled `db upgrade` step rather than at application startup. See [Deployment Architecture](docs/def/deployment-architecture.md) and [Container Builds](docs/tools/container-builds.md).
+
+Native unsigned verification artifacts are built on Windows, macOS, and Linux. Release validation is manual or tag-triggered and remains separate from signing, publication, and deployment. See [Release Model](docs/tools/release-model.md).
+
 ## Project structure
 
 ```text
 backend/             FastAPI application and API tests
 config/              Declarative runtime environment contract
+deployment/          Provider-neutral Docker and Compose baseline
 docs/                Documentation rules, templates, architecture, and ATPs
 frontend/            Vite and TypeScript application with frontend tests
 profiles/            Declarative feature and profile definitions
 project-profile.toml Active feature preset for the current project root
+VERSION              Application version source of truth
 shared/              Framework-neutral contracts, examples, and shared assets
 src-tauri/           Tauri configuration, Rust entry point, and application icons
 tools/control.py     Shared project CLI entry point
@@ -177,10 +195,14 @@ python tools/control.py init --profile web-only --dry-run
 2. Generate the derived project into the safe default `.generated/<profile-id>` location or an explicit target directory:
 
 ```sh
-python tools/control.py init --profile full-platform --target-dir ../my-product
+python tools/control.py init \
+  --profile full-platform \
+  --name CustomerApp \
+  --identifier com.customer.app \
+  --target-dir ../my-product
 ```
 
-3. In the generated project, search for `template-project`, `project-template`, `Template Project`, and `com.example.templateproject`; replace them with project-specific values.
+3. Run `python tools/control.py release check`; it detects any known template release identity that remains.
 4. If the project includes desktop support, replace `src-tauri/app-icon.svg` and generate platform icons with `npm --prefix frontend run tauri -- icon ../src-tauri/app-icon.svg`.
 5. Document the product objective, ownership, and quality criteria.
 6. Create the first ATP from `docs/atp/ATP-TEMPLATE.md`.
@@ -197,9 +219,12 @@ English is the only documentation language for this repository and all projects 
 - [Database Feature](docs/def/database-feature.md)
 - [Runtime Configuration](docs/def/configuration.md)
 - [Project Profiles](docs/def/project-profiles.md)
+- [Deployment Architecture](docs/def/deployment-architecture.md)
 - [ATP Workflow](docs/atp/README.md)
 - [ATP Template](docs/atp/ATP-TEMPLATE.md)
 - [Tooling Guide](docs/tools/tooling.md)
 - [Continuous Integration](docs/tools/ci.md)
+- [Container Builds](docs/tools/container-builds.md)
+- [Release Model](docs/tools/release-model.md)
 
 A new or changed feature is complete only when its code, tests, acceptance evidence, and affected documentation are updated together.

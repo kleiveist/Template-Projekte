@@ -12,7 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools import logger
-from tools.inst import build, configuration, console, db, docs_index, doctor, install, run, run_test, stop
+from tools.inst import build, configuration, console, container, db, docs_index, doctor, install, release, run, run_test, stop
 from tools.profiles import cli as profile_cli
 from tools.profiles import runtime as profile_runtime
 from tools.tauri import build as tauri_build
@@ -64,17 +64,20 @@ Recommended workflow after returning to the project:
   2. install  Install or repair dependencies for enabled features.
   3. run      Start the enabled local development services.
   4. test     Select and run the relevant quality checks.
-  5. build    Choose a web or desktop release.
+  5. build    Choose a web, desktop, or container artifact.
 
 Prefer a menu? Start the optional interactive console:
   python tools/control.py console
 
 Groups with their own command maps:
   python tools/control.py build
+  python tools/control.py container
   python tools/control.py config
   python tools/control.py db
   python tools/control.py docs
   python tools/control.py tauri
+  python tools/control.py version
+  python tools/control.py release
 """
 
 ROOT_EXAMPLES = """
@@ -87,6 +90,7 @@ examples:
   python tools/control.py stop
   python tools/control.py test --suite all --report
   python tools/control.py build web
+  python tools/control.py build container
   python tools/control.py config doctor
   python tools/control.py db doctor
   python tools/control.py docs index --dry-run
@@ -155,6 +159,9 @@ def _build_parser() -> argparse.ArgumentParser:
         metavar="FEATURE",
         help="add an optional capability; repeat the flag or use comma-separated feature ids",
     )
+    init_parser.add_argument("--name", dest="project_name", help="project display name")
+    init_parser.add_argument("--slug", dest="project_slug", help="lowercase package/application slug")
+    init_parser.add_argument("--identifier", help="Tauri reverse-domain identifier")
     init_parser.add_argument(
         "--target-dir",
         metavar="PATH",
@@ -168,6 +175,7 @@ def _build_parser() -> argparse.ArgumentParser:
   python tools/control.py init --profile web-only
   python tools/control.py init --profile web-cloud --with postgres
   python tools/control.py init --profile desktop-cloud --target-dir ../desktop-cloud-app
+  python tools/control.py init --profile desktop-cloud --name CustomerApp --identifier com.customer.app
   python tools/control.py init --profile full-platform --dry-run""",
     )
 
@@ -226,7 +234,7 @@ example:
 
     build_parser = subparsers.add_parser(
         "build",
-        help="choose a web or desktop release",
+        help="choose a web, desktop, or container artifact",
         description="Build map. Choose one target; a bare 'build' only shows this guide.",
         formatter_class=HelpFormatter,
     )
@@ -257,11 +265,25 @@ example:
   python tools/control.py build desktop --target linux --bundles deb,rpm
   python tools/control.py build desktop --target windows-portable""",
     )
+    container_build_parser = build_subparsers.add_parser(
+        "container",
+        help="build profile-aware backend and frontend images",
+        description="Build provider-neutral production images for a cloud-enabled profile.",
+        formatter_class=HelpFormatter,
+    )
+    container_build_parser.add_argument(
+        "--component",
+        choices=["all", "backend", "frontend"],
+        default="all",
+        help="image component to build (default: all)",
+    )
+    container_build_parser.add_argument("--no-cache", action="store_true", help="disable Docker build cache")
     _add_examples(
         build_parser,
         """examples:
   python tools/control.py build web
   python tools/control.py build desktop --dry-run
+  python tools/control.py build container
 
 More desktop commands:
   python tools/control.py tauri""",
@@ -273,6 +295,41 @@ More desktop commands:
         description="Database command map. Commands require the active project to enable the database feature.",
         formatter_class=HelpFormatter,
     )
+
+    container_parser = subparsers.add_parser(
+        "container",
+        help="inspect and validate provider-neutral container deployment files",
+        description="Container command map for Docker and Compose validation.",
+        formatter_class=HelpFormatter,
+    )
+    container_parser.set_defaults(container_parser=container_parser)
+    container_subparsers = container_parser.add_subparsers(dest="container_command", metavar="<action>")
+    container_subparsers.add_parser("doctor", help="check Docker, Compose, and deployment files")
+    container_subparsers.add_parser("validate", help="validate the Compose model without starting services")
+    _add_examples(
+        container_parser,
+        "examples:\n  python tools/control.py container doctor\n  python tools/control.py container validate",
+    )
+
+    version_parser = subparsers.add_parser(
+        "version",
+        help="show or validate the application version",
+        description="Read the VERSION source of truth and compare published metadata.",
+        formatter_class=HelpFormatter,
+    )
+    version_subparsers = version_parser.add_subparsers(dest="version_command", metavar="<action>")
+    version_subparsers.add_parser("check", help="verify all enabled component versions")
+    version_subparsers.add_parser("sync", help="copy VERSION into enabled component metadata")
+
+    release_parser = subparsers.add_parser(
+        "release",
+        help="run non-publishing release validation",
+        description="Validate identity, version, security, and repository state without publishing.",
+        formatter_class=HelpFormatter,
+    )
+    release_parser.set_defaults(release_parser=release_parser)
+    release_subparsers = release_parser.add_subparsers(dest="release_command", metavar="<action>")
+    release_subparsers.add_parser("check", help="run the production release gate")
     db.configure_parser(db_parser)
     _add_examples(
         db_parser,
@@ -437,6 +494,8 @@ def _handle_build(args: argparse.Namespace) -> int:
             logger.fail(f"Tauri desktop build is disabled by active profile '{profile.profile_id}'.")
             return 1
         return tauri_build.main(args)
+    if args.build_command == "container":
+        return container.build(args)
     logger.fail(f"Unknown build target: {args.build_command}")
     return 2
 
@@ -466,6 +525,19 @@ def _handle_docs(args: argparse.Namespace) -> int:
     return 2
 
 
+def _handle_container(args: argparse.Namespace) -> int:
+    command = getattr(args, "container_command", None)
+    if command is None:
+        args.container_parser.print_help()
+        return 0
+    if command == "doctor":
+        return container.doctor(args)
+    if command == "validate":
+        return container.validate(args)
+    logger.fail(f"Unknown container action: {command}")
+    return 2
+
+
 def _handlers() -> dict[str, Handler]:
     return {
         "init": profile_cli.main,
@@ -473,9 +545,12 @@ def _handlers() -> dict[str, Handler]:
         "install": install.main,
         "console": _handle_console,
         "build": _handle_build,
+        "container": _handle_container,
         "config": configuration.main,
         "db": db.main,
         "docs": _handle_docs,
+        "version": release.version,
+        "release": release.release,
         "run": run.run_command,
         "stop": stop.main,
         "test": _handle_test,

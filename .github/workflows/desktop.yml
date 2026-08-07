@@ -1,0 +1,94 @@
+name: Desktop CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  native-build:
+    name: Desktop / ${{ matrix.label }} / Unsigned Verification
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: Linux
+            os: ubuntu-latest
+            target: linux
+            bundles: deb
+          - label: macOS
+            os: macos-latest
+            target: macos
+            bundles: all
+          - label: Windows
+            os: windows-latest
+            target: windows
+            bundles: all
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Set up Rust stable
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-desktop-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-desktop-
+            ${{ runner.os }}-cargo-
+      - name: Install frontend dependencies
+        run: python tools/control.py install --skip-backend --skip-tooling --skip-playwright
+      - name: Install native Tauri prerequisites
+        run: python tools/control.py tauri install --skip-rust --skip-node --skip-frontend
+      - name: Run Tauri doctor
+        run: python tools/control.py tauri doctor
+      - name: Run Tauri and Rust tests
+        run: python tools/control.py test --suite tauri
+      - name: Build unsigned native package
+        if: matrix.target != 'linux'
+        run: python tools/control.py build desktop --target ${{ matrix.target }}
+      - name: Build unsigned Linux package
+        if: matrix.target == 'linux'
+        run: python tools/control.py build desktop --target linux --bundles ${{ matrix.bundles }}
+      - name: Upload unsigned verification artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: desktop-${{ matrix.target }}-unsigned
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            src-tauri/target/release/bundle/**
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/**
+            .dist/desktop/**
+      - name: Verify repository files are unchanged
+        shell: bash
+        run: git diff --exit-code

@@ -17,7 +17,7 @@ This document defines the baseline architecture of the project template, the sha
 
 ## Scope
 
-The architecture covers the web frontend, HTTP backend, desktop shell, shared contracts, optional database infrastructure, profile generator, and local development tooling. It does not prescribe a product domain, database schema, authentication provider, cloud platform or desktop backend packaging strategy.
+The architecture covers the web frontend, HTTP backend, desktop shell, shared contracts, optional database infrastructure, provider-neutral container boundary, profile generator, and local development tooling. It does not prescribe a product domain, database schema, authentication provider, cloud vendor, or production credential system.
 
 ## System context
 
@@ -87,6 +87,12 @@ project-profile.toml     Active profile manifest for the current project root
 
 config/
 └── environment.toml     Shared environment variable contract
+
+deployment/
+├── compose.yaml         Local production simulation
+└── docker/              Backend and optional frontend images
+
+VERSION                  Application version source of truth
 ```
 
 Feature folders should be introduced only when the first real feature exists. Keep a feature's UI, state and tests close together, while reusable infrastructure remains at the framework boundary.
@@ -260,7 +266,7 @@ flowchart TD
     Packages -.->|HTTP API when configured| APIService
 ```
 
-The backend is a separate deployment unit. The template does not embed Python into desktop packages and does not start an API sidecar in production. A derived project must make and document one explicit choice:
+The backend is a separate deployment unit. `deployment/docker` provides a provider-neutral non-root image, while `frontend/dist` remains independently deployable to static hosting. The template does not embed Python into desktop packages and does not start an API sidecar in production. A derived project must make and document one explicit choice:
 
 1. deploy FastAPI as a remote HTTPS service;
 2. package and supervise it as a desktop sidecar; or
@@ -286,7 +292,7 @@ That decision changes packaging, updates, observability and the security model, 
 
 The browser or webview is an untrusted client. FastAPI validates every request regardless of frontend validation. Secrets stay in the backend or an operating-system secret store; no secret may use a `VITE_` variable because Vite exposes those values to client code.
 
-Tauri capabilities follow least privilege. The template grants only `core:default`. Derived projects add individual permissions together with threat analysis, architecture documentation and acceptance coverage. Production projects must replace the template's null Content Security Policy with a restrictive policy suitable for their content and API endpoints.
+Tauri capabilities follow least privilege. The template grants only `core:default`. Its Content Security Policy restricts assets and connections to the local application and documented local development endpoints. A desktop-cloud product adds only its exact HTTPS API origin to `connect-src`. Derived projects add individual permissions together with threat analysis, architecture documentation and acceptance coverage.
 
 CORS is not authentication. Before exposing the API beyond local development, add an authentication and authorization design, HTTPS, request limits, structured logging and an environment-specific origin allowlist.
 
@@ -312,6 +318,8 @@ Run all baseline checks from the repository root:
 python tools/control.py doctor
 python tools/control.py test --suite all
 python tools/control.py build web
+python tools/control.py version check
+python tools/control.py container validate
 python tools/control.py docs index --dry-run
 ```
 
@@ -329,7 +337,9 @@ python tools/control.py build desktop
 - [Project profiles](project-profiles.md)
 - [Optional database feature](database-feature.md)
 - [Runtime configuration](configuration.md)
+- [Deployment architecture](deployment-architecture.md)
 - [Documentation standard](../README.md)
 - [ATP workflow](../atp/README.md)
 - [Tooling guide](../tools/tooling.md)
 - [Continuous integration](../tools/ci.md)
+- [Release model](../tools/release-model.md)

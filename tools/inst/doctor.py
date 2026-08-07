@@ -14,7 +14,7 @@ from pathlib import Path
 
 from tools import logger
 from tools.config import ConfigLoadError, resolve_configuration, validate_configuration
-from tools.inst import configuration
+from tools.inst import configuration, container
 from tools.profiles import runtime as profile_runtime
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -319,6 +319,11 @@ def run_checks() -> tuple[list[CheckResult], str]:
     checks.append(_check_backend_runtime())
     checks.append(_check_tooling_runtime())
     checks.append(_check_playwright_browser())
+    if profile.has_feature("cloud"):
+        checks.extend(
+            CheckResult(item.name, item.status, item.message)
+            for item in container.collect_checks(validate_compose=True, require_docker=False)
+        )
 
     overall = "OK"
     for item in checks:

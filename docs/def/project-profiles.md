@@ -129,6 +129,7 @@ Use repeated `--with` flags for optional capabilities:
 
 ```sh
 python tools/control.py init --profile web-cloud --with postgres
+python tools/control.py init --profile desktop-cloud --name CustomerApp --identifier com.customer.app
 ```
 
 The generated project receives:
@@ -137,6 +138,8 @@ The generated project receives:
 - feature-owned directories such as `frontend/`, `backend/`, or `src-tauri/`;
 - the copied `profiles/` definitions for future reference; and
 - a generated `project-profile.toml` manifest.
+
+When `--name` is supplied, the generator also derives or validates the project slug and updates package, backend, Compose, Tauri, and Cargo identity metadata. A customized Tauri project requires an explicit reverse-domain `--identifier`. This avoids shipping known template identities accidentally.
 
 For profiles without `tauri`, the generator also removes the Tauri npm script and CLI dependency from the copied frontend package metadata and lockfile. This keeps disabled desktop tooling out of web dependency installation without maintaining a second frontend template.
 
@@ -180,5 +183,6 @@ python tools/control.py test --suite tools
 - [Framework architecture](architecture.md)
 - [Database feature](database-feature.md)
 - [Runtime configuration](configuration.md)
+- [Deployment architecture](deployment-architecture.md)
 - [Tooling Guide](../tools/tooling.md)
 - [Project README](../../README.md)

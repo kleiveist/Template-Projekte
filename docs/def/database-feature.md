@@ -116,6 +116,10 @@ python tools/control.py db revision --message "add example"
 
 No initial migration exists because the template contains no business models.
 
+Deployment keeps migrations separate from application startup. One controlled job runs `python tools/control.py db upgrade` after the target database is reachable and before new application replicas receive traffic. The backend container supports this same command through its image-level virtual environment; parallel webserver processes never race to migrate the schema.
+
+`GET /api/health` is database-independent. `GET /api/ready` executes a minimal `SELECT 1` when the generated profile enables `database`. A missing or unavailable database produces HTTP 503 with a stable, non-sensitive response body.
+
 ## Tests
 
 Generic unit tests use an in-memory SQLite engine and require no PostgreSQL service:
@@ -144,5 +148,6 @@ python tools/control.py test --suite postgres
 - [Framework architecture](architecture.md)
 - [Project profiles](project-profiles.md)
 - [Runtime configuration](configuration.md)
+- [Deployment architecture](deployment-architecture.md)
 - [Tooling Guide](../tools/tooling.md)
 - [Documentation Standard](../README.md)

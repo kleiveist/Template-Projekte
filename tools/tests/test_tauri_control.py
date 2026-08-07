@@ -672,7 +672,7 @@ def test_tauri_install_appimage_packages_existing_appdir_when_final_file_is_miss
     home = tmp_path / "home"
     tauri_dir = root / "src-tauri"
     appimage_dir = tauri_dir / "target" / "release" / "bundle" / "appimage"
-    appdir = appimage_dir / "Template Project.AppDir"
+    appdir = appimage_dir / f"{paths.APP_NAME}.AppDir"
     icon_dir = tauri_dir / "icons"
     appdir.mkdir(parents=True)
     icon_dir.mkdir(parents=True)
@@ -681,7 +681,7 @@ def test_tauri_install_appimage_packages_existing_appdir_when_final_file_is_miss
 
     def fake_package_existing_appdir(dry_run: bool = False) -> int:
         packaged.append(dry_run)
-        (appimage_dir / "Template Project_0.1.0_amd64.AppImage").write_bytes(b"appimage")
+        (appimage_dir / f"{paths.APP_NAME}_0.1.0_amd64.AppImage").write_bytes(b"appimage")
         return 0
 
     monkeypatch.setattr(paths, "ROOT", root)
@@ -693,7 +693,7 @@ def test_tauri_install_appimage_packages_existing_appdir_when_final_file_is_miss
 
     assert code == 0
     assert packaged == [False]
-    assert (home / "Applications" / "Template Project.AppImage").read_bytes() == b"appimage"
+    assert (home / "Applications" / f"{paths.APP_NAME}.AppImage").read_bytes() == b"appimage"
 
 
 def test_tauri_build_appimage_dry_run_does_not_install(monkeypatch) -> None:
@@ -807,14 +807,14 @@ def test_tauri_appimage_install_copies_artifact_icon_and_desktop_entry(monkeypat
 
     code = appimage.install_latest()
 
-    installed_appimage = home / "Applications" / "Template Project.AppImage"
-    installed_icon = home / ".local" / "share" / "icons" / "template-project.png"
-    desktop_entry = home / ".local" / "share" / "applications" / "template-project.desktop"
+    installed_appimage = home / "Applications" / f"{paths.APP_NAME}.AppImage"
+    installed_icon = home / ".local" / "share" / "icons" / f"{paths.APP_SLUG}.png"
+    desktop_entry = home / ".local" / "share" / "applications" / f"{paths.APP_SLUG}.desktop"
     assert code == 0
     assert installed_appimage.read_bytes() == b"appimage"
     assert installed_appimage.stat().st_mode & 0o111
     assert installed_icon.read_bytes() == b"png"
-    assert "Name=Template Project" in desktop_entry.read_text(encoding="utf-8")
+    assert f"Name={paths.APP_NAME}" in desktop_entry.read_text(encoding="utf-8")
 
 
 def test_tauri_appimage_repair_icon_matches_desktop_icon_name(tmp_path, monkeypatch) -> None:

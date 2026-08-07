@@ -28,7 +28,7 @@ This document defines one configuration contract with runtime-specific adapters.
 
 ### Excluded
 
-- Docker and cloud deployment;
+- cloud-provider secret stores and vendor-specific deployment adapters;
 - CI configuration;
 - managed secret stores;
 - authentication and authorization; and
@@ -127,6 +127,8 @@ Vite reads the root `.env`. Non-`VITE_` values configure the development server 
 
 Tauri development receives only frontend host, port, backend endpoint metadata, and `VITE_API_BASE_URL`. Known secret variables are removed from the Tauri process environment. Desktop clients continue to reach PostgreSQL only through FastAPI.
 
+Production containers use the same priority and variable names. Docker does not introduce a second application configuration contract. Compose interpolation and platform environment injection are process-environment sources; they override a local `.env` through the existing resolver. The frontend image accepts only the public `VITE_API_BASE_URL` build argument, while backend and migration workloads receive server-side values at runtime.
+
 ## CLI
 
 Display effective values and their source:
@@ -174,5 +176,6 @@ python tools/control.py build web
 - [Framework architecture](architecture.md)
 - [Project profiles](project-profiles.md)
 - [Database feature](database-feature.md)
+- [Deployment architecture](deployment-architecture.md)
 - [Tooling Guide](../tools/tooling.md)
 - [Documentation Standard](../README.md)

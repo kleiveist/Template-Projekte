@@ -33,6 +33,9 @@ def main(args: argparse.Namespace) -> int:
             target_dir=target_dir,
             profile_id=profile.id,
             optional_features=requested_features,
+            project_name=getattr(args, "project_name", None),
+            project_slug=getattr(args, "project_slug", None),
+            identifier=getattr(args, "identifier", None),
         )
     except ProfileLookupError as exc:
         logger.fail(str(exc))
@@ -173,6 +176,9 @@ def _print_plan(plan: ScaffoldPlan) -> None:
     if plan.profile.optional_features:
         logger.info(f"Optional capabilities: {', '.join(plan.profile.optional_features)}")
     logger.info(f"Target directory: {plan.target_dir}")
+    logger.info(
+        f"Project identity: {plan.identity.name} ({plan.identity.slug}, {plan.identity.identifier})"
+    )
     logger.info("Scaffold paths:")
     for source in plan.paths:
         logger.info(f"  - {source.relative_to(plan.project_root).as_posix()}")

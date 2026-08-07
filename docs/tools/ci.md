@@ -13,11 +13,11 @@
 
 ## Purpose
 
-This document defines the automated quality gates for the master template. Continuous integration detects regressions in shared tooling, feature modules, profile generation, PostgreSQL integration, and production web builds before a change reaches `main`.
+This document defines the automated quality gates for the master template. Continuous integration detects regressions in shared tooling, feature modules, profile generation, PostgreSQL integration, container builds, production web builds, and native desktop packaging before a change reaches `main`.
 
 ## Scope
 
-The workflows under `.github/workflows/` run for pull requests and pushes to `main`. They validate the repository and temporary generated projects. Deployment, publishing, signing, release creation, and production database operations are outside this CI baseline.
+Core, profile, PostgreSQL, and desktop workflows run for pull requests and pushes to `main`. They validate the repository and temporary generated projects. The separate release-validation workflow runs only for a matching version tag or manual dispatch. Deployment, publishing, signing, release creation, and production database operations remain outside the automated baseline.
 
 ## Local and CI equivalence
 
@@ -34,6 +34,8 @@ python tools/control.py
       +-- test --suite <name>
       +-- db upgrade
       +-- build web
+      +-- container validate / build container
+      +-- version check / release check
 ```
 
 Project behavior remains in `tools/control.py` and its modules. Workflow YAML is responsible only for runtime setup, dependency caches, temporary service containers, command ordering, and job boundaries.
@@ -58,7 +60,7 @@ Tests that exercise generator capabilities outside a derived project's enabled f
 | Core tests | Tooling, profiles, configuration, schema, FastAPI, SQLAlchemy, frontend, Tauri, and Rust | `python tools/control.py test --suite <name>` |
 | External service tests | PostgreSQL connectivity and Alembic migration | `python tools/control.py test --suite postgres`, `python tools/control.py db upgrade` |
 | Generated project tests | Real scaffolds for every supported profile | `python tools/control.py init`, followed by generated-project commands |
-| Build verification | TypeScript checking and Vite production bundling | `python tools/control.py build web` |
+| Build verification | Vite, provider-neutral images, and native Tauri packages | `python tools/control.py build web`, `build container`, `build desktop` |
 
 Playwright E2E remains an optional suite. It reports `SKIP` until a real E2E configuration and tests exist.
 
@@ -73,13 +75,13 @@ Playwright E2E remains an optional suite. It reports `SKIP` until a real E2E con
 | `Core / Tooling, Profiles & Configuration` | CLI, generator, profile, configuration, and workflow regression tests |
 | `Core / Backend, Database & Schema` | JSON Schema, FastAPI, and SQLAlchemy unit tests |
 | `Core / Frontend & Web Build` | Vitest and a production Vite build |
-| `Core / Tauri & Rust` | Tauri doctor, configuration validation, `cargo check`, and Rust tests |
+| `Core / Container Build` | Version and Compose validation plus backend and frontend image builds |
 
-The jobs are independent and run in parallel. Native installers are not produced.
+The jobs are independent and run in parallel. Native packages belong to Desktop CI.
 
 ### Profile Matrix
 
-`.github/workflows/profiles.yml` generates `web-only`, `web-cloud`, `desktop-local`, `desktop-cloud`, and `full-platform` projects. Each matrix entry runs an initial structure doctor, dependency installation, a prepared-environment doctor, the profile-aware complete suite, and a production web build. Desktop entries also install Linux Tauri prerequisites, run Tauri doctor, and execute Cargo checks.
+`.github/workflows/profiles.yml` generates `web-only`, `web-cloud`, `desktop-local`, `desktop-cloud`, and `full-platform` projects. Each matrix entry runs an initial structure doctor, dependency installation, a prepared-environment doctor, the profile-aware complete suite, and a production web build. Desktop entries also install Linux Tauri prerequisites, run Tauri doctor, and execute Cargo checks. Cloud entries validate their generated Compose model.
 
 On Debian-family Linux runners, `tauri install` refreshes apt metadata before a non-interactive install. It uses the Tauri v2 WebKitGTK 4.1 dependency set and selects the release-appropriate FUSE 2 package name (`libfuse2` on Ubuntu 22.04 and `libfuse2t64` on Ubuntu 24.04 and newer). Missing required compile-time libraries make `tauri doctor` fail; AppImage-only helpers remain warnings during check-only CI.
 
@@ -104,9 +106,19 @@ Alembic upgrade head
 PostgreSQL integration test
 ```
 
-The same workflow generates `web-cloud --with postgres`, then runs doctor, migration, the complete profile-aware suite, and the web build in that generated project. `DATABASE_URL` and `DATABASE_URL_TEST` point only to the job-local service.
+The same workflow generates `web-cloud`, `desktop-cloud`, and `full-platform` with `--with postgres`. Each generated project runs doctor, migration, the complete profile-aware suite, the web build, and container-model validation. Desktop entries also run Tauri checks. `DATABASE_URL` and `DATABASE_URL_TEST` point only to the job-local service.
 
 Application startup never runs migrations. CI invokes `db upgrade` explicitly.
+
+### Desktop CI
+
+`.github/workflows/desktop.yml` uses a native matrix over Ubuntu, macOS, and Windows. Every runner installs its Tauri prerequisites, executes locked Rust checks, builds a technically available native package, and uploads a short-lived artifact named `desktop-<target>-unsigned`. Linux verifies a Debian package. No job reads signing or notarization secrets.
+
+The artifacts establish build compatibility. They are not production releases and are not published outside the workflow artifact store.
+
+### Release Validation
+
+`.github/workflows/release.yml` accepts `workflow_dispatch` and tags matching `v*.*.*`. It runs the full validation suite, builds the web candidate, executes `release check`, and calls the same unsigned desktop workflow. It has read-only repository permission and no publication or deployment job. Product repositories add protected signing and publication jobs only after this gate.
 
 ## Runtime versions
 
@@ -137,7 +149,7 @@ Caches improve execution time but are never required for correctness.
 
 Every workflow declares only `contents: read`. Pull requests from forks do not require repository secrets. PostgreSQL uses the temporary user, password, and database declared in workflow YAML; those values exist only inside an isolated CI run and are not production credentials.
 
-The workflows do not use cloud credentials, signing material, deployment tokens, package publishing, releases, or write permissions. Commands must not print database URLs or other secret values. Each job runs `git diff --exit-code` to detect unintended changes to versioned files.
+The workflows do not use cloud credentials, signing material, deployment tokens, package publication, public release creation, or write permissions. Commands must not print database URLs or other secret values. Normal CI jobs run `git diff --exit-code` to detect unintended changes to versioned files.
 
 ## Failure handling
 
@@ -158,7 +170,8 @@ Configure `main` branch protection after the workflows have completed stable rep
 - all four `Core / ...` jobs;
 - all five `Profiles / ...` matrix jobs;
 - `PostgreSQL / Integration & Migration`;
-- `Profiles / web-cloud + postgres`.
+- all three `Profiles / ... + postgres` jobs; and
+- all three `Desktop / ... / Unsigned Verification` jobs.
 
 Require pull requests and current branch status before merge. Do not grant test workflows deployment or bypass privileges.
 
@@ -184,6 +197,8 @@ python tools/control.py test --suite database
 python tools/control.py test --suite frontend
 python tools/control.py test --suite tauri
 python tools/control.py build web
+python tools/control.py container validate
+python tools/control.py version check
 ```
 
 PostgreSQL verification additionally requires a disposable test database through `DATABASE_URL` and `DATABASE_URL_TEST`.
@@ -195,4 +210,6 @@ PostgreSQL verification additionally requires a disposable test database through
 - [Project Profiles](../def/project-profiles.md)
 - [Database Feature](../def/database-feature.md)
 - [Runtime Configuration](../def/configuration.md)
+- [Deployment Architecture](../def/deployment-architecture.md)
+- [Release Model](release-model.md)
 - [ATP Workflow](../atp/README.md)

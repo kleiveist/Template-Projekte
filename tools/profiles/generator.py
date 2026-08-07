@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -32,12 +33,21 @@ class GenerationError(RuntimeError):
 
 
 @dataclass(frozen=True, slots=True)
+class ProjectIdentity:
+    name: str
+    slug: str
+    identifier: str
+    customized: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class ScaffoldPlan:
     project_root: Path
     target_dir: Path
     profile: ProjectProfile
     paths: tuple[Path, ...]
     env_example: str
+    identity: ProjectIdentity
 
 
 def build_scaffold_plan(
@@ -47,6 +57,9 @@ def build_scaffold_plan(
     target_dir: Path,
     profile_id: str,
     optional_features: tuple[str, ...] = (),
+    project_name: str | None = None,
+    project_slug: str | None = None,
+    identifier: str | None = None,
 ) -> ScaffoldPlan:
     root = project_root.resolve()
     target = target_dir.resolve()
@@ -55,6 +68,12 @@ def build_scaffold_plan(
     source_paths = tuple(root / relative for relative in relative_paths)
     contract = load_contract(root / "config" / "environment.toml")
     env_example = render_env_example(contract, profile.features)
+    identity = resolve_project_identity(
+        profile,
+        project_name=project_name,
+        project_slug=project_slug,
+        identifier=identifier,
+    )
 
     _validate_sources(source_paths, root)
     _validate_target(root, target)
@@ -65,6 +84,7 @@ def build_scaffold_plan(
         profile=profile,
         paths=source_paths,
         env_example=env_example,
+        identity=identity,
     )
 
 
@@ -86,6 +106,47 @@ def scaffold_project(plan: ScaffoldPlan, *, dry_run: bool = False) -> None:
     _write_frontend_profile_module(plan.target_dir, plan.profile)
     _configure_frontend_dependencies(plan.target_dir, plan.profile)
     _configure_env_example(plan.target_dir, plan.env_example)
+    if plan.identity.customized:
+        _configure_project_identity(plan.target_dir, plan.profile, plan.identity)
+
+
+def resolve_project_identity(
+    profile: ProjectProfile,
+    *,
+    project_name: str | None,
+    project_slug: str | None,
+    identifier: str | None,
+) -> ProjectIdentity:
+    customized = any(value is not None for value in (project_name, project_slug, identifier))
+    if not customized:
+        return ProjectIdentity("Template Project", "template-project", "com.example.templateproject")
+
+    name = (project_name or "").strip()
+    if not name:
+        if project_slug:
+            name = " ".join(part.capitalize() for part in project_slug.split("-"))
+        else:
+            raise GenerationError("--name is required when customizing project identity.")
+    slug = (project_slug or _slugify(name)).strip().lower()
+    if not re.fullmatch(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*", slug):
+        raise GenerationError("Project slug must use lowercase kebab-case and start with a letter.")
+
+    resolved_identifier = (identifier or "").strip()
+    if profile.has_feature("tauri") and not resolved_identifier:
+        raise GenerationError("--identifier is required when customizing a Tauri project identity.")
+    if resolved_identifier and not re.fullmatch(
+        r"[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9-]*){2,}",
+        resolved_identifier,
+    ):
+        raise GenerationError("Tauri identifier must be a reverse-domain value such as com.customer.app.")
+    if not resolved_identifier:
+        resolved_identifier = "com.example.templateproject"
+    return ProjectIdentity(name, slug, resolved_identifier, customized=True)
+
+
+def _slugify(value: str) -> str:
+    separated = re.sub(r"([a-z0-9])([A-Z])", r"\1-\2", value)
+    return re.sub(r"[^a-zA-Z0-9]+", "-", separated).strip("-").lower()
 
 
 def render_project_profile(profile: ProjectProfile) -> str:
@@ -250,6 +311,129 @@ def _configure_frontend_dependencies(target_dir: Path, profile: ProjectProfile) 
 def _configure_env_example(target_dir: Path, content: str) -> None:
     path = target_dir / ".env.example"
     path.write_text(content, encoding="utf-8", newline="\n")
+
+
+def _configure_project_identity(
+    target_dir: Path,
+    profile: ProjectProfile,
+    identity: ProjectIdentity,
+) -> None:
+    source_name = "Template Project"
+    source_slug = "template-project"
+    source_binary = "project-template"
+    existing_package_path = target_dir / "frontend" / "package.json"
+    if existing_package_path.exists():
+        existing_package = _read_json_object(existing_package_path)
+        package_name = existing_package.get("name")
+        if isinstance(package_name, str) and package_name.endswith("-frontend"):
+            source_slug = package_name.removesuffix("-frontend")
+
+    existing_tauri_path = target_dir / "src-tauri" / "tauri.conf.json"
+    if existing_tauri_path.exists():
+        existing_tauri = _read_json_object(existing_tauri_path)
+        product_name = existing_tauri.get("productName")
+        binary_name = existing_tauri.get("mainBinaryName")
+        if isinstance(product_name, str) and product_name.strip():
+            source_name = product_name
+        if isinstance(binary_name, str) and binary_name.strip():
+            source_binary = binary_name
+
+    source_service = f"{source_slug}-backend"
+    existing_health_path = target_dir / "backend" / "app" / "api" / "health.py"
+    if existing_health_path.exists():
+        service_match = re.search(
+            r'"service"\s*:\s*"([^"]+)"',
+            existing_health_path.read_text(encoding="utf-8"),
+        )
+        if service_match:
+            source_service = service_match.group(1)
+
+    package_path = target_dir / "frontend" / "package.json"
+    if package_path.exists():
+        package = _read_json_object(package_path)
+        package["name"] = f"{identity.slug}-frontend"
+        _write_json(package_path, package)
+
+    lock_path = target_dir / "frontend" / "package-lock.json"
+    if lock_path.exists():
+        lock = _read_json_object(lock_path)
+        lock["name"] = f"{identity.slug}-frontend"
+        packages = lock.get("packages")
+        if isinstance(packages, dict) and isinstance(packages.get(""), dict):
+            packages[""]["name"] = f"{identity.slug}-frontend"
+        _write_json(lock_path, lock)
+
+    _replace_text(target_dir / "frontend" / "index.html", source_name, identity.name)
+    _replace_text(target_dir / "frontend" / "src" / "main.ts", source_name, identity.name)
+
+    if profile.has_feature("backend"):
+        _replace_text(target_dir / ".env.example", f"{source_name} API", f"{identity.name} API")
+        _replace_text(target_dir / "config" / "environment.toml", f"{source_name} API", f"{identity.name} API")
+        _replace_text(
+            target_dir / "backend" / "app" / "config" / "settings.py",
+            f"{source_name} API",
+            f"{identity.name} API",
+        )
+        _replace_text(
+            target_dir / "backend" / "app" / "api" / "health.py",
+            source_service,
+            f"{identity.slug}-backend",
+        )
+        _replace_text(
+            target_dir / "backend" / "tests" / "api" / "test_health.py",
+            source_service,
+            f"{identity.slug}-backend",
+        )
+
+    _replace_text(
+        target_dir / "tools" / "inst" / "build.py",
+        f"{source_slug}-web.zip",
+        f"{identity.slug}-web.zip",
+    )
+
+    if profile.has_feature("cloud"):
+        _replace_text(target_dir / "deployment" / "compose.yaml", source_slug, identity.slug)
+        _replace_text(target_dir / "deployment" / "compose.yaml", source_name, identity.name)
+
+    if not profile.has_feature("tauri"):
+        return
+
+    tauri_path = target_dir / "src-tauri" / "tauri.conf.json"
+    tauri = _read_json_object(tauri_path)
+    tauri["productName"] = identity.name
+    tauri["identifier"] = identity.identifier
+    tauri["mainBinaryName"] = identity.slug
+    app = tauri.get("app")
+    if isinstance(app, dict):
+        windows = app.get("windows")
+        if isinstance(windows, list):
+            for window in windows:
+                if isinstance(window, dict) and window.get("label") == "main":
+                    window["title"] = identity.name
+    _write_json(tauri_path, tauri)
+
+    cargo_path = target_dir / "src-tauri" / "Cargo.toml"
+    _replace_first(cargo_path, f'name = "{source_binary}"', f'name = "{identity.slug}"')
+    _replace_text(cargo_path, f"{source_name} Contributors", f"{identity.name} Contributors")
+    cargo_lock_path = target_dir / "src-tauri" / "Cargo.lock"
+    _replace_first(cargo_lock_path, f'name = "{source_binary}"', f'name = "{identity.slug}"')
+    _replace_text(target_dir / "src-tauri" / "app-icon.svg", source_name, identity.name)
+
+
+def _replace_text(path: Path, old: str, new: str) -> None:
+    if not path.exists():
+        return
+    content = path.read_text(encoding="utf-8")
+    path.write_text(content.replace(old, new), encoding="utf-8", newline="\n")
+
+
+def _replace_first(path: Path, old: str, new: str) -> None:
+    if not path.exists():
+        return
+    content = path.read_text(encoding="utf-8")
+    if old not in content:
+        raise GenerationError(f"Expected identity marker not found in {path}: {old}")
+    path.write_text(content.replace(old, new, 1), encoding="utf-8", newline="\n")
 
 
 def _read_json_object(path: Path) -> dict[str, Any]:

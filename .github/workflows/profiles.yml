@@ -26,14 +26,19 @@ jobs:
         include:
           - profile: web-only
             desktop: false
+            cloud: false
           - profile: web-cloud
             desktop: false
+            cloud: true
           - profile: desktop-local
             desktop: true
+            cloud: false
           - profile: desktop-cloud
             desktop: true
+            cloud: true
           - profile: full-platform
             desktop: true
+            cloud: true
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -98,5 +103,9 @@ jobs:
       - name: Build generated web bundle
         working-directory: .generated/ci-${{ matrix.profile }}
         run: python tools/control.py build web
+      - name: Validate generated container model
+        if: matrix.cloud
+        working-directory: .generated/ci-${{ matrix.profile }}
+        run: python tools/control.py container validate
       - name: Verify repository files are unchanged
         run: git diff --exit-code

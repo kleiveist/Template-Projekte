@@ -55,6 +55,10 @@ def _backend_python() -> Path:
     for candidate in candidates:
         if candidate.exists():
             return candidate
+    # Production containers run the CLI from the image-level virtualenv instead of
+    # creating a mutable backend/.venv inside the read-only application image.
+    if sys.prefix != sys.base_prefix:
+        return Path(sys.executable)
     return candidates[0] if sys.platform == "win32" else candidates[1]
 
 

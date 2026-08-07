@@ -3,6 +3,7 @@ schema_version = 1
 [core]
 paths = [
   "README.md",
+  "VERSION",
   ".gitignore",
   "config",
   "docs",
@@ -26,6 +27,8 @@ paths = [
   "backend/app/main.py",
   "backend/pytest.ini",
   "backend/requirements.txt",
+  "backend/requirements-production.txt",
+  "backend/requirements-production.lock",
   "backend/tests/api",
   "backend/tests/config",
 ]
@@ -39,7 +42,7 @@ requires = ["frontend"]
 [features.cloud]
 name = "Cloud"
 description = "Cloud-ready deployment profile metadata"
-paths = []
+paths = [".dockerignore", "deployment"]
 requires = ["backend"]
 
 [features.database]
@@ -50,6 +53,8 @@ paths = [
   "backend/alembic.ini",
   "backend/app/db",
   "backend/requirements-database.txt",
+  "backend/requirements-database-production.txt",
+  "backend/requirements-database-production.lock",
   "backend/tests/db",
 ]
 requires = ["backend"]
@@ -60,6 +65,8 @@ name = "PostgreSQL"
 description = "PostgreSQL support through the Psycopg 3 driver"
 paths = [
   "backend/requirements-postgres.txt",
+  "backend/requirements-postgres-production.txt",
+  "backend/requirements-postgres-production.lock",
   "backend/tests/integration",
 ]
 requires = ["database"]

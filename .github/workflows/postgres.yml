@@ -62,9 +62,19 @@ jobs:
         run: git diff --exit-code
 
   generated-postgres:
-    name: Profiles / web-cloud + postgres
+    name: Profiles / ${{ matrix.profile }} + postgres
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: web-cloud
+            desktop: false
+          - profile: desktop-cloud
+            desktop: true
+          - profile: full-platform
+            desktop: true
     env:
       APP_ENV: test
       DATABASE_URL: postgresql+psycopg://postgres:test-password@127.0.0.1:5432/template_test
@@ -102,29 +112,41 @@ jobs:
           node-version: "20"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+      - name: Set up Rust stable
+        if: matrix.desktop
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
       - name: Generate PostgreSQL profile project
         run: >-
           python tools/control.py init
-          --profile web-cloud
+          --profile ${{ matrix.profile }}
           --with postgres
-          --target-dir .generated/ci-web-cloud-postgres
+          --target-dir .generated/ci-${{ matrix.profile }}-postgres
       - name: Inspect generated project structure
-        working-directory: .generated/ci-web-cloud-postgres
+        working-directory: .generated/ci-${{ matrix.profile }}-postgres
         run: python tools/control.py doctor
       - name: Install generated project dependencies
-        working-directory: .generated/ci-web-cloud-postgres
+        working-directory: .generated/ci-${{ matrix.profile }}-postgres
         run: python tools/control.py install --skip-playwright
+      - name: Install generated Tauri system dependencies
+        if: matrix.desktop
+        working-directory: .generated/ci-${{ matrix.profile }}-postgres
+        run: python tools/control.py tauri install --skip-rust --skip-node --skip-frontend
       - name: Diagnose generated project
-        working-directory: .generated/ci-web-cloud-postgres
+        working-directory: .generated/ci-${{ matrix.profile }}-postgres
         run: python tools/control.py doctor
       - name: Upgrade generated project database
-        working-directory: .generated/ci-web-cloud-postgres
+        working-directory: .generated/ci-${{ matrix.profile }}-postgres
         run: python tools/control.py db upgrade
       - name: Test generated project
-        working-directory: .generated/ci-web-cloud-postgres
+        working-directory: .generated/ci-${{ matrix.profile }}-postgres
         run: python tools/control.py test --suite all
       - name: Build generated web bundle
-        working-directory: .generated/ci-web-cloud-postgres
+        working-directory: .generated/ci-${{ matrix.profile }}-postgres
         run: python tools/control.py build web
+      - name: Validate generated container model
+        working-directory: .generated/ci-${{ matrix.profile }}-postgres
+        run: python tools/control.py container validate
       - name: Verify repository files are unchanged
         run: git diff --exit-code

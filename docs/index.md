@@ -17,6 +17,7 @@
 - 📝 [Framework architecture](def/architecture.md)
 - 📝 [Runtime configuration](def/configuration.md)
 - 📝 [Database feature](def/database-feature.md)
+- 📝 [Deployment architecture](def/deployment-architecture.md)
 - 📝 [Project profiles](def/project-profiles.md)
 
 ## 📁 DEV
@@ -25,6 +26,8 @@
 ## 📁 Tools
 - 🗂️ [Overview](tools/tools.md)
 - 📝 [Continuous Integration](tools/ci.md)
+- 📝 [Container builds and local production simulation](tools/container-builds.md)
+- 📝 [Release and desktop packaging model](tools/release-model.md)
 - 📝 [Tooling Guide](tools/tooling.md)
 
 ## 📁 USR
