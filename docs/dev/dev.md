@@ -6,6 +6,6 @@
 <!-- AUTO-GENERATED:docs-index START -->
 
 ## 📄 Pages
-- ⏭️ (no pages)
+- 📝 [Template final acceptance](template-final-acceptance.md)
 
 <!-- AUTO-GENERATED:docs-index END -->

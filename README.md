@@ -21,6 +21,7 @@
 
 ## 📁 DEV
 - 🗂️ [Overview](docs/dev/dev.md)
+- 📝 [Template final acceptance](docs/dev/template-final-acceptance.md)
 
 ## 📁 Tools
 - 🗂️ [Overview](docs/tools/tools.md)
