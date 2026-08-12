@@ -1,0 +1,28 @@
+\begin{figure}[H]
+  \centering
+  \resizebox{0.98\textwidth}{!}{%
+  \begin{tikzpicture}
+    \node[casePrimary,minimum width=52mm,minimum height=14mm] (control) at (0,0)
+      {\texttt{control.py}\\gemeinsamer öffentlicher Einstieg};
+
+    \node[caseBox,minimum width=37mm,minimum height=25mm] (setup) at (-6.3,-2.4)
+      {\textbf{Setup / Diagnose}\\\texttt{init / doctor / install}};
+    \node[caseBox,minimum width=37mm,minimum height=25mm] (development) at (-2.1,-2.4)
+      {\textbf{Entwicklung / Qualität}\\\texttt{run / stop / test}\\\texttt{build / console}};
+    \node[caseBox,minimum width=37mm,minimum height=25mm] (subsystems) at (2.1,-2.4)
+      {\textbf{Subsysteme}\\\texttt{config / db}\\\texttt{tauri / container}};
+    \node[caseBox,minimum width=37mm,minimum height=25mm] (delivery) at (6.3,-2.4)
+      {\textbf{Auslieferung / Pflege}\\\texttt{version / release / docs}};
+
+    \coordinate (branch) at (0,-0.95);
+    \draw[caseFlow] (control.south) -- (branch) -| (setup.north);
+    \draw[caseFlow] (branch) -| (development.north);
+    \draw[caseFlow] (branch) -| (subsystems.north);
+    \draw[caseFlow] (branch) -| (delivery.north);
+  \end{tikzpicture}}
+  \caption{Befehlsgruppen des zentralen Projekt-Toolings}
+  \label{fig:control-command-map}
+  \smallskip
+  {\footnotesize Quelle: Eigene Darstellung auf Grundlage von
+  \textcite{kleiveist2026control} und \textcite{kleiveist2026tooling}.\par}
+\end{figure}

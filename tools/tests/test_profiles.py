@@ -371,6 +371,45 @@ def test_generated_profile_serialization_escapes_metadata() -> None:
     assert parsed["description"] == "First line\nSecond line"
 
 
+def test_scaffold_removes_master_only_readme_blocks(tmp_path: Path) -> None:
+    target = tmp_path / "generated"
+    target.mkdir()
+    (target / "README.md").write_text(
+        "# Product\n\n"
+        "Visible before.\n\n"
+        "<!-- MASTER-ONLY START -->\n"
+        "[Master case study](case-study/README.md)\n"
+        "<!-- MASTER-ONLY END -->\n\n"
+        "Visible after.\n",
+        encoding="utf-8",
+    )
+
+    generator._remove_master_only_readme_blocks(target)
+
+    generated_readme = (target / "README.md").read_text(encoding="utf-8")
+    assert "Visible before." in generated_readme
+    assert "Visible after." in generated_readme
+    assert "MASTER-ONLY" not in generated_readme
+    assert "case-study/README.md" not in generated_readme
+
+
+def test_master_readme_case_study_links_are_removed_from_scaffold(tmp_path: Path) -> None:
+    catalog = loader.load_catalog(PROFILES_DIR, validate_paths=False)
+    target = tmp_path / "web-only"
+    plan = generator.build_scaffold_plan(
+        catalog,
+        project_root=ROOT,
+        target_dir=target,
+        profile_id="web-only",
+    )
+
+    generator.scaffold_project(plan)
+
+    generated_readme = (target / "README.md").read_text(encoding="utf-8")
+    assert "case-study/" not in generated_readme
+    assert "MASTER-ONLY" not in generated_readme
+
+
 @pytest.mark.skipif(not HAS_TAURI_SOURCE, reason="Tauri source is absent in this derived project")
 def test_init_command_scaffolds_selected_profile(tmp_path: Path) -> None:
     target = tmp_path / "desktop-local-project"

@@ -1,0 +1,42 @@
+\subsection{Weaknesses and Limitations}
+\label{subsec:schwaechen-grenzen}
+
+Technical weaknesses, deliberate scope boundaries, and unverified areas must
+be distinguished. Only the first category directly denotes a disadvantage of
+the implementation.
+Although scope boundaries create a need for adaptation, they do not constitute
+an unmet requirement. A lack of verification does not yet permit either a
+positive or a negative technical judgment.
+
+Consolidation in the master repository increases internal complexity: changes
+to the core, generator, or catalog require regression tests across several
+profiles. In addition, the frontend and backend do not use the shared JSON
+schemas at runtime; contract changes remain manual. Direct CLI selection
+distinguishes \texttt{optional} and \texttt{selectable} less clearly than the
+dialog does. Both discrepancies create risks of maintenance errors or
+incorrect operation.
+The examined HEAD also has conflicting evidence: the web profiles and the local
+tooling run passed, while the external tooling, desktop-profile, and Windows
+checks failed.
+This finding does not retroactively call the earlier, commit-specific
+acceptance into question, but it prevents a fully successful assessment of the
+more recent state.
+
+The deliberate exclusions are a backend in \texttt{web-only}, a cloud API in
+\texttt{desktop-local}, and PostgreSQL without a backend. Domain logic,
+authentication, role models, mandatory persistence, cloud providers, and
+native domain-specific commands likewise remain product-specific. The
+resulting adaptation effort is not a deviation from the scope.
+
+Compose startup, production deployment, Release Validation, and Branch
+Protection have not been conclusively verified. Unsigned Linux and macOS
+packages were built, while Windows packaging failed. Signing, notarization,
+publication, and production cloud operation remain product- or
+infrastructure-specific
+\parencite{kleiveist2026ci-core-run,kleiveist2026ci-desktop-run,kleiveist2026acceptance}.
+The packaging results therefore demonstrate neither signed releases nor
+production cloud operation. The subject of the evaluation is the template
+baseline, not the production readiness of a product.
+The remaining risks therefore primarily concern operations, platforms, and
+release processes.
+\beginnerinput{workspace/statement/700_bewertung/730}

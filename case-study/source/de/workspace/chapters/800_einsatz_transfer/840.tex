@@ -1,0 +1,22 @@
+\subsection{Auswahl des Projektprofils}
+\label{subsec:auswahl-projektprofil}
+
+Die Zugriffskanäle bestimmen das Profil: \texttt{web-only} steht für Browser
+ohne Backend, \texttt{web-cloud} für Browser mit Backend,
+\texttt{desktop-local} für Desktop ohne Cloud-Backend,
+\texttt{desktop-cloud} für Desktop mit Backend und \texttt{full-platform} für
+Browser und Desktop gemeinsam. Ein Profil für Backend ohne providerneutrale
+Deployment-Dateien existiert nicht.
+
+Gewählt wird das kleinste passende Profil. Erst danach wird PostgreSQL als
+separate Achse geprüft und nur bei Bedarf zu einem Backendprofil ergänzt. Für
+\texttt{web-only} und \texttt{desktop-local} ist dies unzulässig
+\parencite{kleiveist2026profiles}.
+
+Dokumentiert wird, ob das Profil vollständig passt, benannte Erweiterungen
+benötigt oder zentrale Anforderungen verfehlt. Im letzten Fall sind eine
+andere Architektur oder klar abgegrenzte Teilnutzung zu prüfen, nicht
+ersatzweise das größte Profil.
+Teamkompetenz und wirtschaftliche Randbedingungen ergänzen diese technische
+Entscheidung, ändern aber nicht die Bedeutung der Profile.
+\beginnerinput{workspace/statement/800_einsatz_transfer/840}

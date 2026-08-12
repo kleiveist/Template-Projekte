@@ -1,0 +1,20 @@
+\subsection{Frontend with Vite and TypeScript}
+\label{subsec:frontend-vite-typescript}
+
+The frontend is the shared presentation layer for all five profiles. Vite is
+used for development and building; TypeScript checks the strictly configured
+source code, while Vitest tests the HTTP client
+\parencite{vite2026guide,typescript2026handbook}.
+
+The generated profile module enables backend access only in appropriate
+variants. The browser and Tauri use the same source files and a public
+\texttt{VITE\_API\_BASE\_URL}. Server logic, secrets, and direct database access
+remain outside the client; the web-only and desktop-local profiles require no
+backend
+\parencite{kleiveist2026architecture,kleiveist2026profiles}.
+
+Table~\ref{tab:technology-stack} documents the areas and versions in the commit
+under examination.
+
+\input{workspace/tables/technology-stack}
+\beginnerinput{workspace/statement/300_architektur/320}

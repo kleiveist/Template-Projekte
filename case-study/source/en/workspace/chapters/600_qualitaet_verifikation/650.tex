@@ -1,0 +1,22 @@
+\subsection{Security and Configuration Boundaries}
+\label{subsec:security-konfigurationsgrenzen}
+
+Tooling tests provide evidence for configuration precedence and for validation
+of environments, ports, and CORS origins. They also check the profile-dependent
+\path{.env.example} and ensure that \path{DATABASE_URL} is present only for
+PostgreSQL. These tests passed locally, while the external tooling job failed
+on the same commit
+\parencite{kleiveist2026configuration,kleiveist2026ci-core-run}.
+
+Only \path{VITE_API_BASE_URL} may reach the frontend. Tests reject secrets
+designated as public, remove \path{DATABASE_URL} from the frontend and Tauri,
+and mask database passwords in diagnostics. No database variable is created
+without PostgreSQL. Additional checks cover health, readiness, error responses,
+database-independent liveness, the Tauri CSP, and capability metadata
+\parencite{kleiveist2026acceptance,kleiveist2026release}.
+
+Thus, only the configuration, secret, and desktop boundaries of the baseline
+have been verified. Authentication, authorization, production credentials,
+TLS, and provider-specific hardening remain product-specific; a complete
+security assessment has not been demonstrated.
+\beginnerinput{workspace/statement/600_qualitaet_verifikation/650}

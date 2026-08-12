@@ -1,0 +1,30 @@
+\subsection{Projektinitialisierung und Generierung}
+\label{subsec:projektinitialisierung-generierung}
+
+\texttt{init} erzeugt aus Profil und kompatiblen Capabilities ein eigenständiges
+Produktprojekt. Die Auswahl kann geführt oder nicht interaktiv erfolgen;
+Projektidentität, Ziel und Dry-Run sind konfigurierbar. Eine geänderte
+Tauri-Identität erfordert einen gültigen Reverse-Domain-Identifier
+\parencite{kleiveist2026profiles,kleiveist2026tooling}.
+
+\input{workspace/figures/tooling/project-generation-workflow}
+
+Der Generator löst Abhängigkeiten auf, erstellt den Scaffold-Plan und prüft
+Quellen und Ziel vor dem Schreiben. Er kopiert Core und aktive Features,
+erzeugt Manifest, Frontend-Profil und \path{.env.example} und passt vorhandene
+Produktmetadaten an. Transiente Verzeichnisse werden ausgelassen; Webprofile
+verlieren Tauri-Skript und -CLI.
+Bei angegebener Produktidentität werden nur tatsächlich vorhandene Frontend-,
+Backend-, Compose-, Tauri- und Cargo-Metadaten angepasst. Der Umfang bleibt
+damit vom gewählten Profil abhängig.
+
+Im Master sind Ziele nur unter \path{.generated/} erlaubt; externe Ziele sind
+möglich. Das Repository selbst und nichtleere Ziele werden abgewiesen,
+\texttt{--dry-run} schreibt nichts. Eine Grenze bleibt: Nur der Dialog filtert
+nach \texttt{selectable}; direktes \texttt{--with database} wird für
+Backendprofile akzeptiert \parencite{kleiveist2026template}.
+Diese Vorprüfungen halten Master und Ziel getrennt und verhindern teilweise
+erzeugte Projekte bei bekannten Konflikten. Die Ableitung ist deterministisch
+angelegt; der empirische Reproduzierbarkeitsnachweis bleibt dennoch auf den
+geprüften Fall begrenzt.
+\beginnerinput{workspace/statement/500_tooling_workflow/520}

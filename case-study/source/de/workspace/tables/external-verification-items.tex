@@ -1,0 +1,24 @@
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.1}
+  \caption{Offene und externe Verifikationspunkte auf \texttt{a4487ac}}
+  \label{tab:external-verification-items}
+  \begin{tabularx}{\textwidth}{@{}p{0.21\textwidth}p{0.16\textwidth}p{0.27\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Prüfpunkt} & \textbf{Status} & \textbf{Grund} & \textbf{erforderlicher Nachweis} \\
+    \midrule
+    Tooling- und Desktop-Profil-CI & FAIL & aktuelle Jobs enden in ausgeführten Testschritten mit Exitcode 1 & erfolgreiche Wiederholung auf dem korrigierten Commit \\
+    Windows-Paket & FAIL & Frontend-Installation im nativen Windows-Job fehlgeschlagen & erfolgreicher nativer Build und Artefakt-Upload \\
+    Release Validation & nicht verifiziert & kein manueller oder Tag-Run vorhanden & erfolgreicher, nicht publizierender Run auf festem Commit \\
+    Compose-Start & nicht verifiziert & nur Modell und Master-Images in CI geprüft & \texttt{docker compose up}, Health-/Ready-Nachweis und kontrollierter Abbau \\
+    Branch Protection & nicht verifiziert & öffentliche API verlangt Authentifizierung & autorisierter Nachweis der Required Checks für \texttt{main} \\
+    Signing, Notarisierung, Updater & außerhalb des Scopes & produktspezifische Identität und geschützte Credentials fehlen bewusst & geschützte native Release-Pipeline je Zielplattform \\
+    Produktivbetrieb und Auth/RBAC & außerhalb des Scopes & Cloud, Geschäftsmodell und Sicherheitsmodell sind produktspezifisch & produktbezogene Abnahme einschließlich Credentials und Deployment \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\scriptsize Quelle: Eigene Zusammenstellung aus
+  \textcite{kleiveist2026acceptance,kleiveist2026release} und den aktuellen
+  GitHub-Actions-Läufen.\par}
+\end{table}

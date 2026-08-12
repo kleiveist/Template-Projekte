@@ -1,0 +1,45 @@
+\begin{figure}[H]
+  \centering
+  \resizebox{0.96\textwidth}{!}{%
+  \begin{tikzpicture}[node distance=7mm and 10mm]
+    \node[casePrimary,minimum width=48mm] (master)
+      {Master Repository\\complete baseline};
+    \node[caseBox,minimum width=40mm,below left=of master] (catalog)
+      {\textbf{profiles/}\\features and presets};
+    \node[caseBox,minimum width=40mm,below right=of master] (selection)
+      {profile selection\\optional capabilities};
+    \node[casePrimary,minimum width=48mm,below=11mm of master] (generator)
+      {Generator\\resolve selection and dependencies};
+    \node[caseBox,minimum width=48mm,below=of generator] (project)
+      {derived project\\\texttt{project-profile.toml}};
+
+    \node[caseBox,minimum width=30mm,below left=10mm and 52mm of project] (frontend)
+      {Frontend};
+    \node[caseOptional,minimum width=30mm,right=of frontend] (backend)
+      {Backend};
+    \node[caseOptional,minimum width=30mm,right=of backend] (tauri)
+      {Tauri};
+    \node[caseOptional,minimum width=30mm,right=of tauri] (database)
+      {Persistence};
+
+    \draw[caseFlow] (master) -- (catalog);
+    \draw[caseFlow] (master) -- (selection);
+    \draw[caseFlow] (catalog) -- (generator);
+    \draw[caseFlow] (selection) -- (generator);
+    \draw[caseFlow] (generator) -- (project);
+    \draw[caseFlow] (project) -- (frontend);
+    \draw[caseSecondaryFlow] (project) -- (backend);
+    \draw[caseSecondaryFlow] (project) -- (tauri);
+    \draw[caseSecondaryFlow] (project) -- (database);
+
+    \begin{scope}[on background layer]
+      \node[caseGroup,fit=(frontend)(database),
+        label={[font=\sffamily\scriptsize,text=black!60]below:only resolved features are included}] {};
+    \end{scope}
+  \end{tikzpicture}}
+  \caption{Overall architecture of the technology template}
+  \label{fig:system-architecture}
+  \smallskip
+  {\footnotesize Source: Author's own illustration based on
+  \textcite{kleiveist2026architecture} and \textcite{kleiveist2026profiles}.\par}
+\end{figure}

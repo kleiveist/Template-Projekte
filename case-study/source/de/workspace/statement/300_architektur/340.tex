@@ -1,0 +1,20 @@
+\begin{beginnerstatement}[Kurz erklärt: Tauri und die Desktop-Schicht]
+
+Tauri verwendet das vorhandene Web-Frontend und zeigt es in einer Webview,
+also einem eingebetteten Web-Anzeigebereich, als Desktop-Anwendung an. Ein
+Betriebssystem wie Windows, macOS oder Linux steuert den Computer; Rust bildet
+hier die native Anwendungsschicht, die direkt damit arbeiten und native
+Funktionen bereitstellen kann. Eine native Anwendung läuft
+installiert auf dem Computer und nicht ausschließlich in einem normalen
+Browser. Eine Capability beschreibt zusammen mit Berechtigungen, welche
+nativen Funktionen erlaubt sind; die Content Security Policy (CSP) begrenzt
+zusätzlich die nutzbaren Inhalte und Verbindungen. Ein Sidecar ist ein separates
+Hilfsprogramm, das zusammen mit der Anwendung ausgeliefert werden kann, in der
+Baseline aber nicht für FastAPI vorhanden ist. Eine Remote API läuft dagegen
+auf einem entfernten Server und wird über das Netzwerk erreicht. Packaging
+bündelt die Anwendung zu installierbaren Paketen, während Signing deren
+Herkunft und Unverändertheit kryptografisch bestätigt. Ob Remote API, Sidecar
+oder lokale Kommandos sowie Packaging und Signing verwendet werden, bleibt
+hier eine Produktentscheidung.
+
+\end{beginnerstatement}

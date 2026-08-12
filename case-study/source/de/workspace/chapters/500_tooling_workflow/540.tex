@@ -1,0 +1,26 @@
+\subsection{Entwicklungsbetrieb}
+\label{subsec:entwicklungsbetrieb}
+
+Abbildung~\ref{fig:developer-workflow} zeigt den profilabhängigen Weg von
+Diagnose und Installation bis zu Qualitätssicherung und Auslieferung.
+
+\input{workspace/figures/tooling/developer-workflow}
+
+\texttt{run} startet Vite und nur bei aktivem Backend zusätzlich Uvicorn. Im
+Vordergrund beendet ein Abbruch die erfassten Prozessgruppen; im abgekoppelten
+Modus werden PID- und Logdaten gespeichert. \texttt{stop} beendet erfasste
+Prozesse und standardmäßig auch Listener auf den konfigurierten Ports;
+\texttt{--tracked-only} beschränkt dies auf den eigenen Zustand
+\parencite{kleiveist2026control,kleiveist2026tooling}.
+Im Vordergrund werden die Ausgaben aktiver Dienste zusammengeführt. Der
+abgekoppelte Modus hält dagegen Prozess- und Logdaten unter
+\path{tools/.runtime}; diese Zustandsablage bildet die Grundlage für
+\texttt{stop}.
+
+Der getrennte Desktopweg delegiert an \texttt{tauri dev} und entfernt bekannte
+serverseitige Geheimnisse aus der Kindprozessumgebung. Er unterstützt Vorder-
+und Hintergrundbetrieb. Die Konsole führt lediglich durch dieselben
+CLI-Workflows.
+Damit bleibt der native Entwicklungsweg vom allgemeinen Vite-/Uvicorn-Betrieb
+getrennt, ohne eine zweite Befehlslogik einzuführen.
+\beginnerinput{workspace/statement/500_tooling_workflow/540}

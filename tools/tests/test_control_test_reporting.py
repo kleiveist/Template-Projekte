@@ -114,6 +114,30 @@ def test_tooling_runtime_ignores_stale_virtualenv(monkeypatch, tmp_path) -> None
     assert run_test._tooling_python() == backend_python
 
 
+def test_tools_suite_includes_optional_master_case_study_tests(monkeypatch, tmp_path) -> None:
+    from tools.inst import run_test
+
+    tools_tests = tmp_path / "tools" / "tests"
+    case_study_tests = tmp_path / "case-study" / "tests"
+    tools_tests.mkdir(parents=True)
+    case_study_tests.mkdir(parents=True)
+    python = tmp_path / "python"
+    captured: list[str] = []
+
+    def fake_run(command: list[str], cwd=None) -> subprocess.CompletedProcess[str]:
+        captured.extend(command)
+        return subprocess.CompletedProcess(command, 0, stdout="passed", stderr="")
+
+    monkeypatch.setattr(run_test, "ROOT", tmp_path)
+    monkeypatch.setattr(run_test, "_tooling_python", lambda: python)
+    monkeypatch.setattr(run_test, "_run", fake_run)
+
+    result = run_test._run_tools_suite()
+
+    assert result.status == "OK"
+    assert captured[-2:] == [str(tools_tests), str(case_study_tests)]
+
+
 @pytest.mark.parametrize(
     ("profile_id", "features", "expected"),
     [

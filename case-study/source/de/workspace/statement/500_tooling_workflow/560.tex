@@ -1,0 +1,19 @@
+\begin{beginnerstatement}[Kurz erklärt: vom Versionsstand zum Paket]
+
+Eine Version ist eine eindeutige Bezeichnung für einen bestimmten Stand; im
+Template ist \texttt{VERSION} die zentrale Quelle dafür. Ein Release ist eine
+zur Veröffentlichung freigegebene Version, doch der untersuchte Workflow
+veröffentlicht selbst nichts. \texttt{release check} kontrolliert lediglich
+die Voraussetzungen und erzeugt keine Artefakte. Beim \emph{Packaging} werden
+Programmdateien zu einem auslieferbaren Paket oder \emph{Bundle}
+zusammengefasst; dieses Ergebnis ist ein Artefakt. Ein Git-Tag markiert einen
+bestimmten Commit mit einem Namen, häufig der Versionsnummer. Beim
+\emph{Signing} bestätigt eine digitale Signatur mit einem Zertifikat die
+Herkunft eines Pakets; Notarisierung ist eine zusätzliche externe Prüfung, und
+ein Updater verteilt spätere Versionen an installierte Anwendungen. Deployment
+bedeutet das Bereitstellen einer Anwendung; Docker baut dafür Images,
+Container führen sie aus und Docker Compose beschreibt mehrere
+zusammengehörige Container. AWS, Azure und GCP sind mögliche Cloud-Anbieter,
+auf die sich diese anbieterneutrale Basis jedoch nicht automatisch festlegt.
+
+\end{beginnerstatement}

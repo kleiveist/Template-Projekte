@@ -1,0 +1,17 @@
+\subsection{Generierung eines Kundenprojekts}
+\label{subsec:generierung-kundenprojekt}
+
+\texttt{init} erzeugt aus Profil, Capability und Projektidentität ein separates
+Projekt. Dessen aktives Manifest heißt \path{project-profile.toml}. Die
+Generierung ist der Übergabepunkt zur Produktentwicklung, nicht die
+Fertigstellung des Produkts
+\parencite{kleiveist2026tooling,kleiveist2026profiles}.
+Bei Desktopprojekten gehört eine gültige Anwendungs-ID zu diesen Eingaben.
+
+Im Zielverzeichnis prüfen \texttt{doctor}, \texttt{install}, \texttt{run} und
+\texttt{test {-}{-}suite all} die Baseline. Profilabhängige Tauri-, Datenbank-
+oder Containerprüfungen ergänzen den in
+Abbildung~\ref{fig:customer-project-process} gezeigten Transfer.
+
+\input{workspace/figures/business/customer-project-process}
+\beginnerinput{workspace/statement/800_einsatz_transfer/850}

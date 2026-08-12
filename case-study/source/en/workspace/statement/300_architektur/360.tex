@@ -1,0 +1,16 @@
+\begin{beginnerstatement}[In simple terms: Configuration]
+
+A configuration is a collection of settings that determines how and where a
+program runs. An environment variable is a value that the runtime environment
+provides to the program; a local \texttt{.env} file can collect such values for
+development. \path{environment.toml} describes the permitted variables and
+possible defaults, meaning the standard values to be used.
+\path{project-profile.toml}, by contrast, specifies which technical components
+belong to the project. An override deliberately replaces a lower-priority value,
+and the resolver determines the value that actually applies according to a
+fixed order. A secret is confidential information such as a password and must
+not reach the visible client. \texttt{DATABASE\_URL} contains the server-side
+database connection and is masked. \texttt{VITE\_API\_BASE\_URL}, by contrast,
+is the public backend address that the frontend may use.
+
+\end{beginnerstatement}

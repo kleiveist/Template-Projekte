@@ -1,0 +1,29 @@
+\subsection{Methodisches Vorgehen}
+\label{subsec:methodisches-vorgehen}
+
+Die Untersuchung folgt einer technischen Fallstudie
+\parencite{runeson2009case-study}. Eine Bestandsaufnahme erfasst Struktur,
+Komponenten und Verantwortungsgrenzen des Master-Repository. Die anschließende
+Architekturanalyse betrachtet Frontend, Backend, Desktop-Integration,
+Schnittstellen, Persistenz und Deployment. Sie trennt belegte Eigenschaften
+von Annahmen und offenen Prüfpunkten \parencite{kleiveist2026architecture}.
+
+Die Profilanalyse untersucht gemeinsamen Kern, Varianten und optionale
+Capabilities. Ergänzend wird das Python-Tooling entlang von Generierung,
+Systemprüfung, Installation, Entwicklung, Tests, Builds und Release betrachtet
+\parencite{kleiveist2026profiles,kleiveist2026tooling}.
+Projektinterne Architektur-, Profil- und Werkzeugbeschreibungen dienen dabei
+als Primärquellen für den dokumentierten Stand.
+
+Vorhandene Tests, Build-Ergebnisse und dokumentierte Abnahmen werden den
+Anforderungen und Architekturentscheidungen zugeordnet. Externe oder
+produktspezifische Prüfungen bleiben getrennt. Diese Evidenz trägt die
+Bewertung und den Transfer auf mögliche Kundenprojekte
+\parencite{kleiveist2026acceptance}. Abbildung~\ref{fig:case-study-method}
+zeigt die Abfolge der Untersuchung.
+Bewertung und Transfer folgen damit erst nach Bestandsaufnahme, Analyse und
+Verifikation; offene Prüfpunkte werden nicht als bestätigte Eigenschaften
+behandelt.
+
+\input{workspace/figures/verification/case-study-method}
+\beginnerinput{workspace/statement/100_einleitung/150}

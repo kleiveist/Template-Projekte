@@ -1,0 +1,15 @@
+\begin{beginnerstatement}[In simple terms: Shared data rules]
+
+An interface is a defined boundary at which two parts of a program exchange
+information. A contract describes the data format that both sides expect. JSON
+is a text-based format for structured data, and a JSON Schema defines
+machine-readable rules for its structure. Validation checks whether specific
+data complies with these rules. The frontend and backend must keep their
+formats synchronized because a one-sided change could otherwise break
+communication. Code generation can produce suitable code for both sides from a
+shared contract and thus simplify this coordination. In the state under
+examination, the schema and test examples exist but are not integrated
+automatically at runtime; automatic synchronization and code generation have
+also not yet been implemented.
+
+\end{beginnerstatement}

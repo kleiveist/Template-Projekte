@@ -1,0 +1,31 @@
+\subsection{Unsuitable and Conditionally Suitable Project Types}
+\label{subsec:ungeeignete-projekttypen}
+
+Projects requiring extensive operating-system integration, a
+platform-specific UI, system-level services, or drivers are only conditionally
+suited. The Tauri shell does not provide sufficient evidence of an
+adequate native foundation for such projects. Highly distributed
+infrastructure and specialized event-streaming or HPC requirements may
+likewise require a different architecture; at most, the baseline remains
+usable for a clearly delimited part.
+
+Hard real-time systems, graphically intensive games, firmware, embedded
+systems, and native mobile applications do not belong to the primary target
+domain. Ordinary live updates do not turn a business application into a
+real-time system. Individual mobile or hardware-oriented functions are not
+excluded, but the template does not provide their technical foundation.
+The decisive question is therefore not whether a single characteristic is
+present, but whether the baseline supports the technical core of the product.
+
+High security or compliance requirements do not preclude use of the baseline,
+but require additional evidence concerning protection requirements, audits,
+certification, and legal compliance. Compose validation and master images are
+evidenced, but Compose startup and production deployment are not
+\parencite{kleiveist2026ci-core-run}. Linux and macOS packages were built
+without signing; the Windows packaging path failed
+\parencite{kleiveist2026ci-desktop-run}. Signing and notarization remain
+product-specific \parencite{kleiveist2026release}. The required TypeScript,
+Python, Rust, database, and deployment expertise must also be assessed.
+If this evidence or expertise is unavailable, the project is at most
+conditionally suited.
+\beginnerinput{workspace/statement/800_einsatz_transfer/820}

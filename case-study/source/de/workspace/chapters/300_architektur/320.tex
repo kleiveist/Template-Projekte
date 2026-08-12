@@ -1,0 +1,20 @@
+\subsection{Frontend mit Vite und TypeScript}
+\label{subsec:frontend-vite-typescript}
+
+Das Frontend ist die gemeinsame Präsentationsschicht aller fünf Profile. Vite
+dient Entwicklung und Build; TypeScript prüft den strikt konfigurierten
+Quellcode, Vitest den HTTP-Client
+\parencite{vite2026guide,typescript2026handbook}.
+
+Das generierte Profilmodul aktiviert Backendzugriffe nur in passenden
+Varianten. Browser und Tauri verwenden dieselben Quellen und eine öffentliche
+\texttt{VITE\_API\_BASE\_URL}. Serverlogik, Geheimnisse und direkter
+Datenbankzugriff bleiben außerhalb des Clients; Web-only und Desktop-local
+benötigen kein Backend
+\parencite{kleiveist2026architecture,kleiveist2026profiles}.
+
+Tabelle~\ref{tab:technology-stack} dokumentiert Bereiche und Versionen des
+untersuchten Commits.
+
+\input{workspace/tables/technology-stack}
+\beginnerinput{workspace/statement/300_architektur/320}

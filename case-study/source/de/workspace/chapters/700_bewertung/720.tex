@@ -1,0 +1,28 @@
+\subsection{Stärken}
+\label{subsec:staerken}
+
+Die gemeinsame Baseline verbindet zentrale Pflege mit klaren Grenzen zwischen
+Frontend, Backend, Desktop, Persistenz und Tooling. Das geteilte Frontend
+adressiert A-02 und A-05, ohne jedes Profil mit allen Komponenten zu belasten.
+Diese Trennung unterstützt eigene Tests und produktspezifische Erweiterungen,
+ohne die gemeinsame Präsentationsschicht zu duplizieren.
+
+Fünf Profile bilden wiederkehrende Plattformzuschnitte ab. Abhängigkeiten
+verhindern PostgreSQL ohne Backend. Die Abnahme aller Basisprofile sowie der
+zulässigen und unzulässigen PostgreSQL-Kombinationen stützt dieses Modell für
+den begrenzten aktuellen Katalog, nicht für beliebig viele künftige
+Capabilities \parencite{kleiveist2026acceptance}.
+
+\texttt{control.py} vereinheitlicht den Einstieg, während Fachwerkzeuge
+sichtbar bleiben. Manifest, Konfigurationsvertrag, Tests und Buildpfade erhöhen
+die Nachvollziehbarkeit. Die byte-identische Generierung zweier
+\texttt{desktop-cloud + postgres}-Projekte liefert dafür einen konkreten, aber
+auf eine Kombination und Umgebung begrenzten Nachweis
+\parencite{kleiveist2026acceptance}.
+Profilabhängiges Überspringen nicht vorhandener Schichten hält die gemeinsame
+Befehlsoberfläche dabei an den tatsächlichen Projektumfang gebunden.
+
+Tabelle~\ref{tab:strengths-limitations} stellt Stärken und Geltungsgrenzen
+gegenüber.
+
+\input{workspace/tables/strengths-limitations}

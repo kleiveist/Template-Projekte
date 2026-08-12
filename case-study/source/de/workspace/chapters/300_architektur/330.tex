@@ -1,0 +1,23 @@
+\subsection{Backend mit FastAPI}
+\label{subsec:fastapi-backend}
+
+Das Backend bildet eine separate HTTP-Schicht für Web-cloud, Desktop-cloud und
+Full-platform. FastAPI stellt unter \texttt{/api} derzeit nur
+\texttt{/health} und \texttt{/ready} bereit. Produktspezifische Dienste,
+Fachmodelle und Authentifizierung sind nicht vorgegeben
+\parencite{fastapi2026features,kleiveist2026architecture}.
+
+Liveness meldet den Prozesszustand. Bei aktiver Datenbankfähigkeit prüft
+Readiness zusätzlich die Verbindung und antwortet bei Fehlern mit HTTP~503,
+ohne interne Details offenzulegen. Router, Einstellungen und Abhängigkeit sind
+getrennt testbar; Service- und Domänenmodule ergänzt erst das Produkt.
+
+Im Deployment bleiben die Einheiten getrennt
+(Abbildung~\ref{fig:deployment-architecture}): Der Vite-Build ist statisch
+bereitstellbar, FastAPI läuft in einem eigenen nicht privilegierten Container.
+Compose bildet diese providerneutrale Grenze lokal ab; PostgreSQL kommt nur
+explizit hinzu
+\parencite{kleiveist2026deployment}.
+
+\input{workspace/figures/architecture/deployment-architecture}
+\beginnerinput{workspace/statement/300_architektur/330}

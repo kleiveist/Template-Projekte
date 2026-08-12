@@ -1,0 +1,212 @@
+% ------------------------------------------------------------
+% Sprache, Zeichencodierung und Anführungen
+% ------------------------------------------------------------
+\usepackage[ngerman]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{csquotes}
+
+% ------------------------------------------------------------
+% Seitenlayout: DIN A4, 2 cm Ränder
+% ------------------------------------------------------------
+\usepackage{geometry}
+\geometry{
+  top=2cm,
+  bottom=2cm,
+  left=2cm,
+  right=2cm
+}
+
+% ------------------------------------------------------------
+% Zeilenabstand und Feintypografie
+% ------------------------------------------------------------
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{microtype}
+
+% ------------------------------------------------------------
+% Schrift: TeX Gyre Heros als Arial-ähnliche Schrift
+% ------------------------------------------------------------
+\usepackage{tgheros}
+\renewcommand{\familydefault}{\sfdefault}
+
+% ------------------------------------------------------------
+% Überschriftenformatierung
+% ------------------------------------------------------------
+\usepackage{titlesec}
+
+\titleformat{\section}
+  {\bfseries\fontsize{12pt}{14pt}\selectfont}
+  {\thesection}
+  {1em}
+  {}
+
+\titleformat{\subsection}
+  {\bfseries\fontsize{12pt}{14pt}\selectfont}
+  {\thesubsection}
+  {1em}
+  {}
+
+\titleformat{\subsubsection}
+  {\bfseries\fontsize{12pt}{14pt}\selectfont}
+  {\thesubsubsection}
+  {1em}
+  {}
+
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+% ------------------------------------------------------------
+% Absätze und Fußnoten
+% ------------------------------------------------------------
+\setlength{\parskip}{6pt}
+\setlength{\parindent}{0pt}
+
+\makeatletter
+\renewcommand\footnotesize{\@setfontsize\footnotesize{10pt}{12pt}}
+\makeatother
+
+% ------------------------------------------------------------
+% Seitenzahlen: zentriert unten, keine Kopfzeile
+% ------------------------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+% ------------------------------------------------------------
+% Grafiken, Tabellen und codebasierte Abbildungen
+% ------------------------------------------------------------
+\usepackage{graphicx}
+\usepackage{xcolor}
+\ifbeginnerstatements
+  \usepackage{tcolorbox}
+\fi
+\usepackage{tikz}
+\usetikzlibrary{
+  arrows.meta,
+  backgrounds,
+  calc,
+  fit,
+  matrix,
+  positioning,
+  shapes.geometric
+}
+
+% Einheitliche Farben der Fallstudiengrafiken
+\definecolor{caseBlue}{HTML}{174A7E}
+\definecolor{caseGreen}{HTML}{5A8F3D}
+\definecolor{caseLight}{HTML}{F4F8FB}
+\definecolor{caseLine}{HTML}{A9B4BF}
+
+% Optionale, zurückhaltende Erklärungen für technische Neueinsteiger
+\ifbeginnerstatements
+  \definecolor{beginnerBackground}{HTML}{F3F3F3}
+  \definecolor{beginnerBorder}{HTML}{B8B8B8}
+
+  \newtcolorbox{beginnerstatement}[1][Kurz erklärt]{
+    colback=beginnerBackground,
+    colframe=beginnerBorder,
+    colbacktitle=beginnerBackground,
+    coltitle=black,
+    coltext=black,
+    boxrule=0.6pt,
+    arc=2mm,
+    outer arc=2mm,
+    left=2.5mm,
+    right=2.5mm,
+    top=2mm,
+    bottom=2mm,
+    before skip=10pt plus 2pt minus 2pt,
+    after skip=10pt plus 2pt minus 2pt,
+    fonttitle=\bfseries,
+    fontupper=\small,
+    title={#1}
+  }
+\fi
+
+\tikzset{
+  casePrimary/.style={
+    draw=caseBlue,
+    fill=caseBlue,
+    text=white,
+    rounded corners=3pt,
+    align=center,
+    font=\sffamily\bfseries\scriptsize,
+    minimum height=8mm,
+    inner sep=4pt
+  },
+  caseBox/.style={
+    draw=caseBlue,
+    fill=white,
+    text=caseBlue,
+    rounded corners=3pt,
+    align=center,
+    font=\sffamily\scriptsize,
+    minimum height=8mm,
+    inner sep=4pt
+  },
+  caseOptional/.style={
+    draw=caseGreen,
+    fill=caseGreen!10,
+    text=caseGreen!55!black,
+    rounded corners=3pt,
+    align=center,
+    font=\sffamily\scriptsize,
+    minimum height=8mm,
+    inner sep=4pt
+  },
+  caseGroup/.style={
+    draw=caseLine,
+    fill=caseLight,
+    rounded corners=5pt,
+    inner sep=6pt
+  },
+  caseFlow/.style={
+    -{Latex[length=2.6mm,width=1.8mm]},
+    draw=caseBlue,
+    line width=0.9pt
+  },
+  caseSecondaryFlow/.style={
+    -{Latex[length=2.4mm,width=1.7mm]},
+    draw=caseLine,
+    line width=0.8pt,
+    dashed
+  }
+}
+
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{threeparttable}
+
+% ------------------------------------------------------------
+% Hyperlinks
+% ------------------------------------------------------------
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+
+% ------------------------------------------------------------
+% Literaturverwaltung mit biblatex-apa
+% ------------------------------------------------------------
+\usepackage[
+  style=apa,
+  backend=biber,
+  sorting=nyt,
+  giveninits=true,
+  maxcitenames=2,
+  maxbibnames=20,
+  doi=true,
+  url=true,
+  isbn=true
+]{biblatex}
+
+\DeclareLanguageMapping{ngerman}{ngerman-apa}
+
+\DefineBibliographyStrings{ngerman}{
+  nodate = {o\adddot\addspace D\adddot}
+}
+
+\addbibresource{references.bib}

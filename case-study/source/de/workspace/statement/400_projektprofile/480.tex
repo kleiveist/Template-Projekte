@@ -1,0 +1,13 @@
+\begin{beginnerstatement}[Kurz erklärt: eine gemeinsame Wartungsbasis]
+
+\emph{Single Repository} bedeutet hier, dass Core, Features, Profile und
+Generator gemeinsam an einer Stelle gepflegt werden. Dieses
+Master-Repository ist die maßgebliche \emph{Source of Truth}, also der
+verlässliche Ausgangsstand der Vorlage. Die Profile sind keine getrennten
+Forks oder Kopien dieser Wartungsbasis. Der Generator erstellt daraus ein
+eigenständiges Produktrepository mit den ausgewählten Teilen. Danach bleiben
+Master und Produktprojekt getrennt. Spätere Updates des Masters werden nicht
+automatisch synchronisiert, sondern müssen gezielt in das Produkt übernommen
+werden.
+
+\end{beginnerstatement}

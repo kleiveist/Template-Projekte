@@ -1,0 +1,33 @@
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.1}
+  \caption{Profile-specific technical verification}
+  \label{tab:verification-matrix}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\centering\arraybackslash}p{0.055\textwidth}>{\centering\arraybackslash}p{0.08\textwidth}>{\centering\arraybackslash}p{0.055\textwidth}>{\centering\arraybackslash}p{0.055\textwidth}>{\centering\arraybackslash}p{0.11\textwidth}>{\centering\arraybackslash}p{0.08\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Profile / combination} & \textbf{Gen.} & \textbf{Install / Doctor} & \textbf{Tests} & \textbf{Web} & \textbf{Desktop} & \textbf{PG / migr.} & \textbf{CI on \texttt{a4487ac}} \\
+    \midrule
+    \texttt{web-only} & P & P & P & P & -- & -- & P \\
+    \texttt{web-cloud} & P & H & P & P & -- & -- & P \\
+    \texttt{desktop-local} & P & P & P & P & P (Linux DEB) & -- & F: profile test \\
+    \texttt{desktop-cloud} & P & H & P & P & P (Linux DEB) & -- & F: profile test \\
+    \texttt{full-platform} & P & H & P & P & P (Linux DEB) & -- & F: profile test \\
+    \midrule
+    \texttt{web-cloud + postgres} & P & P & P & P & -- & P & P \\
+    \texttt{desktop-cloud + postgres} & P & P & P & P & P (Linux DEB) & P & F: profile test \\
+    \texttt{full-platform + postgres} & P & P & P & P & P (Linux DEB) & P & F: profile test \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  \begin{minipage}{\textwidth}
+    \scriptsize
+    \textbf{Legend:} P = PASS; H = PASS WITH NOTE; F = executed check failed;
+    -- = not applicable. The six central result columns are taken from the local acceptance
+    on \texttt{1cdfb6e}; the final column reports the profile-specific GitHub Actions run on
+    \texttt{a4487ac}. \texttt{web-only + postgres} and
+    \texttt{desktop-local + postgres} were correctly rejected before target generation in the
+    local acceptance (P). Source: \textcite{kleiveist2026acceptance} and
+    \textcite{kleiveist2026ci-profiles-run,kleiveist2026ci-postgres-run}.
+  \end{minipage}
+\end{table}

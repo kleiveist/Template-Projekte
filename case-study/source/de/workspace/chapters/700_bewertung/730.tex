@@ -1,0 +1,39 @@
+\subsection{Schwächen und Grenzen}
+\label{subsec:schwaechen-grenzen}
+
+Zu unterscheiden sind technische Schwächen, bewusste Scope-Grenzen und nicht
+verifizierte Bereiche. Nur die erste Gruppe bezeichnet unmittelbar einen
+Nachteil der Umsetzung.
+Scope-Grenzen erzeugen zwar Anpassungsbedarf, sind aber keine fehlgeschlagene
+Anforderung. Fehlende Verifikation erlaubt noch kein positives oder negatives
+technisches Urteil.
+
+Die Bündelung im Master erhöht die interne Komplexität: Änderungen an Core,
+Generator oder Katalog erfordern Regressionstests über mehrere Profile.
+Außerdem nutzen Frontend und Backend die gemeinsamen JSON-Schemata nicht zur
+Laufzeit; Vertragsänderungen bleiben manuell. Die direkte CLI-Auswahl trennt
+\texttt{optional} und \texttt{selectable} schwächer als der Dialog. Beide
+Abweichungen erzeugen Wartungs- oder Fehlbedienungsrisiken. Auf dem
+untersuchten HEAD kommen widersprüchliche Nachweise hinzu: Webprofile und der
+lokale Tooling-Lauf bestanden, externe Tooling-, Desktopprofil- und
+Windows-Prüfungen scheiterten.
+Dieser Befund stellt die frühere commitgebundene Abnahme nicht rückwirkend
+infrage, verhindert aber ein vollständig grünes Urteil für den neueren Stand.
+
+Bewusst ausgeschlossen sind Backend in \texttt{web-only}, Cloud-API in
+\texttt{desktop-local} und PostgreSQL ohne Backend. Auch Fachlogik,
+Authentifizierung, Rollenmodelle, verpflichtende Persistenz, Cloud-Provider
+und native Fachkommandos bleiben produktspezifisch. Der daraus folgende
+Anpassungsaufwand ist keine Abweichung vom Scope.
+
+Nicht abschließend verifiziert sind Compose-Start, produktive Bereitstellung,
+Release Validation und Branch Protection. Linux und macOS wurden unsigniert
+paketiert, Windows scheiterte. Signing, Notarisierung, Veröffentlichung und
+produktiver Cloudbetrieb bleiben produkt- oder infrastrukturspezifisch
+\parencite{kleiveist2026ci-core-run,kleiveist2026ci-desktop-run,kleiveist2026acceptance}.
+Die Paketergebnisse belegen daher weder signierte Releases noch produktiven
+Cloudbetrieb. Bewertet wird die Template-Baseline, nicht die Produktionsreife
+eines Produkts.
+Die verbleibenden Risiken betreffen damit vor allem Betrieb, Plattformen und
+Freigabeprozesse.
+\beginnerinput{workspace/statement/700_bewertung/730}

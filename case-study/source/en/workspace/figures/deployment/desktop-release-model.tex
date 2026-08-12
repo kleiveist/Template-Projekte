@@ -1,0 +1,34 @@
+\begin{figure}[H]
+  \centering
+  \resizebox{0.68\textwidth}{!}{%
+  \begin{tikzpicture}[node distance=6mm and 9mm]
+    \node[casePrimary,minimum width=52mm] (tauri)
+      {\texttt{build desktop} / \texttt{tauri build}};
+    \node[caseBox,minimum width=52mm,below=of tauri] (strategy)
+      {select a target strategy};
+    \node[caseBox,minimum width=32mm,below left=of strategy] (windows) {Windows host};
+    \node[caseBox,minimum width=32mm,below=of strategy] (macos) {macOS host};
+    \node[caseBox,minimum width=32mm,below right=of strategy] (linux) {Linux host};
+    \node[caseBox,minimum width=58mm,below=15mm of macos] (packaging)
+      {Tauri packaging\\native package formats per platform};
+    \node[caseBox,minimum width=58mm,below=of packaging] (artifacts)
+      {unsigned bundle artifacts};
+    \node[caseOptional,minimum width=82mm,below=of artifacts] (external)
+      {signing / macOS notarization / publication / updater\\protected product-specific integration};
+
+    \draw[caseFlow] (tauri) -- (strategy);
+    \draw[caseFlow] (strategy) -- (windows);
+    \draw[caseFlow] (strategy) -- (macos);
+    \draw[caseFlow] (strategy) -- (linux);
+    \draw[caseFlow] (windows) |- (packaging);
+    \draw[caseFlow] (macos) -- (packaging);
+    \draw[caseFlow] (linux) |- (packaging);
+    \draw[caseFlow] (packaging) -- (artifacts);
+    \draw[caseSecondaryFlow] (artifacts) -- (external);
+  \end{tikzpicture}}
+  \caption{Cross-platform model for desktop releases}
+  \label{fig:desktop-release-model}
+  \smallskip
+  {\footnotesize Source: Author's own illustration based on
+  \textcite{kleiveist2026release}.\par}
+\end{figure}

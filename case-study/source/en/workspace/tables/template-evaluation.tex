@@ -1,0 +1,39 @@
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Consolidated evaluation of the technology template}
+  \label{tab:template-evaluation}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.31\textwidth}>{\raggedright\arraybackslash}p{0.19\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Criterion} & \textbf{Evidence base} & \textbf{Assessment} &
+      \textbf{Key limitation} \\
+    \midrule
+    Reuse and standardization & Shared Core, five profiles,
+      generator, and uniform command interface & largely addressed &
+      Applies to the defined stack; derived projects are not updated automatically. \\
+    Variability and extensibility & Profile presets, capability dependencies,
+      and verified PostgreSQL combinations & largely addressed & Small
+      current catalog; extensions increase the maintenance and testing scope. \\
+    Testability and reproducibility & Documented profile, integration,
+      and build acceptance, plus a byte-for-byte identical generation comparison &
+      partially addressed & Some current remote jobs failed;
+      reproducibility experiment covers only one combination. \\
+    Developer experience and documentability & \texttt{control.py},
+      diagnostic paths, versioned manifests, and structured documentation &
+      partially addressed & Onboarding and interaction effort were not measured
+      empirically; multiple toolchains remain visible. \\
+    Maintainability & One central baseline with shared tests and
+      documentation rules & partially addressed & Technology diversity,
+      variant regression, and manual interface synchronization. \\
+    Platform coverage and operational maturity & Evidence covering web, backend,
+      PostgreSQL, container images, Linux, and macOS; provider-neutral boundary &
+      not conclusively demonstrated & Windows package, Compose startup, signing,
+      notarization, and production deployment have not been evidenced. \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Source: Author's own evaluation based on the preceding
+  chapters, \textcite{kleiveist2026acceptance}, and the CI runs evaluated in
+  Section~\ref{subsec:continuous-integration}.\par}
+\end{table}

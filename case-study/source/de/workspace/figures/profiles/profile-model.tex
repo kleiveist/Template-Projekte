@@ -1,0 +1,25 @@
+\begin{figure}[H]
+  \centering
+  \resizebox{0.84\textwidth}{!}{%
+  \begin{tikzpicture}[node distance=8mm]
+    \node[casePrimary,minimum width=60mm] (master) {Master-Repository};
+    \node[caseBox,minimum width=60mm,below=of master] (core) {Shared Core und Feature-Pfade};
+    \node[caseBox,minimum width=60mm,below=of core] (profiles) {gewähltes Profil-Preset};
+    \node[caseOptional,minimum width=60mm,below=of profiles] (capability)
+      {optionale Capability (falls kompatibel)};
+    \node[casePrimary,minimum width=60mm,below=of capability] (project)
+      {generiertes Produktprojekt};
+
+    \draw[caseFlow] (master) -- (core);
+    \draw[caseFlow] (core) -- (profiles);
+    \draw[caseFlow] (profiles) -- (capability);
+    \draw[caseFlow] (capability) -- (project);
+    \begin{scope}[on background layer]
+      \node[caseGroup,fit=(master)(capability),inner sep=5mm] (basis) {};
+    \end{scope}
+    \node[font=\sffamily\scriptsize,text=black!60,right=9mm of basis,align=left]
+      {eine Wartungsbasis\\statt separater\\Template-Repositories};
+  \end{tikzpicture}}
+  \caption{Ableitung eines Produktprojekts aus einer gemeinsamen Template-Basis}
+  \label{fig:profile-model}
+\end{figure}

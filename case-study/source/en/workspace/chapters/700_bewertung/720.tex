@@ -1,0 +1,28 @@
+\subsection{Strengths}
+\label{subsec:staerken}
+
+The shared baseline combines centralized maintenance with clear boundaries
+between the frontend, backend, desktop, persistence, and tooling layers. The
+shared frontend addresses A-02 and A-05 without burdening every profile with
+all components. This separation supports independent tests and
+product-specific extensions without duplicating the shared presentation layer.
+
+Five profiles represent recurring platform configurations. Dependencies
+prevent the use of PostgreSQL without a backend. The acceptance results for
+all base profiles and for the permitted and prohibited PostgreSQL combinations
+support this model for the limited current catalog, but not for an arbitrary
+number of future capabilities \parencite{kleiveist2026acceptance}.
+
+\texttt{control.py} standardizes the entry point while keeping the specialized
+tools visible. The manifest, configuration contract, tests, and build paths
+increase traceability. The byte-identical generation of two
+\texttt{desktop-cloud + postgres} projects provides concrete evidence of this,
+albeit limited to one combination and environment
+\parencite{kleiveist2026acceptance}.
+Profile-dependent skipping of absent layers keeps the shared command interface
+aligned with the actual project scope.
+
+Table~\ref{tab:strengths-limitations} contrasts the strengths with the limits
+of their applicability.
+
+\input{workspace/tables/strengths-limitations}

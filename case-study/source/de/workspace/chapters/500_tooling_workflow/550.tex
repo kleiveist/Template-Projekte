@@ -1,0 +1,33 @@
+\subsection{Tests und Builds}
+\label{subsec:tests-builds}
+
+Die acht Testsuiten decken Tooling, Schema, API, Datenbank, PostgreSQL,
+Frontend, E2E und Tauri/Rust ab. \texttt{test --suite all} bildet den
+vollständigen projektbezogenen Einstieg; Berichte sind optional
+\parencite{kleiveist2026control,kleiveist2026tooling}.
+Die Tooling-Suite prüft unter anderem Generator, Profile und Konfiguration; die
+Komponentensuiten delegieren an Pytest, Vitest, Playwright oder Cargo. Damit
+bleiben Testbereiche getrennt ausführbar.
+
+Die Auswahl bleibt profilabhängig: Fehlt ein Feature, meldet die Suite
+\texttt{SKIP}; fehlen für ein aktives Feature Quellen oder Voraussetzungen,
+meldet sie \texttt{FAIL}. PostgreSQL ohne Test-URL und E2E ohne
+Playwright-Konfiguration werden übersprungen. Der Runner kann fehlende
+Backend-Umgebungen reparieren und für E2E die Entwicklungsdienste verwalten.
+Diese Semantik unterscheidet bewusst fehlende Features von defekten aktiven
+Komponenten. Ein übersprungener Test ist deshalb kein Erfolgsnachweis.
+
+Die Buildpfade bleiben getrennt: Web erzeugt Vite-Ausgabe und ZIP, Desktop
+delegiert Ziel und Bundle an Tauri, Container baut für Cloudprofile Frontend-,
+Backend- oder beide Images. \texttt{container validate} prüft das
+Compose-Modell ohne Start \parencite{kleiveist2026container,kleiveist2026release}.
+Der Webpfad legt zusätzlich ein ZIP-Paket ab. Desktop-Builds bleiben an ein
+aktives Tauri-Feature und die jeweilige Zielplattform gebunden.
+
+GitHub Actions verwendet dieselben öffentlichen Einstiege für Core,
+Profilmatrizen, PostgreSQL und Desktopziele. CI ergänzt dafür Betriebssysteme,
+Laufzeiten und einen temporären PostgreSQL-Dienst
+\parencite{kleiveist2026ci}.
+Lokale und externe Abläufe nutzen damit vergleichbare Einstiegspunkte, laufen
+aber nicht unter identischen Umgebungsbedingungen.
+\beginnerinput{workspace/statement/500_tooling_workflow/550}

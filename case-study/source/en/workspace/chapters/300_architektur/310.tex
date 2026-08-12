@@ -1,0 +1,33 @@
+\subsection{Overall Architecture}
+\label{subsec:gesamtarchitektur}
+
+The baseline consists of a master repository with a shared core and declarative
+variants. Profiles select reusable features; optional capabilities extend only
+compatible profiles. This controlled variability avoids separate copies of the
+template
+\parencite{clements2001software-product-lines,kleiveist2026profiles}.
+
+\input{workspace/figures/architecture/system-architecture}
+
+Figure~\ref{fig:system-architecture} distinguishes the baseline from the derived
+project. The generator resolves the profile and capabilities, copies the
+associated paths, and records the result in
+\texttt{project-profile.toml}. The frontend, backend, Tauri, and persistence
+remain independent components, some of which are optional
+\parencite{kleiveist2026architecture}.
+
+\input{workspace/figures/architecture/component-architecture}
+
+The separation of components in Figure~\ref{fig:component-architecture} keeps
+the client, server, native integration, and shared artifacts distinct. Profiles
+and configuration describe the structure and runtime values; tooling and
+deployment control the components outside the product runtime.
+
+\input{workspace/figures/architecture/runtime-architecture}
+
+At runtime, either the browser or a Tauri webview loads the same Vite build
+(Figure~\ref{fig:runtime-architecture}). Backend-enabled profiles communicate
+with FastAPI over HTTP; only the backend accesses persistence when it is
+enabled. This
+keeps the client, server, and data storage separately testable and extensible.
+\beginnerinput{workspace/statement/300_architektur/310}

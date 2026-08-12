@@ -1,0 +1,17 @@
+\begin{beginnerstatement}[In simple terms: Prerequisites and installation]
+
+\texttt{doctor} performs read-only checks to determine whether the runtimes,
+settings, paths, dependencies, and ports important to the selected profile are
+available. Installation sets up required dependencies: additional programs
+and libraries on which the project relies. A \emph{package manager} automates
+the downloading and setup of such packages. Node.js runs the frontend
+tooling; npm manages its packages, and \texttt{npm ci} installs the versions
+specified in the lockfile. Python runs the backend and tooling; a virtual
+environment (\emph{venv}) separates their packages from the rest of the
+system, while \texttt{uv}, or \texttt{pip} as a fallback, installs them. Git
+manages source-code changes and is required to clone the repository. Rust is
+required for the native Tauri layer of desktop profiles. Chromium is the
+browser used for configured Playwright tests and is set up only when needed;
+other optional tools are likewise handled according to the profile.
+
+\end{beginnerstatement}

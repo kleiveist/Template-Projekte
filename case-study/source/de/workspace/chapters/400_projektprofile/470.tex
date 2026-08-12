@@ -1,0 +1,36 @@
+\subsection{Optionale Capabilities}
+\label{subsec:optionale-capabilities}
+
+Der Katalog enthält sechs Features. \texttt{tauri} benötigt
+\texttt{frontend}; \texttt{cloud} und \texttt{database} benötigen
+\texttt{backend}; \texttt{postgres} benötigt \texttt{database}. Die
+gerichteten Regeln in Abbildung~\ref{fig:feature-dependencies} beschreiben
+keine Laufzeitkommunikation
+\parencite{kleiveist2026profiles,kleiveist2026database}.
+
+\input{workspace/figures/profiles/feature-dependencies}
+
+Nur \texttt{postgres} ist derzeit als auswählbare Capability markiert. Für
+Backendprofile löst sie zunächst das optionale, intern bleibende
+\texttt{database} auf und ergänzt SQLAlchemy, Alembic, Psycopg sowie Tests. Der
+PostgreSQL-Dienst ist im Compose-Dokument bereits als inaktives Profil
+deklariert; die Capability ergänzt Backend-Infrastruktur und Abhängigkeiten
+\parencite{kleiveist2026deployment,kleiveist2026template}.
+So besteht \texttt{web-cloud + postgres} aus Frontend, Backend, Cloud,
+Datenbankbasis und PostgreSQL-Erweiterung. Die Auswahl aktiviert also nicht
+erst den Compose-Eintrag, sondern die zugehörigen Backend-Pfade.
+
+Der Resolver ergänzt nur optionale Voraussetzungen. Deshalb werden
+\texttt{web-only + postgres} und \texttt{desktop-local + postgres} wegen des
+fehlenden Backends abgewiesen. Neue Katalogeinträge gelten nicht allein durch
+ihre Deklaration als implementiert.
+Sie benötigen zusätzlich eigene Pfade, Abhängigkeiten und Tests.
+
+Zwei Implementierungsabweichungen bleiben: Der Dialog bietet nur
+\texttt{selectable} PostgreSQL an, eine direkte \texttt{--with database}-Angabe
+akzeptiert jedoch die für Backendprofile optionale Datenbankfähigkeit. Zudem
+stammen Einträge für \path{.env.example} entgegen der allgemeinen
+Profildokumentation aus \path{config/environment.toml}, nicht aus
+\path{features.toml}. Die Presets bleiben unverändert; die Trennung zwischen
+interner und auswählbarer Capability ist aber nicht vollständig durchgesetzt.
+\beginnerinput{workspace/statement/400_projektprofile/470}

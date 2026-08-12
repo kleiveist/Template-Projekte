@@ -1,0 +1,13 @@
+\subsection{Profil Desktop-cloud}
+\label{subsec:profil-desktop-cloud}
+
+\texttt{desktop-cloud} verbindet das Tauri-Frontend über eine öffentliche URL
+mit dem getrennten FastAPI-Backend und ergänzt Deployment-Dateien. PostgreSQL
+ist kompatibel, bleibt aber optional
+\parencite{kleiveist2026profiles,kleiveist2026deployment}.
+
+Die technischen Basisfeatures entsprechen \texttt{full-platform}; die
+Profil-ID kennzeichnet jedoch den Desktop-Client als vorgesehenen Produktkanal.
+Die Abgrenzung ist semantisch: Ein zusätzlicher technischer Baustein entsteht
+daraus nicht.
+\beginnerinput{workspace/statement/400_projektprofile/450}

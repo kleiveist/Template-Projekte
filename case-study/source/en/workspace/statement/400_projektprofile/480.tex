@@ -1,0 +1,12 @@
+\begin{beginnerstatement}[In simple terms: One shared maintenance base]
+
+\emph{Single repository} means here that the Core, features, profiles, and
+generator are maintained together in one place. This master repository is the
+authoritative \emph{source of truth}, meaning the reliable baseline for the
+template. The profiles are not separate forks or copies of this maintenance
+base. The generator uses it to create an independent product repository with
+the selected parts. The master and product project then remain separate.
+Later updates to the master are not synchronized automatically; they must be
+incorporated into the product deliberately.
+
+\end{beginnerstatement}

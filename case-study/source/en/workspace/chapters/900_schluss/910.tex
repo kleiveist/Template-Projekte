@@ -1,0 +1,20 @@
+\subsection{Summary of Results}
+\label{subsec:zusammenfassung-ergebnisse}
+
+The master template addresses repeated setup effort and diverging project
+bases through a shared core and declarative variability. It consolidates
+generation, configuration, boundaries of responsibility, workflows, and
+maintenance.
+
+Five profiles combine the shared Vite frontend with a profile-dependent
+FastAPI backend and an optional Tauri layer; PostgreSQL can be selected only
+with a backend. \texttt{control.py} standardizes the development path.
+Generated projects remain independent and receive no automatic updates from
+the master repository.
+
+The local acceptance of an earlier commit supports the profile, PostgreSQL,
+test, web build, and Linux packaging paths. The current external CI is only
+partially successful; further evidence is either unavailable or
+product-specific. The evidence therefore demonstrates a baseline with
+controlled variability, not production readiness or empirical suitability for
+customer projects.

@@ -1,0 +1,30 @@
+\subsection{Wartungsaufwand}
+\label{subsec:wartungsaufwand}
+
+Die Single-Repository-Strategie bündelt Core, Features, Profile, Generator,
+Tests und Dokumentation. Das vermeidet parallele Baseline-Änderungen und nützt
+künftigen Projekten. Bereits generierte Repositories müssen Korrekturen jedoch
+eigenständig übernehmen.
+Die Source of Truth reduziert somit die Zahl zu pflegender Ausgangsstände,
+nicht aber den Aufwand für die Migration bestehender Produkte.
+
+Die zentrale Pflege umfasst mehrere Sprachen, Dependency-Manager, Toolchains,
+Plattformen und Releasezyklen. Diese Vielfalt folgt aus den Web-, Backend-,
+Desktop- und Deploymentzielen, erhöht aber Kompetenzbedarf, Testbreite und
+Umgebungsabhängigkeit.
+Native Builds und externe Dienste sind dabei wartungsintensiver als ein rein
+webbasierter, technologiehomogener Starter.
+
+Fünf Profile, sechs Features und eine auswählbare Capability begrenzen derzeit
+den Kombinationsraum; die Abnahme deckt fünf Basispfade und drei zulässige
+PostgreSQL-Erweiterungen ab \parencite{kleiveist2026acceptance}. Weitere
+Capabilities erweitern Abhängigkeiten und Testmatrix. Eine kombinatorische
+Explosion ist nicht nachgewiesen, ein wachsender Pflegebedarf aber plausibel.
+Katalog, Resolver, Konfigurationsvertrag, Testmatrix und Dokumentation müssen
+bei solchen Erweiterungen gemeinsam konsistent bleiben.
+
+Die zentrale Wartung ist damit aufwendiger als bei einem kleinen homogenen
+Starter, kann aber wiederholte Basispflege bündeln. Ihre Wirtschaftlichkeit
+hängt von Nutzungshäufigkeit, Projektähnlichkeit und Pflegezeit ab; Kostendaten
+fehlen.
+\beginnerinput{workspace/statement/700_bewertung/740}

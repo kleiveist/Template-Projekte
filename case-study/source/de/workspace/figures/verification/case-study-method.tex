@@ -1,0 +1,24 @@
+\begin{figure}[H]
+  \centering
+  \scalebox{1.15}{%
+  \begin{tikzpicture}[node distance=6mm]
+    \node[casePrimary,minimum width=78mm] (capture) {Template erfassen};
+    \node[caseBox,minimum width=78mm,below=of capture] (architecture) {Architektur analysieren};
+    \node[caseBox,minimum width=78mm,below=of architecture] (profiles) {Profilmodell untersuchen};
+    \node[caseBox,minimum width=78mm,below=of profiles] (tooling) {Tooling untersuchen};
+    \node[caseBox,minimum width=78mm,below=of tooling] (verification) {Verifikationsdaten auswerten};
+    \node[caseOptional,minimum width=78mm,below=of verification] (evaluation) {Stärken und Grenzen bewerten};
+    \node[caseOptional,minimum width=78mm,below=of evaluation] (transfer) {Einsatzmöglichkeiten ableiten};
+
+    \draw[caseFlow] (capture) -- (architecture);
+    \draw[caseFlow] (architecture) -- (profiles);
+    \draw[caseFlow] (profiles) -- (tooling);
+    \draw[caseFlow] (tooling) -- (verification);
+    \draw[caseFlow] (verification) -- (evaluation);
+    \draw[caseFlow] (evaluation) -- (transfer);
+  \end{tikzpicture}}
+  \caption{Methodische Schritte der Fallstudie}
+  \label{fig:case-study-method}
+  \smallskip
+  {\footnotesize Quelle: Eigene Darstellung.\par}
+\end{figure}

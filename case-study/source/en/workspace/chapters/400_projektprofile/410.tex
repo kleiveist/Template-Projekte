@@ -1,0 +1,52 @@
+\subsection{Basic Principle of the Profile Model}
+\label{subsec:grundprinzip-profilmodell}
+
+The master repository manages variants through features, thereby supporting
+systematic reuse without constituting a complete software product line
+\parencite{clements2001software-product-lines,krueger1992software-reuse}.
+Here, \emph{Core} denotes the paths included in every product project. A
+\emph{Feature} groups the paths and dependencies of a technical capability,
+while a \emph{profile} represents a permissible combination of features. A
+\emph{capability} optionally extends a profile and is not itself a platform
+profile. The \emph{manifest} records the selection in the generated project
+\parencite{kleiveist2026profiles,kleiveist2026template}.
+The Core includes version information, configuration, documentation, profile
+descriptions, shared artifacts, and tooling, among other elements. Technical
+runtime components, by contrast, reside in the selected feature paths.
+
+\input{workspace/figures/profiles/profile-model}
+
+The generator resolves the profile and compatible capabilities and copies the
+Core and active feature paths into a new product project
+(Figure~\ref{fig:profile-model}). Inactive directories are not selected; web
+profiles additionally omit the Tauri CLI. The name, slug, and, for Tauri, the
+application ID can be customized
+\parencite{kleiveist2026profiles,kleiveist2026tooling}.
+Resolution produces an ordered scaffold plan. As a result, the target project
+does not merely contain disabled components; it predominantly contains only
+the directories intended for its variant.
+
+Backend and cloud occur together in the current presets. For desktop projects,
+an additional browser channel distinguishes \texttt{full-platform} from
+\texttt{desktop-cloud}. Capabilities are checked only after the profile has
+been selected; the resolver does not silently add missing platform features
+(Figure~\ref{fig:profile-selection-flow}).
+
+\input{workspace/figures/profiles/profile-selection-flow}
+
+The generated \texttt{project-profile.toml} records the schema version,
+profile identity, requested extensions, and fully resolved features. The
+tooling validates it and handles only active services and workflows. The
+master manifest uses \texttt{full-platform + postgres} without modifying the
+preset itself. Runtime values, ports, URLs, and secrets instead belong to the
+separate configuration model
+\parencite{kleiveist2026configuration,kleiveist2026template}.
+Requested optional features and the resolved result remain separately visible
+in the manifest. This distinction makes transitive dependencies traceable.
+
+Figure~\ref{fig:profile-matrix} and Table~\ref{tab:profile-matrix} compare the
+five presets. None enables PostgreSQL by default.
+
+\input{workspace/figures/profiles/profile-matrix}
+\input{workspace/tables/profile-matrix}
+\beginnerinput{workspace/statement/400_projektprofile/410}

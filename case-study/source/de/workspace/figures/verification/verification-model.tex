@@ -1,0 +1,23 @@
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[node distance=3.5mm]
+    \node[casePrimary,minimum width=70mm,minimum height=7mm] (requirement) {Anforderung};
+    \node[caseBox,minimum width=70mm,minimum height=7mm,below=of requirement] (decision) {Architekturentscheidung};
+    \node[caseBox,minimum width=70mm,minimum height=7mm,below=of decision] (implementation) {Implementierung};
+    \node[caseBox,minimum width=70mm,minimum height=7mm,below=of implementation] (test) {automatisierter Test / technische Prüfung};
+    \node[caseBox,minimum width=70mm,minimum height=7mm,below=of test] (acceptance) {commitgebundene Abnahme};
+    \node[caseOptional,minimum width=70mm,minimum height=7mm,below=of acceptance] (evidence) {Evidenz und Status};
+    \node[caseOptional,minimum width=70mm,minimum height=7mm,below=of evidence] (evaluation) {Bewertung in Kapitel~\ref{sec:bewertung}};
+
+    \draw[caseFlow] (requirement) -- (decision);
+    \draw[caseFlow] (decision) -- (implementation);
+    \draw[caseFlow] (implementation) -- (test);
+    \draw[caseFlow] (test) -- (acceptance);
+    \draw[caseFlow] (acceptance) -- (evidence);
+    \draw[caseFlow] (evidence) -- (evaluation);
+  \end{tikzpicture}
+  \caption{Nachweiskette der technischen Verifikation}
+  \label{fig:verification-model}
+  \smallskip
+  {\footnotesize Quelle: Eigene Darstellung.\par}
+\end{figure}

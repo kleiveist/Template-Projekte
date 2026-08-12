@@ -1,0 +1,44 @@
+\subsection{Beantwortung der Fragestellungen}
+\label{subsec:beantwortung-fragestellungen}
+
+\paragraph{Fragestellung 1: Adressierte Anforderungen.}
+Das Template adressiert die Anforderungen durch eine generierbare Baseline,
+klare Komponenten, Profile, gemeinsame Workflows, zentrale Pflege und
+versionierte Konfiguration. Getrennte Laufzeit- und Prüfpfade stützen dies;
+Fachlogik, Authentifizierung, Berechtigungen und Produktivbetrieb bleiben
+produktspezifisch.
+
+\paragraph{Fragestellung 2: Varianten für Web, Cloud und Desktop.}
+Fünf Presets kombinieren das gemeinsame Frontend mit Backend-, Cloud- und
+Tauri-Bausteinen; PostgreSQL wird nur bei Backendfähigkeit ergänzt. Generierte
+Projekte enthalten überwiegend benötigte Pfade. \texttt{desktop-cloud} und
+\texttt{full-platform} sind technisch gleich gescaffoldet und semantisch
+abgegrenzt.
+
+\paragraph{Fragestellung 3: Wiederverwendung.}
+Die zentrale Pflege von Implementierungen, Profilen, Generator, Konfiguration,
+Tests und Dokumentation fördert Wiederverwendung und einheitliche
+Ausgangsstände. Der Vorteil gilt für die Baseline und künftige Generierungen;
+bestehende Produktprojekte erhalten keine automatischen Updates.
+
+\paragraph{Fragestellung 4: Reduktion wiederkehrender Aufwände.}
+Automatisierte oder einheitliche Profilwahl, Generierung, Diagnose,
+Installation, Start, Tests und Builds schaffen plausibles Einsparpotenzial.
+Zeit-, Aufwands- und Vergleichsdaten fehlen jedoch; eine
+Produktivitätssteigerung ist unter Einbezug zentraler Pflege und mehrerer
+Toolchains nicht nachgewiesen.
+
+\paragraph{Fragestellung 5: Projekteignung.}
+Das Template eignet sich als Basis für verwandte Web-, Desktop- und
+kombinierte Business-Anwendungen mit abbildbarem Plattform-, Cloud- und
+Persistenzbedarf. Stark native Anwendungen, Spiele und spezialisierte
+Echtzeitsysteme liegen außerhalb des primären Zielbereichs. Die qualitative
+Einstufung ist keine universelle Eignungszusage.
+
+\paragraph{Fragestellung 6: Grenzen, Wartungsaufwände und Risiken.}
+Grenzen sind wachsende Regressionsbreite, manuelle Vertragssynchronisierung,
+die nicht strikt getrennte Capability-Auswahl, fehlende Produktupdates und der
+Pflegebedarf mehrerer Toolchains. Tooling-, Desktopprofil- und Windows-CI sind
+aktuell rot; Release Validation, Compose-Start und Branch Protection fehlen.
+Signing, Notarisierung, Updater, Produktiv-Deployment und Sicherheitsmodell
+bleiben Produktaufgaben.

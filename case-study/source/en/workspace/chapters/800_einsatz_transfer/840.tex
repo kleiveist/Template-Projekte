@@ -1,0 +1,22 @@
+\subsection{Selecting the Project Profile}
+\label{subsec:auswahl-projektprofil}
+
+The access channels determine the profile: \texttt{web-only} denotes a
+browser without a backend, \texttt{web-cloud} a browser with a backend,
+\texttt{desktop-local} a desktop application without a cloud backend,
+\texttt{desktop-cloud} a desktop application with a backend, and
+\texttt{full-platform} the browser and desktop channels together. There is no
+profile for a backend without provider-neutral deployment files.
+
+The smallest suitable profile is selected. PostgreSQL is then assessed as a
+separate dimension and added to a backend profile only when needed. This is
+not permitted for \texttt{web-only} and \texttt{desktop-local}
+\parencite{kleiveist2026profiles}.
+
+The documentation records whether the profile is a complete match, requires
+specified extensions, or fails to meet central requirements. In the last
+case, a different architecture or clearly delimited partial use should be
+examined instead of selecting the largest profile.
+Team expertise and economic constraints supplement this technical decision,
+but do not change the meaning of the profiles.
+\beginnerinput{workspace/statement/800_einsatz_transfer/840}

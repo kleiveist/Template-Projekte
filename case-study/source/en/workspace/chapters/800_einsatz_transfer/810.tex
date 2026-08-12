@@ -1,0 +1,41 @@
+\subsection{Suitable Project Types}
+\label{subsec:geeignete-projekttypen}
+
+Suitability depends on access channels, the backend and persistence,
+deployment, native integration, and infrastructure, security, and operational
+needs. The evidence covers combinations that can be generated and verified
+profile paths.
+By contrast, the levels \emph{well suited}, \emph{conditionally suited},
+and \emph{not primarily intended} qualitatively assess the distance from the
+baseline, not the probability that a project will succeed
+\parencite{kleiveist2026profiles,kleiveist2026acceptance}.
+The more central requirements lie outside the available components and
+evidence, the greater the adaptation effort and remaining risk.
+
+\texttt{web-only} is suitable for browser-based frontends without a template
+backend. \texttt{web-cloud} adds a central API and provider-neutral deployment
+structure, for example for internal business and data applications.
+PostgreSQL remains optional; authentication, authorization, domain models, and
+production infrastructure are product-specific.
+The profile therefore covers the initial technical structure, not the
+particular business application.
+
+\texttt{desktop-local} is appropriate for local tools without a central
+backend, provided that native functions can be added within a manageable
+scope; a local database is absent. \texttt{desktop-cloud} adds central
+services, and \texttt{full-platform} also adds the browser channel. The
+primary application domain therefore comprises web-, cloud-, and
+desktop-oriented business and full-stack applications.
+For all desktop variants, more extensive native functions must be added and
+verified specifically.
+
+\input{workspace/figures/business/project-suitability-map}
+
+Figure~\ref{fig:project-suitability-map} and
+Table~\ref{tab:project-suitability} summarize the classification.
+\emph{Suitable} means only that the baseline covers essential platform
+components. Domain logic, user interface, integrations, product security, and
+operations remain open, as does the economic assessment.
+
+\input{workspace/tables/project-suitability}
+\beginnerinput{workspace/statement/800_einsatz_transfer/810}

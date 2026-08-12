@@ -1,0 +1,34 @@
+\begin{figure}[H]
+  \centering
+  \resizebox{0.98\textwidth}{!}{%
+  \begin{tikzpicture}[
+    cell/.style={draw=caseLine,minimum height=11mm,align=left,anchor=center,
+      font=\sffamily\scriptsize,text width=62mm,inner sep=3mm},
+    head/.style={cell,fill=caseBlue,text=white,align=center,
+      font=\sffamily\bfseries\scriptsize,text width=29mm},
+    good/.style={head,fill=caseGreen,minimum height=21mm},
+    conditional/.style={head,fill=caseBlue!82,minimum height=19mm},
+    outside/.style={head,fill=black!62,minimum height=19mm},
+    types/.style={cell,text width=57mm},
+    reason/.style={cell,text width=67mm}
+  ]
+    \matrix[matrix of nodes,nodes in empty cells,ampersand replacement=\&,row sep=-\pgflinewidth,column sep=-\pgflinewidth] {
+      |[head]| Kategorie \& |[head,text width=57mm]| Projekttypen \& |[head,text width=67mm]| Maßgebliches Kriterium \\
+      |[good]| \shortstack{GUT\\GEEIGNET}
+        \& |[types,minimum height=21mm]| Browser-Frontend; Web + Backend/Cloud; lokales Desktop-Werkzeug; Desktop + Cloud; Web + Desktop + Cloud
+        \& |[reason,minimum height=21mm]| Zugriffskanäle und Laufzeitschichten entsprechen einem geprüften Profil; Fach- und Betriebsfunktionen bleiben zu ergänzen. \\
+      |[conditional]| \shortstack{BEDINGT\\GEEIGNET}
+        \& |[types,minimum height=19mm]| hoher nativer Anteil; stark individualisierte Infrastruktur; hohe Compliance- oder Sicherheitsauflagen
+        \& |[reason,minimum height=19mm]| Ein Profil deckt nur einen Teil ab; erhebliche Erweiterungen oder zusätzliche Nachweise sind erforderlich. \\
+      |[outside]| \shortstack{NICHT PRIMÄR\\VORGESEHEN}
+        \& |[types,minimum height=19mm]| harte Echtzeitsysteme; Game-Engine-basierte Spiele; native Mobile-Apps; Firmware- und Embedded-Kernsysteme
+        \& |[reason,minimum height=19mm]| Die tragende Laufzeit- oder Plattformarchitektur liegt außerhalb der Vite-/FastAPI-/Tauri-Baseline. \\
+    };
+  \end{tikzpicture}}
+  \caption{Qualitative Eignungsübersicht nach Architekturfit und Anpassungsbedarf}
+  \label{fig:project-suitability-map}
+  \smallskip
+  {\footnotesize Quelle: Eigene Transferbewertung auf Grundlage der
+  Profildefinitionen und der technischen Abnahme
+  \parencite{kleiveist2026profiles,kleiveist2026acceptance}.\par}
+\end{figure}

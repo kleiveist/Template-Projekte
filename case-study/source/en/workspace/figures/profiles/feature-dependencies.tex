@@ -1,0 +1,23 @@
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \node[caseBox,minimum width=31mm] (backend) at (0,0) {\texttt{backend}};
+    \node[caseBox,minimum width=31mm] (frontend) at (7,0) {\texttt{frontend}};
+
+    \node[caseBox,minimum width=31mm] (cloud) at (-2,-1.6) {\texttt{cloud}};
+    \node[caseOptional,minimum width=31mm] (database) at (2,-1.6)
+      {\texttt{database}\\optional};
+    \node[caseBox,minimum width=31mm] (tauri) at (7,-1.6) {\texttt{tauri}};
+    \node[caseOptional,minimum width=31mm] (postgres) at (2,-3.2)
+      {\texttt{postgres}\\selectable};
+
+    \draw[caseFlow] (cloud) -- (backend);
+    \draw[caseFlow] (database) -- (backend);
+    \draw[caseFlow] (postgres) -- (database);
+    \draw[caseFlow] (tauri) -- (frontend);
+    \node[font=\sffamily\scriptsize,text=black!60,below=3mm of postgres]
+      {Arrow direction: requires};
+  \end{tikzpicture}
+  \caption{Implemented dependencies in the feature catalog}
+  \label{fig:feature-dependencies}
+\end{figure}

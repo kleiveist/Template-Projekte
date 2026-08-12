@@ -1,0 +1,14 @@
+\begin{beginnerstatement}[In simple terms: Reproducible results]
+
+A reproducible build should produce the same result again from the same
+inputs. For this case study, however, the evidence only shows that two
+generations of \texttt{desktop-cloud + postgres} on \texttt{1cdfb6e} were
+byte-for-byte identical in the same environment. A pinned dependency version
+specifies exactly which version of a required library is used. A lockfile pins
+such versions instead of selecting arbitrary newer packages on the next run. A
+hash is a short digital fingerprint that can verify specific content very
+reliably. The toolchain comprises the runtimes, compilers, and build tools in
+use. Differences in the operating system, toolchain, network, or platform SDKs
+can nevertheless affect reproduction.
+
+\end{beginnerstatement}

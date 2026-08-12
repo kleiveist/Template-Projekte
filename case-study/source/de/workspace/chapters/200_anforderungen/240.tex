@@ -1,0 +1,15 @@
+\subsection{Qualitäts- und Wartbarkeitsanforderungen}
+\label{subsec:qualitaets-wartbarkeitsanforderungen}
+
+Die Anforderungen orientieren sich an überprüfbaren Merkmalen von
+ISO/IEC~25010 \parencite{iso25010-2023}. Komponenten und Profile sollen klare
+Verantwortlichkeiten besitzen, getrennt testbar und durch dokumentierte
+Entscheidungen wartbar sein. Erweiterungen und Technologieaktualisierungen
+sollen keine Kopie der gesamten Baseline erfordern, bleiben aber risikobehaftet.
+
+Gleiche Eingaben und Konfigurationen sollen nachvollziehbare Generierungs- und
+Build-Ergebnisse liefern. Dies stärkt die prüfbare Beziehung zwischen
+Quellstand und Artefakt \parencite{lamb2022reproducible-builds}. Zielartefakte
+sollen kontrolliert erzeugbar und Konfigurationsprioritäten verständlich sein;
+serverseitige Geheimnisse bleiben von Client-Konfiguration getrennt.
+\beginnerinput{workspace/statement/200_anforderungen/240}

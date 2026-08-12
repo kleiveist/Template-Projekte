@@ -102,6 +102,7 @@ def scaffold_project(plan: ScaffoldPlan, *, dry_run: bool = False) -> None:
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, destination)
 
+    _remove_master_only_readme_blocks(plan.target_dir)
     _write_project_profile(plan.target_dir, plan.profile)
     _write_frontend_profile_module(plan.target_dir, plan.profile)
     _configure_frontend_dependencies(plan.target_dir, plan.profile)
@@ -311,6 +312,19 @@ def _configure_frontend_dependencies(target_dir: Path, profile: ProjectProfile) 
 def _configure_env_example(target_dir: Path, content: str) -> None:
     path = target_dir / ".env.example"
     path.write_text(content, encoding="utf-8", newline="\n")
+
+
+def _remove_master_only_readme_blocks(target_dir: Path) -> None:
+    path = target_dir / "README.md"
+    if not path.exists():
+        return
+
+    content = path.read_text(encoding="utf-8")
+    pattern = re.compile(
+        r"^<!-- MASTER-ONLY START -->\n.*?^<!-- MASTER-ONLY END -->\n?",
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    path.write_text(pattern.sub("", content), encoding="utf-8", newline="\n")
 
 
 def _configure_project_identity(

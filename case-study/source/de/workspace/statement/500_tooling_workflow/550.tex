@@ -1,0 +1,16 @@
+\begin{beginnerstatement}[Kurz erklärt: Tests und Builds]
+
+Ein automatisierter Test führt vorgegebene Prüfungen ohne manuelles
+Durchklicken aus. Ein Unit-Test betrachtet einen kleinen, abgegrenzten Teil des
+Codes. Ein Integrationstest prüft, ob mehrere Teile wie Backend und Datenbank
+zusammenarbeiten. Ein E2E-Test verfolgt einen vollständigen Ablauf aus Sicht
+eines Nutzers. Eine Testsuite bündelt zusammengehörige Tests; das Template
+verwendet dafür Pytest bei Python, Vitest im Frontend, Playwright für E2E und
+Cargo bei Rust. \emph{PASS} bedeutet bestanden, \emph{FAIL} fehlgeschlagen und
+\emph{SKIP} übersprungen; ein übersprungener Test ist kein Erfolgsnachweis. Ein
+Build verarbeitet den Quellcode zu einem auslieferbaren Artefakt, hier je nach
+Pfad etwa zur Web-Ausgabe oder zu einem Desktop-Paket. Ein ZIP bündelt Dateien
+in einem Archiv; ein Container-Image verpackt eine Laufzeitumgebung, aus der
+ein Container gestartet werden kann.
+
+\end{beginnerstatement}

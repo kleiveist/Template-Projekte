@@ -1,0 +1,19 @@
+\subsection{Outstanding External Checks}
+\label{subsec:extern-verbleibende-pruefungen}
+
+Table~\ref{tab:external-verification-items} distinguishes failed checks,
+missing evidence, and deliberate product boundaries. Failed CI jobs are real
+errors; a Compose stack that was not started, by contrast, is not verified.
+
+The current Core job provides evidence for Compose validation and both master
+images, but not for either \texttt{docker compose up} or production
+deployment. Linux and macOS packages were built unsigned on
+\texttt{a4487ac}; the Windows package was not. Branch Protection could not be
+read because the required API permission was unavailable. Signing,
+notarization, updaters,
+production credentials, and authentication/RBAC require a product and
+external infrastructure
+\parencite{kleiveist2026ci-core-run,kleiveist2026ci-desktop-run,kleiveist2026release}.
+
+\input{workspace/tables/external-verification-items}
+\beginnerinput{workspace/statement/600_qualitaet_verifikation/660}

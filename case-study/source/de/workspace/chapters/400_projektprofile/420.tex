@@ -1,0 +1,10 @@
+\subsection{Profil Web-only}
+\label{subsec:profil-web-only}
+
+\texttt{web-only} ergänzt den Core ausschließlich um das Vite-Frontend. Der
+Browser lädt es ohne FastAPI-, Desktop-, Deployment- oder Datenbankschicht;
+Tauri-Skript und -CLI werden entfernt. Das Profil eignet sich damit für reine
+Clientanwendungen ohne Backendzugriff \parencite{kleiveist2026profiles}.
+Gegenüber \texttt{web-cloud} fehlen folglich API und Cloud-Feature; auch das
+generierte Frontend aktiviert keinen Backend-Statusaufruf.
+\beginnerinput{workspace/statement/400_projektprofile/420}

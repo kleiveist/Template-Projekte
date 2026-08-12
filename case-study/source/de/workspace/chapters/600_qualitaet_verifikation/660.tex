@@ -1,0 +1,17 @@
+\subsection{Extern verbleibende Prüfungen}
+\label{subsec:extern-verbleibende-pruefungen}
+
+Tabelle~\ref{tab:external-verification-items} trennt fehlgeschlagene Prüfungen,
+fehlende Evidenz und bewusste Produktgrenzen. Rote CI-Jobs sind reale Fehler;
+ein nicht gestarteter Compose-Verbund ist dagegen nicht verifiziert.
+
+Der aktuelle Core-Job belegt Compose-Validierung und beide Master-Images, aber
+weder \texttt{docker compose up} noch produktives Deployment. Linux- und
+macOS-Pakete wurden auf \texttt{a4487ac} unsigniert gebaut; Windows nicht.
+Branch Protection war mangels API-Berechtigung nicht lesbar. Signing,
+Notarisierung, Updater, produktive Zugangsdaten und Authentifizierung/RBAC
+benötigen ein Produkt und externe Infrastruktur
+\parencite{kleiveist2026ci-core-run,kleiveist2026ci-desktop-run,kleiveist2026release}.
+
+\input{workspace/tables/external-verification-items}
+\beginnerinput{workspace/statement/600_qualitaet_verifikation/660}

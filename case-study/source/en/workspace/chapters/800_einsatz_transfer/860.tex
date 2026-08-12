@@ -1,0 +1,24 @@
+\subsection{Transition to Product Development}
+\label{subsec:ueberfuehrung-produktentwicklung}
+
+After generation, the independent product project assumes responsibility for
+domain models, business rules, the user interface, integrations, data, and
+operations. Authentication, authorization, scaling, monitoring, backups, data
+protection, and signing also remain product tasks. The baseline structures
+this work, but does not solve these product-specific tasks.
+
+The master repository and the product have separate lifecycles. There is no
+permanent update or synchronization mechanism. Changes to the master
+repository must be transferred to products deliberately; product changes
+should flow back into the baseline only after a generalization and
+verification review.
+
+Template acceptance and product acceptance remain separate. The
+commit-specific acceptance provides evidence for generation, installation,
+tests, and selected baseline builds, but not for deployment, signing, or
+functional and security requirements
+\parencite{kleiveist2026acceptance}. The product requires its own tests and
+evidence for these areas.
+They must cover the specific customer requirements, integrations, and
+operating conditions.
+\beginnerinput{workspace/statement/800_einsatz_transfer/860}

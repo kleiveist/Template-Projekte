@@ -1,0 +1,18 @@
+\begin{beginnerstatement}[In simple terms: From version to package]
+
+A version is a unique designation for a particular state; in the template,
+\texttt{VERSION} is the central source for it. A release is a version approved
+for publication, but the workflow examined here does not itself publish
+anything. \texttt{release check} merely checks the prerequisites and produces
+no artifacts. During \emph{packaging}, program files are combined into a
+deliverable package or \emph{bundle}; this result is an artifact. A Git tag
+marks a particular commit with a name, often the version number. During
+\emph{signing}, a digital signature backed by a certificate confirms a
+package's origin; notarization is an additional external check, and an updater
+distributes later versions to installed applications. Deployment means making
+an application available; Docker builds images for this purpose, containers
+run them, and Docker Compose describes multiple related containers. AWS,
+Azure, and GCP are possible cloud providers, but this provider-agnostic
+foundation does not automatically commit to any of them.
+
+\end{beginnerstatement}

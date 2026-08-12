@@ -1,0 +1,29 @@
+\subsection{Systemprüfung und Installation}
+\label{subsec:systempruefung-installation}
+
+Der nur lesende \texttt{doctor} prüft profilabhängig Laufzeiten, Konfiguration,
+Pfade, Abhängigkeiten und Ports. Deaktivierte Schichten sind kein Fehler.
+Fehlendes Docker erzeugt allgemein nur eine Warnung; Container-, Datenbank- und
+Tauri-Voraussetzungen besitzen strengere eigene Diagnosewege
+\parencite{kleiveist2026tooling,kleiveist2026configuration}.
+
+\texttt{install} richtet nur aktive Komponenten ein: Frontend-Abhängigkeiten
+werden bevorzugt aus dem Lockfile installiert, Backend-Abhängigkeiten in einer
+virtuellen Umgebung. Datenbankpakete, Tooling-Umgebung und Chromium kommen nur
+bei Bedarf hinzu; für Python besteht neben \texttt{uv} ein pip/venv-Fallback.
+Eine lokale \texttt{.env} bleibt unverändert. Native Betriebssystem- und
+Rust-Voraussetzungen behandelt \texttt{tauri install} separat.
+Konkret verwendet das Frontend bei vorhandenem Lockfile \texttt{npm ci}. Ein
+aktives Backend erhält eine eigene Umgebung und nur die profilabhängigen
+Anforderungssätze. Chromium wird ausschließlich bei konfiguriertem Playwright
+installiert; deaktivierte Schichten werden übersprungen.
+
+Die README fordert Git, Python ab 3.11, Node.js ab 20 und für Desktopprofile
+Rust Stable. Der allgemeine Doctor prüft Git und diese Versionsbereiche nicht;
+der Tauri-Doctor akzeptiert jede aktive Rust-Toolchain. CI richtet die
+festgelegten Python- und Node-Hauptversionen dagegen explizit ein. Damit weicht
+die lokale Durchsetzung von der Dokumentation ab
+\parencite{kleiveist2026template,kleiveist2026ci}.
+Diese Grenze betrifft die Prüfung der Voraussetzung, nicht deren dokumentierte
+Gültigkeit.
+\beginnerinput{workspace/statement/500_tooling_workflow/530}

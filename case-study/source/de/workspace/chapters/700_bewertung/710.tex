@@ -1,0 +1,54 @@
+\subsection{Produktivitätswirkung}
+\label{subsec:produktivitaetswirkung}
+
+Die Bewertung stellt Anforderungen, implementierte Mechanismen und Evidenz
+gegenüber. Kriterien sind Wiederverwendung, Standardisierung, Variabilität,
+Wartbarkeit, Testbarkeit, Reproduzierbarkeit, Entwicklerfreundlichkeit,
+Erweiterbarkeit und Plattformabdeckung. Komplexität, Betriebsreife und
+Dokumentierbarkeit ergänzen die Einordnung. Das projektinterne
+Abnahmeprotokoll liefert Projektnachweise, aber keine unabhängige Replikation
+\parencite{kleiveist2026acceptance}.
+Damit bleiben beobachtete Mechanismen, ausgeführte Nachweise und abgeleitete
+Wirkungen getrennt. Automatisierung gilt nicht allein deshalb als messbarer
+Produktivitätsgewinn.
+
+Produktivität umfasst hier den Aufwand bis zum lauffähigen Ausgangsprojekt,
+wiederkehrende Einrichtungsentscheidungen, den Entwicklungsfluss und die
+spätere Pflege. Eine einzelne Aktivitätskennzahl bildet sie nicht angemessen ab
+\parencite{forsgren2021space}. Konzeptionell lässt sich die Wirkung daher als
+
+\begin{center}
+  \emph{Produktivitätsnutzen = vermiedener Projektaufwand
+  $-$ Template-Pflegeaufwand $-$ zusätzliche Komplexität}
+\end{center}
+
+auffassen. Mangels Zeit- und Aufwandsmessungen ist sie nicht numerisch
+auswertbar.
+Die Beziehung zeigt zugleich, dass zentrale Pflege und zusätzliche Komplexität
+den vermiedenen Projektaufwand mindern können.
+
+Beim Projektstart bündelt \texttt{control.py} Profilwahl, Generierung,
+Systemprüfung und Installation. Die Abnahme belegt diese Schritte für alle
+fünf Profile sowie die Ablehnung inkompatibler PostgreSQL-Auswahlen
+\parencite{kleiveist2026acceptance}. Die gemischten CI-Ergebnisse des späteren
+HEAD begrenzen die Übertragbarkeit. Weniger manuelle Einrichtung ist daher
+plausibel, eine konkrete Zeitersparnis aber nicht belegt.
+
+In der Entwicklung vereinheitlichen profilabhängige Einstiege Start, Test und
+Build. Gemeinsames Frontend, Konfigurationsvertrag und klare Verantwortungen
+fördern Wiederverwendung; Fachwerkzeuge und Plattformvoraussetzungen bleiben.
+Zentrale Änderungen nützen künftigen Projekten, erfordern aber gemeinsame
+Pflege von Profilen, Generator, Tests und Dokumentation. Bereits generierte
+Projekte werden nicht automatisch aktualisiert.
+Der Nutzen verteilt sich somit über Projektstart, laufende Entwicklung und
+spätere Baseline-Pflege. Er ist besonders plausibel, wenn mehrere technisch
+verwandte Vorhaben dieselben Grundlagen verwenden.
+
+Quantitative Evidenz fehlt. Eine spätere kontrollierte Evaluation müsste
+vergleichbare Projekte mit und ohne Template anhand von Start- und
+Onboarding-Zeit, Setup-Fehlern, fehlgeschlagenen Builds, Wiederverwendungsanteil
+und Pflegezeit untersuchen.
+Zusätzlich wären die Zeit bis zur ersten Fachfunktion und die Zahl manueller
+Einrichtungsentscheidungen zu erfassen. Erst solche Vergleichsdaten erlauben
+eine Aussage über die Größe des Effekts.
+\beginnerinput{workspace/statement/700_bewertung/710}

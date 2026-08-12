@@ -1,0 +1,52 @@
+\begin{figure}[H]
+  \centering
+  \resizebox{0.97\textwidth}{!}{%
+  \begin{tikzpicture}[node distance=5.5mm and 11mm]
+    \node[casePrimary,minimum width=48mm] (repository) {Master Repository};
+    \node[font=\sffamily\bfseries\scriptsize,text=caseBlue,above=5mm of repository]
+      {Areas of responsibility within the repository};
+
+    \node[casePrimary,minimum width=46mm,below left=10mm and 53mm of repository] (runtime)
+      {Runtime sources};
+    \node[casePrimary,minimum width=46mm,below=10mm of repository] (contracts)
+      {Selection and contracts};
+    \node[casePrimary,minimum width=46mm,below right=10mm and 53mm of repository] (lifecycle)
+      {Lifecycle};
+
+    \node[caseBox,minimum width=46mm,below=of runtime] (frontend)
+      {\textbf{frontend/}\\UI, build, HTTP client};
+    \node[caseBox,minimum width=46mm,below=of frontend] (backend)
+      {\textbf{backend/}\\API, configuration, optional DB};
+    \node[caseBox,minimum width=46mm,below=of backend] (tauri)
+      {\textbf{src-tauri/}\\native desktop boundary};
+
+    \node[caseBox,minimum width=46mm,below=of contracts] (profiles)
+      {\textbf{profiles/}\\features and presets};
+    \node[caseBox,minimum width=46mm,below=of profiles] (config)
+      {\textbf{config/}\\variable contract};
+    \node[caseBox,minimum width=46mm,below=of config] (shared)
+      {\textbf{shared/}\\schema, examples, assets};
+
+    \node[caseBox,minimum width=46mm,below=of lifecycle] (tools)
+      {\textbf{tools/}\\generation and control};
+    \node[caseBox,minimum width=46mm,below=of tools] (deployment)
+      {\textbf{deployment/}\\provider-neutral artifacts};
+    \node[caseBox,minimum width=46mm,below=of deployment] (docs)
+      {\textbf{docs/}\\architecture and operations};
+
+    \draw[caseFlow] (repository) -- (runtime);
+    \draw[caseFlow] (repository) -- (contracts);
+    \draw[caseFlow] (repository) -- (lifecycle);
+
+    \begin{scope}[on background layer]
+      \node[caseGroup,fit=(runtime)(frontend)(backend)(tauri)] {};
+      \node[caseGroup,fit=(contracts)(profiles)(config)(shared)] {};
+      \node[caseGroup,fit=(lifecycle)(tools)(deployment)(docs)] {};
+    \end{scope}
+  \end{tikzpicture}}
+  \caption{Components and responsibility boundaries in the Master Repository}
+  \label{fig:component-architecture}
+  \smallskip
+  {\footnotesize Source: Author's own illustration based on
+  \textcite{kleiveist2026architecture}.\par}
+\end{figure}

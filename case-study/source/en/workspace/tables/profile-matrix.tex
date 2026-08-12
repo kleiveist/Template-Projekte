@@ -1,0 +1,22 @@
+\begin{table}[H]
+  \centering
+  \small
+  \renewcommand{\arraystretch}{1.2}
+  \caption{Declared baseline features and resulting runtime directories}
+  \label{tab:profile-matrix}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}>{\raggedright\arraybackslash}p{0.29\textwidth}>{\raggedright\arraybackslash}p{0.32\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Profile} & \textbf{Baseline features} & \textbf{Runtime directories} & \textbf{PostgreSQL} \\
+    \midrule
+    \texttt{web-only} & \texttt{frontend} & \path{frontend/} & incompatible \\
+    \texttt{web-cloud} & \texttt{frontend}, \texttt{backend}, \texttt{cloud}
+      & \path{frontend/}, \path{backend/}, \path{deployment/} & optional \\
+    \texttt{desktop-local} & \texttt{frontend}, \texttt{tauri}
+      & \path{frontend/}, \path{src-tauri/} & incompatible \\
+    \texttt{desktop-cloud} & \texttt{frontend}, \texttt{backend}, \texttt{tauri}, \texttt{cloud}
+      & \path{frontend/}, \path{backend/}, \path{src-tauri/}, \path{deployment/} & optional \\
+    \texttt{full-platform} & \texttt{frontend}, \texttt{backend}, \texttt{tauri}, \texttt{cloud}
+      & \path{frontend/}, \path{backend/}, \path{src-tauri/}, \path{deployment/} & optional \\
+    \bottomrule
+  \end{tabularx}
+\end{table}

@@ -1,0 +1,16 @@
+\subsection{Shared Contracts und Schnittstellen}
+\label{subsec:shared-contracts-schnittstellen}
+
+\texttt{shared/} gehört zu jedem generierten Projekt. Es enthält statische
+Assets, ein JSON-Schema nach Draft~2020-12 sowie gültige und ungültige
+Testbeispiele. Die Ablage ist serialisierbar und frameworkneutral, definiert
+aber weder eine Produkt-API noch ausführbaren Frameworkcode
+\parencite{kleiveist2026architecture,kleiveist2026template}.
+
+Die Laufzeit nutzt das Schema jedoch nicht automatisch: Weder Frontend noch
+Backend importieren es. Auch der Health-Vertrag ist als TypeScript-Interface
+und FastAPI-Antwort manuell gespiegelt. Ohne Codegenerierung oder
+Synchronisierung müssen Vertragsänderungen auf beiden Seiten und in den
+Konsumententests nachgezogen werden. Die dokumentierte Zielrolle gemeinsam
+genutzter Verträge ist damit noch nicht vollständig umgesetzt.
+\beginnerinput{workspace/statement/300_architektur/350}

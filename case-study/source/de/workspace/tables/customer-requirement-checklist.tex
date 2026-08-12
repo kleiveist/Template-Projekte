@@ -1,0 +1,29 @@
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.1}
+  \caption{Kompakte Checkliste zur technikneutralen Anforderungsanalyse}
+  \label{tab:customer-requirement-checklist}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.43\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Bereich} & \textbf{Leitfrage} & \textbf{Einfluss auf die Auswahl} \\
+    \midrule
+    Fachfunktion und Nutzung & Welche Abläufe, Nutzergruppen und Einsatzorte sind abzudecken?
+      & Bestimmt Produktumfang; noch keine Profilfestlegung. \\
+    Zugriffskanäle & Wird das Produkt im Browser, als Desktop-Anwendung oder über beide Kanäle genutzt?
+      & Trennt Web-, Desktop- und Full-platform-Pfade. \\
+    Zentrale Dienste & Müssen Funktionen oder gemeinsam genutzte Daten serverseitig bereitstehen?
+      & Erfordert ein backendfähiges Cloudprofil. \\
+    Persistenz und Offline-Betrieb & Werden zentrale relationale Daten benötigt; muss der Client ohne Netz arbeitsfähig sein?
+      & PostgreSQL nur bei Backendbedarf; lokale Speicherung und Synchronisation sind separate Ergänzungen. \\
+    Native Integration & Welche Betriebssystem-APIs, Geräte oder plattformspezifischen Oberflächen sind notwendig?
+      & Bestimmt Tauri-Bedarf und Abstand zur nativen Baseline. \\
+    Integration und Betrieb & Welche Fremdsysteme, Zielumgebungen, Skalierungs- und Betriebsanforderungen bestehen?
+      & Erzeugt produktspezifische Adapter und Infrastrukturentscheidungen. \\
+    Security und Compliance & Welche Schutz-, Nachweis-, Audit- oder regulatorischen Vorgaben gelten?
+      & Erfordert zusätzliche Maßnahmen und Evidenz unabhängig vom Profil. \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Quelle: Eigene Darstellung.\par}
+\end{table}

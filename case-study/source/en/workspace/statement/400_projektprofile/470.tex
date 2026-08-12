@@ -1,0 +1,12 @@
+\begin{beginnerstatement}[In simple terms: Optional capabilities]
+
+Features can be prerequisites for other features; for example, Tauri requires
+the frontend. An optional capability is added only when requested, and
+\emph{selectable} means that it is normally offered as a choice. Currently,
+only PostgreSQL can be selected in this way. PostgreSQL requires the database
+base, which in turn requires a backend because that is where database access
+runs. Therefore, \texttt{web-only + postgres} and
+\texttt{desktop-local + postgres} are not permitted. The resolver checks such
+dependencies, but it cannot add a missing platform feature on its own.
+
+\end{beginnerstatement}

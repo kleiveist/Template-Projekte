@@ -1,0 +1,33 @@
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.1}
+  \caption{Profilbezogene technische Verifikation}
+  \label{tab:verification-matrix}
+  \begin{tabularx}{\textwidth}{@{}p{0.18\textwidth}>{\centering\arraybackslash}p{0.055\textwidth}>{\centering\arraybackslash}p{0.08\textwidth}>{\centering\arraybackslash}p{0.055\textwidth}>{\centering\arraybackslash}p{0.055\textwidth}>{\centering\arraybackslash}p{0.11\textwidth}>{\centering\arraybackslash}p{0.08\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Profil / Kombination} & \textbf{Gen.} & \textbf{Install / Doctor} & \textbf{Tests} & \textbf{Web} & \textbf{Desktop} & \textbf{PG / Migr.} & \textbf{CI auf \texttt{a4487ac}} \\
+    \midrule
+    \texttt{web-only} & P & P & P & P & -- & -- & P \\
+    \texttt{web-cloud} & P & H & P & P & -- & -- & P \\
+    \texttt{desktop-local} & P & P & P & P & P (Linux DEB) & -- & F: Profiltest \\
+    \texttt{desktop-cloud} & P & H & P & P & P (Linux DEB) & -- & F: Profiltest \\
+    \texttt{full-platform} & P & H & P & P & P (Linux DEB) & -- & F: Profiltest \\
+    \midrule
+    \texttt{web-cloud + postgres} & P & P & P & P & -- & P & P \\
+    \texttt{desktop-cloud + postgres} & P & P & P & P & P (Linux DEB) & P & F: Profiltest \\
+    \texttt{full-platform + postgres} & P & P & P & P & P (Linux DEB) & P & F: Profiltest \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  \begin{minipage}{\textwidth}
+    \scriptsize
+    \textbf{Legende:} P = PASS; H = PASS WITH NOTE; F = ausgeführte Prüfung fehlgeschlagen;
+    -- = nicht anwendbar. Die sechs mittleren Ergebnisspalten stammen aus der lokalen Abnahme
+    auf \texttt{1cdfb6e}; die letzte Spalte gibt den profilbezogenen GitHub-Actions-Run auf
+    \texttt{a4487ac} wieder. \texttt{web-only + postgres} und
+    \texttt{desktop-local + postgres} wurden in der lokalen Abnahme vor der Zielerzeugung
+    korrekt abgewiesen (P). Quelle: \textcite{kleiveist2026acceptance} sowie
+    \textcite{kleiveist2026ci-profiles-run,kleiveist2026ci-postgres-run}.
+  \end{minipage}
+\end{table}

@@ -1,0 +1,23 @@
+\subsection{Persistenz mit PostgreSQL, SQLAlchemy und Alembic}
+\label{subsec:persistenz-postgresql}
+
+PostgreSQL ist optional und kein eigenes Profil. \texttt{postgres} setzt
+\texttt{database} und damit ein Backend voraus; Web-only und Desktop-local
+sind ausgeschlossen. Die Datenbankfähigkeit umfasst SQLAlchemy-Engine,
+Sessions und Alembic. PostgreSQL ergänzt Psycopg~3, URL-Vorgaben und
+Integrationstests und bleibt eine getrennte Laufzeiteinheit
+\parencite{postgresql2026docs,kleiveist2026database}.
+
+Die Engine entsteht erst beim Zugriff und prüft Verbindungen vor der Nutzung;
+Sessions werden kontrolliert geschlossen. Die leere deklarative \texttt{Base}
+ist ein Erweiterungspunkt für Fachmodelle
+\parencite{sqlalchemy2026engines}.
+
+Alembic nutzt dieselbe Metadatenbasis für Online- und Offline-Migrationen. Ohne
+Fachmodelle gibt es keine initiale Revision. Weder \texttt{create\_all()} noch
+automatische Migrationen beim FastAPI-Start sind implementiert; Änderungen
+erfordern explizite Alembic-Kommandos
+\parencite{alembic2026tutorial,kleiveist2026database}. \texttt{/api/health}
+bleibt datenbankunabhängig, \texttt{/api/ready} prüft bei aktiver Persistenz die
+Erreichbarkeit.
+\beginnerinput{workspace/statement/300_architektur/370}

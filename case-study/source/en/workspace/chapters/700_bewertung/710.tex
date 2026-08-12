@@ -1,0 +1,55 @@
+\subsection{Productivity Effects}
+\label{subsec:produktivitaetswirkung}
+
+The evaluation compares the requirements, implemented mechanisms, and
+evidence. The criteria are reuse, standardization, variability,
+maintainability, testability, reproducibility, developer experience,
+extensibility, and platform coverage. Complexity, operational maturity, and
+documentability supplement this assessment. The project's internal
+acceptance report provides project-specific evidence, but no independent
+replication \parencite{kleiveist2026acceptance}.
+This distinction keeps observed mechanisms, executed verification activities,
+and inferred effects separate. Automation alone is not considered a measurable
+productivity gain.
+
+Here, productivity encompasses the effort required to obtain a runnable
+initial project, recurring setup decisions, the development flow, and
+subsequent maintenance. A single activity metric does not represent it
+adequately \parencite{forsgren2021space}. Conceptually, the effect can
+therefore be expressed as
+
+\begin{center}
+  \emph{Productivity benefit = avoided project effort
+  $-$ template maintenance effort $-$ additional complexity}
+\end{center}
+
+In the absence of time and effort measurements, it cannot be quantified.
+The relationship also shows that centralized maintenance and additional
+complexity can reduce the project effort avoided.
+
+At project initialization, \texttt{control.py} combines profile selection,
+generation, system checks, and installation. The acceptance results provide
+evidence for these steps across all five profiles and for the rejection of
+incompatible PostgreSQL selections
+\parencite{kleiveist2026acceptance}. The mixed CI results for the later HEAD
+limit the transferability of this evidence. Less manual setup is therefore
+plausible, but a specific amount of time saved has not been demonstrated.
+
+During development, profile-dependent entry points standardize startup,
+testing, and builds. The shared frontend, configuration contract, and clear
+responsibilities encourage reuse; specialized tools and platform prerequisites
+remain necessary. Central changes benefit future projects, but require shared
+maintenance of profiles, generator, tests, and documentation. Projects that
+have already been generated are not updated automatically.
+The benefit is thus distributed across project initialization, ongoing
+development, and subsequent baseline maintenance. It is particularly plausible
+when several technically related projects use the same foundations.
+
+Quantitative evidence is lacking. A future controlled evaluation would need to
+compare similar projects with and without the template in terms of
+initialization and onboarding time, setup errors, failed builds, proportion of
+reuse, and maintenance time.
+It should also record the time to the first domain-specific feature and the
+number of manual setup decisions. Only such comparative data would permit a
+statement about the magnitude of the effect.
+\beginnerinput{workspace/statement/700_bewertung/710}

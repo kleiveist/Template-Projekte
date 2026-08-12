@@ -1,0 +1,34 @@
+\subsection{Requirements for Reusability and Standardization}
+\label{subsec:wiederverwendbarkeit-standardisierung}
+
+The baseline is intended to define shared structures and public workflows while
+allowing controlled profile variants. Centralized maintenance prevents copies
+from diverging. Table~\ref{tab:anforderungen-template} summarizes the verifiable
+requirements.
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Key requirements for the technology template}
+  \label{tab:anforderungen-template}
+  \begin{tabularx}{\textwidth}{@{}p{0.08\textwidth}p{0.22\textwidth}p{0.39\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{ID} & \textbf{Requirement} & \textbf{Operationalized objective} & \textbf{Basis for subsequent verification} \\
+    \midrule
+    A-01 & Baseline & It must be possible to generate the basic structure. & Project generation \\
+    A-02 & Structure & Responsibilities are assigned to consistent locations. & Repository structure \\
+    A-03 & Profiles & Only designated components are activated. & Profile model \\
+    A-04 & Workflows & Checks, initialization, installation, startup, testing, and building share common entry points. & Tooling \\
+    A-05 & Maintainability & Shared components are maintained centrally. & Repository strategy \\
+    A-06 & Traceability & Changes and configuration are versioned and documented. & Version state, documentation \\
+    A-07 & Extensibility & Optional capabilities have documented dependencies. & Capability model \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Source: Author's own compilation.\par}
+\end{table}
+
+The stated verification basis is subsequently used to assess these target
+criteria.
+\beginnerinput{workspace/statement/200_anforderungen/220}

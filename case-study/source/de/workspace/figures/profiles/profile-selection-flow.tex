@@ -1,0 +1,42 @@
+\begin{figure}[H]
+  \centering
+  \resizebox{0.96\textwidth}{!}{%
+  \begin{tikzpicture}[
+    decision/.style={caseBox,diamond,aspect=2.25,inner sep=1.5pt,minimum width=35mm},
+    answer/.style={font=\sffamily\scriptsize,text=black!65,fill=white,inner sep=1pt},
+    profile/.style={casePrimary,minimum width=29mm}
+  ]
+    \node[casePrimary,minimum width=38mm] (requirements) at (0,0) {Projektanforderung};
+    \node[decision] (desktop) at (0,-1.6) {Desktop-Kanal?};
+    \node[decision] (webbackend) at (-4.2,-3.4) {Backend und Cloud?};
+    \node[decision] (browserchannel) at (3.8,-3.4) {zusätzlicher\\Browser-Kanal?};
+
+    \node[profile] (webonly) at (-5.7,-5.2) {web-only};
+    \node[profile] (webcloud) at (-2.7,-5.2) {web-cloud};
+    \node[profile] (full) at (2.1,-5.2) {full-platform};
+    \node[decision] (desktopbackend) at (5.5,-5.2) {Backend und Cloud?};
+    \node[profile] (desktoplocal) at (4.0,-7.0) {desktop-local};
+    \node[profile] (desktopcloud) at (7.0,-7.0) {desktop-cloud};
+
+    \draw[caseFlow] (requirements) -- (desktop);
+    \draw[caseFlow] (desktop.west) -| node[answer,pos=0.22] {nein} (webbackend.north);
+    \draw[caseFlow] (desktop.east) -| node[answer,pos=0.22] {ja} (browserchannel.north);
+    \draw[caseFlow] (webbackend.west) -| node[answer,pos=0.22] {nein} (webonly.north);
+    \draw[caseFlow] (webbackend.east) -| node[answer,pos=0.22] {ja} (webcloud.north);
+    \draw[caseFlow] (browserchannel.west) -| node[answer,pos=0.22] {ja} (full.north);
+    \draw[caseFlow] (browserchannel.east) -| node[answer,pos=0.22] {nein} (desktopbackend.north);
+    \draw[caseFlow] (desktopbackend.west) -| node[answer,pos=0.68,left] {nein} (desktoplocal.north);
+    \draw[caseFlow] (desktopbackend.east) -| node[answer,pos=0.68,right] {ja} (desktopcloud.north);
+
+    \begin{scope}[on background layer]
+      \node[caseGroup,fit=(webonly)(webcloud)(full)(desktoplocal)(desktopcloud),inner sep=5mm] (presets) {};
+    \end{scope}
+    \node[caseOptional,minimum width=54mm,below=8mm of presets] (capability)
+      {optionale Capability prüfen\\(PostgreSQL benötigt Backend)};
+    \node[casePrimary,minimum width=54mm,below=7mm of capability] (generate) {Projekt generieren};
+    \draw[caseFlow] (presets.south) -- (capability);
+    \draw[caseFlow] (capability) -- (generate);
+  \end{tikzpicture}}
+  \caption{Entscheidungsfluss für Profil und anschließende Capability-Auswahl}
+  \label{fig:profile-selection-flow}
+\end{figure}

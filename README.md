@@ -283,6 +283,9 @@ The README answers “How do I start?” The linked guides answer “How does it
 - [Continuous Integration](docs/tools/ci.md): automated profile and platform checks
 - [Release model](docs/tools/release-model.md): validation and desktop packaging
 - [Documentation Standard](docs/README.md): repository language and authoring rules
+<!-- MASTER-ONLY START -->
+- [Template Projects Case Study](case-study/README.md): bilingual LaTeX sources, build workflow, and reviewed PDFs
+<!-- MASTER-ONLY END -->
 
 English is the only documentation language for this repository and projects derived from it. A new or changed feature is complete only when its code, tests, acceptance evidence, and affected documentation are updated together.
 

@@ -1,0 +1,19 @@
+\subsection{Konfigurationsmodell}
+\label{subsec:konfigurationsmodell}
+
+Projektstruktur und Laufzeitkonfiguration sind getrennt. Das Projektmanifest
+bestimmt die Features und liegt in \path{project-profile.toml}. Der
+Variablenvertrag steht in \path{config/environment.toml}. Für aktive Features gilt die
+Priorität CLI-Override, Prozessumgebung, lokale \texttt{.env}, Vertragsdefault.
+Auch abgeleitete Werte bleiben nachvollziehbar
+\parencite{kleiveist2026configuration}.
+
+Abbildung~\ref{fig:configuration-boundaries} zeigt die Sicherheitsgrenzen.
+Vite erhält nur die freigegebene \texttt{VITE\_API\_BASE\_URL}; FastAPI
+verarbeitet Serverwerte typisiert und maskiert \texttt{DATABASE\_URL}. Das
+Tooling reicht nur relevante Werte weiter und entfernt bekannte Secret-Namen
+aus der Tauri-Umgebung. Ungültige oder fehlende Werte führen zum kontrollierten
+Abbruch, ohne Geheimnisse auszugeben.
+
+\input{workspace/figures/architecture/configuration-boundaries}
+\beginnerinput{workspace/statement/300_architektur/360}

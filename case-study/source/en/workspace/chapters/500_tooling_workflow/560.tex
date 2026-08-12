@@ -1,0 +1,36 @@
+\subsection{Release and Packaging Workflow}
+\label{subsec:release-packaging-workflow}
+
+\texttt{VERSION} is the central version source; validation and write-based
+synchronization are separate. \texttt{release check} does not produce
+artifacts. The command checks the version, product identity, Tauri rules, tag,
+and Git working tree. Inconsistencies, placeholders from the template, and a
+mismatched or modified state are errors. Missing signing configuration, by
+contrast, produces only a warning.
+Only the master repository accepts its canonical template identity
+\parencite{kleiveist2026release,kleiveist2026control}.
+
+Web delivers a Vite build and ZIP. On the respective host, Tauri produces
+native Windows, macOS, or Linux bundles; additional paths are available for a
+portable Windows ZIP and a Linux cross-build. CI produces only ephemeral,
+unsigned validation artifacts.
+These packages validate the technical packaging path. Without a signature and
+product-specific approval, they are not publishable releases.
+
+\input{workspace/figures/deployment/desktop-release-model}
+
+Signing and notarization are product-specific. The same applies to
+publication, app stores, and updaters. The release workflow combines tests
+with web and container builds. These are followed by the gate and the unsigned
+desktop matrix. The workflow neither publishes nor deploys
+\parencite{kleiveist2026release,kleiveist2026ci}.
+
+For cloud profiles, the container commands check Docker, Compose, and
+deployment files and build versioned images. Compose simulates production
+locally and optionally runs PostgreSQL. The foundation does not prescribe a
+provider and replaces neither secrets management nor a controlled migration
+job
+\parencite{kleiveist2026container,kleiveist2026deployment}.
+A Docker/Compose foundation is therefore not equivalent to a complete
+architecture for AWS, Azure, or GCP.
+\beginnerinput{workspace/statement/500_tooling_workflow/560}

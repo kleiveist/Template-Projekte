@@ -1,0 +1,26 @@
+\subsection{Abnahme und technische Verifikation}
+\label{subsec:abnahme-technische-verifikation}
+
+Das finale Abnahmeprotokoll bewertet Commit \texttt{1cdfb6e} als \emph{PASS
+WITH OPEN EXTERNAL ITEMS} und \emph{READY FOR CASE STUDY}. Dies gilt für die
+Fallstudien-Baseline, nicht für Produktionsreife oder externe Deployments. Auf
+diesem Commit bestanden 189 Tooling-Tests
+\parencite{kleiveist2026acceptance}.
+
+Die Abnahme generierte und installierte alle fünf Profile, führte
+profilabhängige Diagnosen, Tests und Web-Builds aus und paketierte die drei
+Desktopprofile als Linux-DEB. Mit bereitgestelltem Compose bestand die strikte
+Validierung. Die drei Backendprofile bestanden zusätzlich mit PostgreSQL samt
+Verbindung, Migrationen, Tests und Build; Desktopvarianten wurden erneut
+paketiert. Die beiden inkompatiblen PostgreSQL-Kombinationen wurden vor der
+Zielerzeugung erwartungsgemäß abgewiesen
+\parencite{kleiveist2026acceptance}.
+
+Abbildung~\ref{fig:profile-verification-matrix} und
+Tabelle~\ref{tab:verification-matrix} trennen lokale Abnahme und aktuelle CI.
+Die neueren Fehler entwerten die commitgebundene Abnahme nicht, verhindern aber
+ihre Übertragung auf \texttt{a4487ac} als vollständig grünen Remote-Nachweis.
+
+\input{workspace/figures/verification/profile-verification-matrix}
+\input{workspace/tables/verification-matrix}
+\beginnerinput{workspace/statement/600_qualitaet_verifikation/630}

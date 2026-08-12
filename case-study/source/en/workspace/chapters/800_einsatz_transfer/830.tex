@@ -1,0 +1,24 @@
+\subsection{Analysis of Customer Requirements}
+\label{subsec:analyse-kundenanforderungen}
+
+The analysis begins with the functional objective, user groups, workflows, and
+deployment environment. Only then are the requirements classified in technical
+terms. Shared data processing, for example, may require a backend and
+persistence, but does not yet determine the use of PostgreSQL.
+
+Browser and desktop access, server functions, persistence, offline needs,
+native functions, external APIs, operations, deployment, security, and
+compliance are recorded separately. Despite lacking a cloud backend,
+\texttt{desktop-local} includes neither a local data model nor
+synchronization. Table~\ref{tab:customer-requirement-checklist} consolidates
+the guiding questions.
+
+\input{workspace/tables/customer-requirement-checklist}
+
+The result comprises platform components and gaps, for example in
+authentication, data models, integrations, observability, backups,
+infrastructure, or signing. Only then can a decision be made between a
+suitable profile, a limited extension, and a solution outside the baseline.
+The method therefore deliberately follows the sequence of requirements,
+technical classification, and only then profile or technology selection.
+\beginnerinput{workspace/statement/800_einsatz_transfer/830}

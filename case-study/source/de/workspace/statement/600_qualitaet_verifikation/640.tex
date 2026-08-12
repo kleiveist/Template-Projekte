@@ -1,0 +1,15 @@
+\begin{beginnerstatement}[Kurz erklärt: reproduzierbare Ergebnisse]
+
+Ein reproduzierbarer Build soll bei gleichen Eingaben wieder dasselbe Ergebnis
+erzeugen. Für diese Fallstudie wurde jedoch nur gezeigt, dass zwei
+Generierungen von \texttt{desktop-cloud + postgres} auf
+\texttt{1cdfb6e} in derselben Umgebung bytegleich waren. Eine festgelegte
+Dependency-Version bestimmt genau, welcher Stand einer benötigten Bibliothek
+verwendet wird. Ein Lockfile schreibt solche Versionen fest, statt beim
+nächsten Lauf beliebige neuere Pakete zu wählen. Ein Hash ist ein kurzer
+digitaler Fingerabdruck, mit dem sich ein bestimmter Inhalt sehr zuverlässig
+prüfen lässt. Die Toolchain umfasst die eingesetzten Laufzeiten, Compiler und
+Buildwerkzeuge. Unterschiede bei Betriebssystem, Toolchain, Netzwerk oder
+Plattform-SDKs können die Wiederholung trotzdem beeinflussen.
+
+\end{beginnerstatement}

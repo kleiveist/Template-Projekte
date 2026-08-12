@@ -1,0 +1,16 @@
+\begin{beginnerstatement}[Kurz erklärt: Die Datenbankschicht]
+
+Eine Datenbank sorgt für Persistenz: Daten bleiben also auch nach dem Beenden
+des Programms erhalten. Eine relationale Datenbank ordnet Daten in miteinander
+verknüpften Tabellen; SQL ist die Sprache für Abfragen und Änderungen daran.
+PostgreSQL ist die optionale relationale Datenbank dieses Templates. Eine
+Verbindung ist der Kommunikationsweg zur Datenbank, und der Datenbanktreiber
+Psycopg stellt ihn zwischen Python und PostgreSQL bereit. SQLAlchemy vereinfacht
+den Zugriff: Die Engine verwaltet den technischen Zugang, eine Session bündelt
+die Arbeit mit Daten. Das Schema beschreibt die Struktur der Datenbank, etwa
+Tabellen und Spalten. Eine Migration ändert diese Struktur kontrolliert, und
+Alembic verwaltet solche Änderungen. Die Baseline enthält noch keine
+Fachmodelle oder erste Migration; Änderungen müssen ausdrücklich mit
+Alembic-Kommandos ausgeführt werden.
+
+\end{beginnerstatement}

@@ -1,0 +1,23 @@
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[node distance=3.5mm]
+    \node[casePrimary,minimum width=70mm,minimum height=7mm] (requirement) {Requirement};
+    \node[caseBox,minimum width=70mm,minimum height=7mm,below=of requirement] (decision) {Architecture decision};
+    \node[caseBox,minimum width=70mm,minimum height=7mm,below=of decision] (implementation) {Implementation};
+    \node[caseBox,minimum width=70mm,minimum height=7mm,below=of implementation] (test) {automated test / technical check};
+    \node[caseBox,minimum width=70mm,minimum height=7mm,below=of test] (acceptance) {commit-specific acceptance};
+    \node[caseOptional,minimum width=70mm,minimum height=7mm,below=of acceptance] (evidence) {Evidence and status};
+    \node[caseOptional,minimum width=70mm,minimum height=7mm,below=of evidence] (evaluation) {Evaluation in Chapter~\ref{sec:bewertung}};
+
+    \draw[caseFlow] (requirement) -- (decision);
+    \draw[caseFlow] (decision) -- (implementation);
+    \draw[caseFlow] (implementation) -- (test);
+    \draw[caseFlow] (test) -- (acceptance);
+    \draw[caseFlow] (acceptance) -- (evidence);
+    \draw[caseFlow] (evidence) -- (evaluation);
+  \end{tikzpicture}
+  \caption{Evidence chain for technical verification}
+  \label{fig:verification-model}
+  \smallskip
+  {\footnotesize Source: Author's own illustration.\par}
+\end{figure}

@@ -1,0 +1,14 @@
+\subsection{Profil Full-platform}
+\label{subsec:profil-full-platform}
+
+\texttt{full-platform} stellt Browser und Tauri als zwei Produktkanäle
+derselben Frontend-Basis bereit; beide greifen auf dasselbe FastAPI-Backend zu.
+Von \texttt{desktop-\allowbreak cloud} unterscheidet sich der Scaffold nur in
+Profilidentität und Beschreibung, nicht in den Basisfeatures
+\parencite{kleiveist2026profiles,kleiveist2026template}.
+Browser-Build und Desktopanwendung verwenden damit dieselbe Frontend- und
+Backendbasis.
+
+\emph{Full} schließt keine Persistenz ein. Erst \texttt{postgres} ergänzt die
+Datenbankfähigkeit.
+\beginnerinput{workspace/statement/400_projektprofile/460}

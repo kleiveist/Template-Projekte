@@ -1,0 +1,29 @@
+\subsection{Role of control.py}
+\label{subsec:rolle-control-py}
+
+\path{tools/control.py} consolidates the public workflows. Its commands cover
+initialization, diagnostics, installation, development, configuration,
+database operations, tests, builds, containers, Tauri, versioning, releases,
+and documentation. Help and group views structure this interface
+\parencite{kleiveist2026control,kleiveist2026tooling}.
+The principal entry points include \texttt{init}, \texttt{doctor},
+\texttt{install}, \texttt{run}, \texttt{test}, and \texttt{build}. The
+\texttt{db}, \texttt{tauri}, \texttt{container}, and \texttt{release} groups
+add only the specialized workflows required in each case.
+
+\input{workspace/figures/tooling/control-command-map}
+
+The handlers load the manifest and, when required, the runtime configuration,
+then delegate to the respective specialized tools. These tools remain
+independent. The guided \texttt{console} invokes the same commands and does
+not form a second system.
+
+Different exit codes distinguish help and success, domain errors, usage
+errors, and cancellation. Expected profile and generation errors are shown
+without a traceback; unexpected exceptions are logged. This convention
+supports interactive diagnostics and CI evaluation
+\parencite{kleiveist2026control,kleiveist2026ci}.
+In particular, successful execution, domain failure, and incorrect usage can
+be distinguished programmatically. Warnings do not automatically block the
+workflow.
+\beginnerinput{workspace/statement/500_tooling_workflow/510}

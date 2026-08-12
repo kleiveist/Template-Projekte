@@ -1,0 +1,17 @@
+\begin{beginnerstatement}[Kurz erklärt: Continuous Integration]
+
+\emph{Continuous Integration} (CI) bedeutet, dass Prüfungen nach
+Quellcodeänderungen automatisch auf einem separaten System ausgeführt werden.
+Im untersuchten Projekt übernimmt GitHub Actions diesen Dienst. Ein
+\emph{Workflow} beschreibt einen solchen automatischen Ablauf. Darin ist ein
+\emph{Job} eine einzelne Arbeitsgruppe von Schritten, die auf einem
+\emph{Runner}, also dem bereitgestellten Rechner, läuft. Eine
+\emph{Pipeline} ist die gesamte Kette dieser automatischen Prüfungen. Ein
+Commit bezeichnet einen festen Codezustand; \emph{HEAD} zeigt auf den Commit,
+der für die betrachtete Arbeitskopie oder den Zweig gerade maßgeblich ist.
+Eine grüne CI hat alle verlangten Jobs bestanden, eine rote CI enthält
+mindestens einen Fehlschlag. Die im
+Haupttext ausgewerteten Läufe für Commit \texttt{a4487ac} sind nicht
+vollständig grün, auch wenn bestimmte lokale Prüfungen bestanden.
+
+\end{beginnerstatement}

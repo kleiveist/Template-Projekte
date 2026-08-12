@@ -1,0 +1,24 @@
+\subsection{Entwickler-Onboarding}
+\label{subsec:entwickler-onboarding}
+
+Das Onboarding folgt dem Pfad Master klonen, \texttt{doctor}, \texttt{init},
+Zielprojekt, erneut \texttt{doctor}, \texttt{install} und \texttt{run}.
+Produktcode, Konfiguration, Tests und Commits gehören danach in das abgeleitete
+Repository. Template-Wartung arbeitet dagegen im Master und prüft dort die
+gesamte Baseline
+\parencite{kleiveist2026template,kleiveist2026profiles}.
+Diese Trennung verhindert, dass Produktentwicklung versehentlich die gemeinsame
+Vorlage verändert.
+
+Grundvoraussetzungen sind Git, Python ab 3.11 und Node.js ab 20. Desktopprofile
+benötigen zusätzlich Rust Stable und plattformspezifische Tauri-Pakete;
+Docker, PostgreSQL und PyGitIndex nur für die jeweiligen optionalen Aufgaben.
+Optionale Werkzeuge blockieren damit nicht jedes Profil.
+
+README und Fachdokumente trennen Einstieg, Tooling, Profile, Konfiguration, CI,
+Container und Release. Das vereinheitlicht die öffentlichen Setup-Pfade,
+belegt aber noch keine messbare Verkürzung des Onboardings
+\parencite{kleiveist2026tooling,kleiveist2026configuration,kleiveist2026ci,kleiveist2026release}.
+Die Dokumentationsstruktur ergänzt damit das technische Onboarding, ersetzt
+aber keine empirische Messung seiner Dauer.
+\beginnerinput{workspace/statement/500_tooling_workflow/570}

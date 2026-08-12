@@ -1,0 +1,40 @@
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Zusammengeführte Bewertung des Technologie-Templates}
+  \label{tab:template-evaluation}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.31\textwidth}>{\raggedright\arraybackslash}p{0.19\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Kriterium} & \textbf{Evidenzbasis} & \textbf{Bewertung} &
+      \textbf{wesentliche Einschränkung} \\
+    \midrule
+    Wiederverwendung und Standardisierung & Gemeinsamer Kern, fünf Profile,
+      Generator und einheitliche Befehlsoberfläche & weitgehend adressiert &
+      Gilt für den definierten Stack; keine automatische Aktualisierung
+      abgeleiteter Projekte. \\
+    Variabilität und Erweiterbarkeit & Profil-Presets, Capability-Abhängigkeiten
+      und geprüfte PostgreSQL-Kombinationen & weitgehend adressiert & Kleiner
+      aktueller Katalog; Erweiterungen vergrößern Pflege- und Testumfang. \\
+    Testbarkeit und Reproduzierbarkeit & Dokumentierte Profil-, Integrations-
+      und Buildabnahme sowie ein byte-identischer Generierungsvergleich &
+      teilweise adressiert & Aktuelle Remote-Jobs teilweise fehlgeschlagen;
+      Reproduzierbarkeitsversuch nur für eine Kombination. \\
+    Entwicklerfreundlichkeit und Dokumentierbarkeit & \texttt{control.py},
+      Diagnosewege, versionierte Manifeste und gegliederte Dokumentation &
+      teilweise adressiert & Onboarding und Bedienaufwand nicht empirisch
+      gemessen; mehrere Toolchains bleiben sichtbar. \\
+    Wartbarkeit & Eine zentrale Baseline mit gemeinsamen Tests und
+      Dokumentationsregeln & teilweise adressiert & Technologievielfalt,
+      Variantenregression und manuelle Schnittstellensynchronisierung. \\
+    Plattformabdeckung und Betriebsreife & Web-, Backend-, PostgreSQL-,
+      Container-Image-, Linux- und macOS-Nachweise; providerneutrale Grenze &
+      nicht abschließend nachgewiesen & Windows-Paket, Compose-Start, Signing,
+      Notarisierung und produktives Deployment nicht belegt. \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Quelle: Eigene Bewertung auf Grundlage der vorangehenden
+  Kapitel, \textcite{kleiveist2026acceptance} und der in
+  Abschnitt~\ref{subsec:continuous-integration} ausgewerteten CI-Läufe.\par}
+\end{table}

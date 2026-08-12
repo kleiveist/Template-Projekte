@@ -1,0 +1,13 @@
+\begin{beginnerstatement}[Kurz erklärt: optionale Fähigkeiten]
+
+Features können Voraussetzungen für andere Features sein; Tauri benötigt
+beispielsweise das Frontend. Eine optionale Capability wird nur auf Wunsch
+ergänzt, und \emph{selectable} bedeutet, dass sie regulär zur Auswahl angeboten
+wird. Derzeit ist nur PostgreSQL auf diese Weise auswählbar. PostgreSQL braucht
+die Datenbankbasis, und diese wiederum braucht ein Backend, weil dort der
+Datenbankzugriff ausgeführt wird. Deshalb sind
+\texttt{web-only + postgres} und \texttt{desktop-local + postgres} nicht
+zulässig. Der Resolver prüft solche Abhängigkeiten, kann aber ein fehlendes
+Plattformfeature nicht eigenmächtig ergänzen.
+
+\end{beginnerstatement}

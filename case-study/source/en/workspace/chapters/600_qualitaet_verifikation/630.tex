@@ -1,0 +1,27 @@
+\subsection{Acceptance and Technical Verification}
+\label{subsec:abnahme-technische-verifikation}
+
+The final acceptance report rates commit \texttt{1cdfb6e} as \emph{PASS
+WITH OPEN EXTERNAL ITEMS} and \emph{READY FOR CASE STUDY}. This applies to the
+case study baseline, not to production readiness or external deployments. On
+this commit, 189 tooling tests passed
+\parencite{kleiveist2026acceptance}.
+
+The acceptance process generated and installed all five profiles, executed
+profile-dependent diagnostics, tests, and web builds, and packaged the three
+desktop profiles as Linux DEBs. With Compose available, strict validation
+passed. The three backend profiles additionally passed with PostgreSQL,
+including the connection, migrations, tests, and build; the desktop variants
+were packaged again. As expected, the two incompatible PostgreSQL combinations
+were rejected before the target was generated
+\parencite{kleiveist2026acceptance}.
+
+Figure~\ref{fig:profile-verification-matrix} and
+Table~\ref{tab:verification-matrix} distinguish local acceptance from current
+CI. The more recent failures do not invalidate the commit-bound acceptance,
+but they prevent its application to \texttt{a4487ac} as fully green remote
+evidence.
+
+\input{workspace/figures/verification/profile-verification-matrix}
+\input{workspace/tables/verification-matrix}
+\beginnerinput{workspace/statement/600_qualitaet_verifikation/630}

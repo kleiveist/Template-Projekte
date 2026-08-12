@@ -1,0 +1,47 @@
+\subsection{Answers to the Research Questions}
+\label{subsec:beantwortung-fragestellungen}
+
+\paragraph{Research Question 1: Requirements Addressed.}
+The template addresses the functional and technical, quality, and operational
+requirements through a baseline that can be generated, clearly defined
+components, profiles, shared workflows, centralized maintenance, and versioned
+configuration. Separate runtime and verification paths support this;
+domain logic, authentication, authorization, and production operation remain
+product-specific.
+
+\paragraph{Research Question 2: Variants for Web, Cloud, and Desktop.}
+Five presets combine the shared frontend with backend, cloud, and Tauri
+components; PostgreSQL is added only when backend capability is present.
+Generated projects predominantly contain the paths they require.
+\texttt{desktop-cloud} and \texttt{full-platform} are scaffolded identically
+at the technical level and differentiated semantically.
+
+\paragraph{Research Question 3: Reuse and Standardization.}
+Centralized maintenance of implementations, profiles, the generator,
+configuration, tests, and documentation promotes reuse and consistent initial
+states across projects. The benefit applies to the baseline and future
+generations; existing product projects receive no automatic updates.
+
+\paragraph{Research Question 4: Reduction of Recurring Effort.}
+Automated or standardized profile selection, generation, diagnostics,
+installation, startup, testing, and builds provide plausible potential for
+reducing recurring effort. Time, effort, and comparative data are lacking,
+however; a productivity improvement has not been demonstrated when central
+maintenance and multiple toolchains are taken into account.
+
+\paragraph{Research Question 5: Suitability for Project Types and Customer Requirements.}
+The template is suitable as a foundation for related web, desktop, and
+combined business applications whose platform, cloud, and persistence needs
+can be represented. Highly native applications, games, and specialized
+real-time systems lie outside the primary target domain. The qualitative
+classification is not a universal assurance of suitability.
+
+\paragraph{Research Question 6: Limitations, Maintenance Effort, Risks, and External Dependencies.}
+Limitations include the growing breadth of regression testing, manual contract
+synchronization, insufficiently strict separation between optional and
+selectable capabilities, the absence of product updates, and the effort of
+maintaining multiple toolchains.
+The tooling, desktop-profile, and Windows CI paths are currently failing;
+Release Validation, Compose startup, and Branch Protection are still missing.
+Signing, notarization, the updater, production deployment, and the security
+model remain product tasks.

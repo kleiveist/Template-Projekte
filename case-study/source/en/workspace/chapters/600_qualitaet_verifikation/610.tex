@@ -1,0 +1,26 @@
+\subsection{Test Strategy}
+\label{subsec:teststrategie}
+
+Verification associates every observation with an artifact, an executed
+check, and a commit-bound result. Test code alone does not demonstrate
+execution, just as a workflow file does not demonstrate a successful CI run.
+Execution results and the acceptance report therefore carry more weight than
+code, configuration, and documentation
+\parencite{runeson2009case-study,iso25010-2023}.
+
+Four levels cover the baseline: tooling tests check the CLI, profiles,
+generator, configuration, release, and repository; component tests cover the
+schema, backend, frontend, and Tauri/Rust. Integration tests exercise
+PostgreSQL~16 together with the configuration and Alembic. Build checks
+produce web, container, or native artifacts \parencite{kleiveist2026ci}.
+
+The scope follows the active profile. \emph{PASS} denotes a successful check,
+and \emph{FAIL} an executed check that failed. \emph{Not verified} means that
+evidence is absent, while \emph{out of scope} denotes a deliberate boundary;
+disabled items are not applicable. Generation and structure checks address
+A-01 and A-03, the public tooling interface addresses A-04, and valid and
+rejected capability combinations address A-07.
+Figure~\ref{fig:verification-model} classifies this evidence.
+
+\input{workspace/figures/verification/verification-model}
+\beginnerinput{workspace/statement/600_qualitaet_verifikation/610}

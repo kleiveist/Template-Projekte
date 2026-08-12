@@ -1,0 +1,15 @@
+\begin{beginnerstatement}[In simple terms: Tests and builds]
+
+An automated test performs predefined checks without requiring a person to
+click through them manually. A unit test examines a small, self-contained part
+of the code. An integration test checks whether multiple parts, such as the
+backend and database, work together. An E2E test follows a complete process
+from a user's perspective. A test suite groups related tests; the template
+uses Pytest for Python, Vitest in the frontend, Playwright for E2E, and Cargo
+for Rust. \emph{PASS} means passed, \emph{FAIL} means failed, and \emph{SKIP}
+means skipped; a skipped test is not evidence of success. A build processes
+the source code into a deliverable artifact, such as web output or a desktop
+package, depending on the path. A ZIP groups files in an archive; a container
+image packages a runtime environment from which a container can be started.
+
+\end{beginnerstatement}

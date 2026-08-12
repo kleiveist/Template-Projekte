@@ -1,0 +1,40 @@
+\subsection{Vergleich mit alternativen Template-Strategien}
+\label{subsec:vergleich-template-strategien}
+
+Verglichen werden Architekturstrategien anhand von Wiederverwendung,
+Konsistenz, Variabilität, Einstiegskomplexität, Pflege, Testbarkeit und
+Updateübernahme
+\parencite{krueger1992software-reuse,clements2001software-product-lines}.
+Die qualitativen Stufen bilden kein Gesamtranking; hohe Einstiegskomplexität
+ist beispielsweise nachteilig.
+
+\emph{Separate Template-Repositories} bleiben einzeln übersichtlich, können
+aber divergieren. Ein \emph{Copy-Paste-Starter} minimiert die Vorlagenlogik,
+liefert jedoch keinen Rückkanal für spätere Verbesserungen. GitHub-Templates
+erzeugen entsprechend eine eigene, nicht verwandte Historie
+\parencite{github2026repository-template}.
+Separate Repositories gewichten damit organisatorische Isolation höher als die
+zentrale Konsistenz gemeinsamer Bausteine.
+
+\emph{Framework-spezifische Starter} wie \texttt{create-vite} bieten einen
+einfachen Einstieg in einen engen Ausschnitt. Backend, Desktop, Persistenz und
+Gesamtworkflow müssen bei Bedarf separat ergänzt werden
+\parencite{vite2026guide}.
+Für ein kleines homogenes Frontend kann diese geringere Einstiegskomplexität
+angemessener sein als der untersuchte Full-Stack-Ansatz.
+
+Ein \emph{monolithisches Universal-Template} vereinfacht die Auswahl, belastet
+kleine Projekte aber mit ungenutzten Komponenten. Das untersuchte
+\emph{Single-Repository mit Profilen und Capabilities} kombiniert zentrale
+Pflege mit ausgewählten Pfaden. Dafür steigen Master-, Resolver- und
+Matrixkomplexität; Updates erreichen generierte Projekte nicht automatisch.
+Es verbindet somit zentrale Variabilität vor der Generierung mit der
+Eigenständigkeit eines Copy-Starters danach.
+
+\input{workspace/tables/template-strategy-comparison}
+
+Der profilbasierte Ansatz passt vor allem zu wiederkehrenden, technisch
+verwandten Vorhaben. Kleine Einzelprojekte können von Framework-Startern,
+organisatorisch getrennte Produktlinien von separaten Repositories profitieren.
+Es gibt keinen universellen Sieger, sondern unterschiedliche Trade-offs.
+\beginnerinput{workspace/statement/700_bewertung/750}

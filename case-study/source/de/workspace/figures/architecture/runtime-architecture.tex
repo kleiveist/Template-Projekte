@@ -1,0 +1,29 @@
+\begin{figure}[H]
+  \centering
+  \resizebox{0.88\textwidth}{!}{%
+  \begin{tikzpicture}[node distance=8mm and 34mm]
+    \node[casePrimary,minimum width=34mm] (browser) {Browser};
+    \node[casePrimary,minimum width=34mm,right=of browser] (desktop) {Tauri-Webview};
+    \node[caseBox,minimum width=70mm,below=17mm of $(browser)!0.5!(desktop)$] (frontend)
+      {ein gemeinsamer Vite-/TypeScript-Build};
+    \node[caseOptional,minimum width=48mm,below=of frontend] (api)
+      {FastAPI-Service\\nur backendfähige Profile};
+    \node[caseOptional,minimum width=48mm,below=of api] (postgres)
+      {SQLAlchemy + Psycopg\\PostgreSQL optional};
+
+    \draw[caseFlow] (browser) -- node[pos=0.42,left,font=\sffamily\tiny] {lädt} (frontend);
+    \draw[caseFlow] (desktop) -- node[pos=0.42,right,font=\sffamily\tiny] {hostet} (frontend);
+    \draw[caseSecondaryFlow] (frontend) -- node[right,font=\sffamily\tiny] {HTTP /api} (api);
+    \draw[caseSecondaryFlow] (api) -- node[right,font=\sffamily\tiny] {serverseitig} (postgres);
+
+    \begin{scope}[on background layer]
+      \node[caseGroup,fit=(browser)(desktop)(postgres),
+        label={[font=\sffamily\scriptsize,text=black!60]below:Komponentenbestand abhängig vom aufgelösten Profil}] {};
+    \end{scope}
+  \end{tikzpicture}}
+  \caption{Profilabhängige Laufzeitarchitektur}
+  \label{fig:runtime-architecture}
+  \smallskip
+  {\footnotesize Quelle: Eigene Darstellung auf Grundlage von
+  \textcite{kleiveist2026architecture} und \textcite{kleiveist2026profiles}.\par}
+\end{figure}

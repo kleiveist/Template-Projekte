@@ -1,0 +1,25 @@
+\begin{figure}[H]
+  \centering
+  \resizebox{0.84\textwidth}{!}{%
+  \begin{tikzpicture}[node distance=8mm]
+    \node[casePrimary,minimum width=60mm] (master) {Master Repository};
+    \node[caseBox,minimum width=60mm,below=of master] (core) {Shared Core and feature paths};
+    \node[caseBox,minimum width=60mm,below=of core] (profiles) {selected profile preset};
+    \node[caseOptional,minimum width=60mm,below=of profiles] (capability)
+      {optional capability (if compatible)};
+    \node[casePrimary,minimum width=60mm,below=of capability] (project)
+      {generated product project};
+
+    \draw[caseFlow] (master) -- (core);
+    \draw[caseFlow] (core) -- (profiles);
+    \draw[caseFlow] (profiles) -- (capability);
+    \draw[caseFlow] (capability) -- (project);
+    \begin{scope}[on background layer]
+      \node[caseGroup,fit=(master)(capability),inner sep=5mm] (basis) {};
+    \end{scope}
+    \node[font=\sffamily\scriptsize,text=black!60,right=9mm of basis,align=left]
+      {one maintenance baseline\\rather than separate\\template repositories};
+  \end{tikzpicture}}
+  \caption{Deriving a product project from a shared template baseline}
+  \label{fig:profile-model}
+\end{figure}

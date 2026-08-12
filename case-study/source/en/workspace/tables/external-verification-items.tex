@@ -1,0 +1,24 @@
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.1}
+  \caption{Outstanding and external verification items on \texttt{a4487ac}}
+  \label{tab:external-verification-items}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.21\textwidth}>{\raggedright\arraybackslash}p{0.16\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Verification item} & \textbf{Status} & \textbf{Reason} & \textbf{Required evidence} \\
+    \midrule
+    Tooling and desktop-profile CI & FAIL & current jobs terminate in executed test steps with exit code 1 & successful repetition on the corrected commit \\
+    Windows package & FAIL & frontend installation failed in the native Windows job & successful native build and artifact upload \\
+    Release Validation & not verified & no manual or tag run is available & successful non-publishing run on a fixed commit \\
+    Compose startup & not verified & only the model and master images were checked in CI & \texttt{docker compose up}, health/readiness evidence, and controlled teardown \\
+    Branch Protection & not verified & the public API requires authentication & authorized evidence of the required checks for \texttt{main} \\
+    Signing, notarization, updater & outside the scope & product-specific identity and protected credentials are intentionally absent & protected native release pipeline for each target platform \\
+    Production operation and auth/RBAC & outside the scope & cloud environment, business model, and security model are product-specific & product-specific acceptance including credentials and deployment \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\scriptsize Source: Author's own compilation based on
+  \textcite{kleiveist2026acceptance,kleiveist2026release} and the current
+  GitHub Actions runs.\par}
+\end{table}

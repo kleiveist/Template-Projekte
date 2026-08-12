@@ -1,0 +1,35 @@
+\subsection{Optional Capabilities}
+\label{subsec:optionale-capabilities}
+
+The catalog contains six features. \texttt{tauri} requires
+\texttt{frontend}; \texttt{cloud} and \texttt{database} require
+\texttt{backend}; and \texttt{postgres} requires \texttt{database}. The
+directed rules in Figure~\ref{fig:feature-dependencies} do not describe
+runtime communication
+\parencite{kleiveist2026profiles,kleiveist2026database}.
+
+\input{workspace/figures/profiles/feature-dependencies}
+
+Only \texttt{postgres} is currently marked as a selectable capability. For
+backend profiles, it first resolves the optional, internal-only
+\texttt{database} feature and adds SQLAlchemy, Alembic, Psycopg, and tests. The
+PostgreSQL service is already declared as an inactive profile in the Compose
+document; the capability adds backend infrastructure and dependencies
+\parencite{kleiveist2026deployment,kleiveist2026template}.
+Thus, \texttt{web-cloud + postgres} consists of the frontend, backend, cloud,
+database base, and PostgreSQL extension. The selection therefore does not
+merely activate the Compose entry; it adds the associated backend paths.
+
+The resolver adds only optional prerequisites. It therefore rejects
+\texttt{web-only + postgres} and \texttt{desktop-local + postgres} because both
+lack a backend. Declaring new catalog entries alone does not make them
+implemented. They also require their own paths, dependencies, and tests.
+
+Two implementation discrepancies remain: the dialog offers only
+\texttt{selectable} PostgreSQL, but a direct \texttt{--with database} argument
+accepts the database capability that is optional for backend profiles. In
+addition, contrary to the general profile documentation, entries for
+\path{.env.example} originate from \path{config/environment.toml}, not from
+\path{features.toml}. The presets remain unchanged, but the distinction
+between internal and selectable capabilities is not fully enforced.
+\beginnerinput{workspace/statement/400_projektprofile/470}

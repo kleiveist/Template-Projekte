@@ -1,0 +1,14 @@
+\begin{beginnerstatement}[Kurz erklärt: Programme im Entwicklungsbetrieb]
+
+Ein Entwicklungsserver macht eine noch nicht ausgelieferte Anwendung während
+der Arbeit lokal erreichbar. \texttt{run} startet dafür Vite und bei aktivem
+Backend zusätzlich Uvicorn. Vite bedient das Frontend, Uvicorn das
+FastAPI-Backend. Ein laufendes Programm heißt Prozess; ein Port ist dessen
+nummerierter Zugangspunkt für Verbindungen. Im Vordergrund bleibt die Ausgabe
+direkt im Terminal sichtbar und ein Abbruch beendet die erfassten Prozesse. Im
+Hintergrund laufen sie abgekoppelt weiter. Eine PID identifiziert dabei einen
+Prozess, während ein Log seine Meldungen festhält. \texttt{stop} beendet die
+erfassten Prozesse und je nach Option auch weitere Listener auf ihren
+konfigurierten Ports.
+
+\end{beginnerstatement}

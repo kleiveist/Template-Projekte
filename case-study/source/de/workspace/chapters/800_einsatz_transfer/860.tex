@@ -1,0 +1,22 @@
+\subsection{Überführung in die Produktentwicklung}
+\label{subsec:ueberfuehrung-produktentwicklung}
+
+Nach der Generierung übernimmt das eigenständige Produktprojekt Fachmodelle,
+Geschäftsregeln, Oberfläche, Integrationen, Daten und Betrieb. Auch
+Authentifizierung, Berechtigungen, Skalierung, Monitoring, Backup, Datenschutz
+und Signing bleiben Produktaufgaben. Die Baseline strukturiert diese Arbeit,
+löst sie aber nicht.
+
+Master und Produkt besitzen getrennte Lebenszyklen. Es gibt keinen dauerhaften
+Update- oder Synchronisationsmechanismus. Master-Änderungen müssen gezielt in
+Produkte übernommen werden; Produktänderungen gehören nur nach
+Generalisierungs- und Verifikationsprüfung zurück in die Baseline.
+
+Template- und Produktabnahme bleiben getrennt. Die commitgebundene Abnahme
+belegt Generierung, Installation, Tests und ausgewählte Builds der Baseline,
+nicht Deployment, Signing oder Fach- und Sicherheitsanforderungen
+\parencite{kleiveist2026acceptance}. Das Produkt benötigt dafür eigene Tests
+und Nachweise.
+Diese müssen die konkreten Kundenanforderungen, Integrationen und
+Betriebsbedingungen abdecken.
+\beginnerinput{workspace/statement/800_einsatz_transfer/860}

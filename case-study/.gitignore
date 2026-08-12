@@ -1,0 +1,16 @@
+# LaTeX intermediates; reviewed release PDFs live in pdf/.
+source/**/*.aux
+source/**/*.bbl
+source/**/*.bcf
+source/**/*.blg
+source/**/*.fdb_latexmk
+source/**/*.fls
+source/**/*.lof
+source/**/*.log
+source/**/*.lot
+source/**/*.out
+source/**/*.pdf
+source/**/*.run.xml
+source/**/*.synctex.gz
+source/**/*.toc
+source/**/*.xdv

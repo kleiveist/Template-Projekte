@@ -1,0 +1,37 @@
+\subsection{Anforderungen für Web-, Cloud- und Desktop-Anwendungen}
+\label{subsec:anforderungen-plattformen}
+
+Alle Varianten sollen Frontend-Basis, Struktur, Konfigurationslogik, Tests und
+Dokumentation teilen. Browserprojekte benötigen keine Desktop-Schicht und nur
+bei Bedarf ein Backend. Cloudvarianten erfordern API, Deployment-Grenzen sowie
+Health- und Readiness-Prüfung. Desktopvarianten verwenden dasselbe Frontend in
+einer nativen Laufzeit; kombinierte Varianten ergänzen Backend und
+gegebenenfalls Browserzugriff.
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Anforderungsmatrix der unterstützten Projektarten}
+  \label{tab:plattform-anforderungen}
+  \begin{tabularx}{\textwidth}{@{}p{0.24\textwidth}>{\centering\arraybackslash}X>{\centering\arraybackslash}X>{\centering\arraybackslash}X>{\centering\arraybackslash}X@{}}
+    \toprule
+    \textbf{Anforderung} & \textbf{Web} & \textbf{Cloud} & \textbf{Desktop lokal} & \textbf{Desktop + Cloud} \\
+    \midrule
+    Frontend & erforderlich & erforderlich & erforderlich & erforderlich \\
+    Backend / API & optional & erforderlich & nicht grundsätzlich & erforderlich \\
+    Desktop-Laufzeit & nein & nein & erforderlich & erforderlich \\
+    Deployment-Grenze & optional & erforderlich & nein & erforderlich \\
+    Persistenz & optional & optional & produktspezifisch & optional \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Quelle: Eigene Darstellung auf Grundlage von
+  \textcite{kleiveist2026profiles}.\par}
+\end{table}
+
+PostgreSQL ist nur eine optionale Capability für backendfähige Profile, kein
+eigenes Plattformprofil \parencite{kleiveist2026profiles}. Öffentliche
+Client-Konfiguration und serverseitige Werte einschließlich Geheimnissen sind
+zu trennen; eine bestimmte Cloud-Plattform wird nicht vorausgesetzt.
+\beginnerinput{workspace/statement/200_anforderungen/230}

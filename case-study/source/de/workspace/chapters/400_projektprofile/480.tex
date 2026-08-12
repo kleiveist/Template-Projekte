@@ -1,0 +1,18 @@
+\subsection{Single-Repository-Strategie}
+\label{subsec:single-repository-strategie}
+
+Die fünf Profile sind keine Template-Forks. Core, Feature-Implementierungen,
+Profile und Generator liegen in einer Wartungsbasis, aus der eigenständige
+Produktprojekte entstehen
+\parencite{kleiveist2026profiles,kleiveist2026template}.
+
+Das Master enthält auch optionale Implementierungen und aktiviert selbst
+PostgreSQL. Ein generiertes Projekt erhält dagegen nur Core, aufgelöste
+Feature-Pfade, Manifest, Frontend-Profil und passende \path{.env.example}. Es
+bleibt danach vom unveränderten Master getrennt. Die zentrale Pflege reduziert
+parallele Baselines; eine automatische Rücksynchronisierung generierter
+Projekte besteht nicht.
+Diese Trennung schützt die Wartungsbasis vor Produktänderungen. Umgekehrt
+profitieren bereits erzeugte Produkte nicht ohne gezielte Übernahme von
+späteren Korrekturen des Masters.
+\beginnerinput{workspace/statement/400_projektprofile/480}

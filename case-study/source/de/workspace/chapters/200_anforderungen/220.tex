@@ -1,0 +1,33 @@
+\subsection{Anforderungen an Wiederverwendbarkeit und Standardisierung}
+\label{subsec:wiederverwendbarkeit-standardisierung}
+
+Die Baseline soll gemeinsame Strukturen und öffentliche Arbeitsabläufe
+vorgeben, aber kontrollierte Profilvarianten zulassen. Eine zentrale Pflege
+vermeidet auseinanderlaufende Kopien. Tabelle~\ref{tab:anforderungen-template}
+fasst die überprüfbaren Anforderungen zusammen.
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Zentrale Anforderungen an das Technologie-Template}
+  \label{tab:anforderungen-template}
+  \begin{tabularx}{\textwidth}{@{}p{0.08\textwidth}p{0.22\textwidth}p{0.39\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{ID} & \textbf{Anforderung} & \textbf{Operationalisiertes Ziel} & \textbf{spätere Prüfbasis} \\
+    \midrule
+    A-01 & Baseline & Grundstruktur muss generierbar sein. & Projektgenerierung \\
+    A-02 & Struktur & Verantwortlichkeiten liegen an konsistenten Stellen. & Repository-Struktur \\
+    A-03 & Profile & Nur vorgesehene Komponenten werden aktiviert. & Profilmodell \\
+    A-04 & Workflows & Prüfen, Initialisieren, Installieren, Starten, Testen und Bauen besitzen gemeinsame Einstiegspunkte. & Tooling \\
+    A-05 & Wartbarkeit & Gemeinsame Bestandteile werden zentral gepflegt. & Repository-Strategie \\
+    A-06 & Nachvollziehbarkeit & Änderungen und Konfiguration sind versioniert und dokumentiert. & Versionsstand, Dokumentation \\
+    A-07 & Erweiterbarkeit & Optionale Fähigkeiten besitzen dokumentierte Abhängigkeiten. & Capability-Modell \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Quelle: Eigene Darstellung.\par}
+\end{table}
+
+Die genannte Prüfbasis dient später der Bewertung dieser Soll-Kriterien.
+\beginnerinput{workspace/statement/200_anforderungen/220}

@@ -1,0 +1,17 @@
+\subsection{Desktop Integration with Tauri and Rust}
+\label{subsec:tauri-rust-desktop}
+
+Tauri provides a native boundary without duplicating the frontend. During
+development, it uses the Vite server; in the build, it uses
+\path{frontend/dist}. The Rust entry point only creates the Tauri application;
+native domain commands and a FastAPI sidecar are absent from the baseline
+\parencite{tauri2026start,rust2026book,kleiveist2026architecture}.
+
+The default capability grants only \texttt{core:default}; a Content Security
+Policy restricts resources and development endpoints. Additional native
+permissions must be added on a product-specific basis
+\parencite{tauri2026capabilities}. In the desktop-local profile, local
+functionality resides in the frontend or in future Tauri commands; desktop-cloud
+and full-platform use the public FastAPI URL. Packaging, signing, and the choice between a remote
+API, sidecar, or local commands remain product decisions.
+\beginnerinput{workspace/statement/300_architektur/340}

@@ -1,0 +1,31 @@
+\begin{figure}[H]
+  \centering
+  \resizebox{0.72\textwidth}{!}{%
+  \begin{tikzpicture}[node distance=5mm and 10mm]
+    \node[casePrimary,minimum width=52mm] (master) {Master Repository};
+    \node[caseBox,minimum width=52mm,below=of master] (selection)
+      {profile + capabilities\\optional product identity};
+    \node[caseBox,minimum width=52mm,below=of selection] (features)
+      {resolve dependencies\\validate combination};
+    \node[caseBox,minimum width=52mm,below=of features] (plan)
+      {scaffold plan\\Core + active feature paths};
+    \node[caseBox,minimum width=52mm,below=of plan] (generation)
+      {copy paths\\derive configuration and identity};
+    \node[casePrimary,minimum width=52mm,below=of generation] (product)
+      {independent product project};
+    \node[caseOptional,minimum width=42mm,right=of product] (manifest)
+      {active manifest\\\texttt{project-profile.toml}};
+
+    \draw[caseFlow] (master) -- (selection);
+    \draw[caseFlow] (selection) -- (features);
+    \draw[caseFlow] (features) -- (plan);
+    \draw[caseFlow] (plan) -- (generation);
+    \draw[caseFlow] (generation) -- (product);
+    \draw[caseSecondaryFlow] (product) -- (manifest);
+  \end{tikzpicture}}
+  \caption{Workflow for profile-driven project generation}
+  \label{fig:project-generation-workflow}
+  \smallskip
+  {\footnotesize Source: Author's own illustration based on
+  \textcite{kleiveist2026profiles} and \textcite{kleiveist2026tooling}.\par}
+\end{figure}

@@ -1,0 +1,19 @@
+\begin{beginnerstatement}[Kurz erklärt: FastAPI und HTTP]
+
+Das Backend ist der Teil im Hintergrund; hier wird es mit der Sprache Python
+und dem Werkzeug FastAPI erstellt. HTTP legt Regeln dafür fest, wie Programme
+Anfragen und Antworten über ein Netzwerk übertragen. Eine API ist eine
+vereinbarte Schnittstelle, über die das Frontend auf diesem Weg mit dem Backend
+kommuniziert.
+Eine Route oder ein Endpoint ist eine ansprechbare Adresse dieser API, wobei
+\texttt{/api} die gemeinsamen Prüfpfade gruppiert. \texttt{/api/health} meldet
+als Liveness-Prüfung, ob der Prozess lebt; \texttt{/api/ready} meldet als
+Readiness-Prüfung, ob er einsatzbereit ist, und prüft bei aktivierter Datenbank
+auch deren Verbindung. Ein HTTP-Statuscode fasst das Ergebnis als Zahl
+zusammen; HTTP~503 bedeutet hier, dass der Dienst vorübergehend nicht bereit
+ist. Ein Container verpackt einen Dienst mit seiner Laufzeit in eine getrennte
+Einheit, und das FastAPI-Backend läuft beim Deployment in einem solchen
+Container. Produktspezifische Dienste und eine Authentifizierung enthält diese
+Baseline noch nicht.
+
+\end{beginnerstatement}

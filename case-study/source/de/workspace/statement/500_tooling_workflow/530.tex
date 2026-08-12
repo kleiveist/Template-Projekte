@@ -1,0 +1,18 @@
+\begin{beginnerstatement}[Kurz erklärt: Voraussetzungen und Installation]
+
+\texttt{doctor} prüft lesend, ob die für das gewählte Profil wichtigen
+Laufzeiten, Einstellungen, Pfade, Abhängigkeiten und Ports bereitstehen. Eine
+Installation richtet benötigte Abhängigkeiten ein, also zusätzliche Programme
+und Bibliotheken, auf denen das Projekt aufbaut. Ein \emph{Package Manager}
+automatisiert das Herunterladen und Einrichten solcher Pakete. Node.js führt
+das Frontend-Tooling aus; npm verwaltet dessen Pakete, und \texttt{npm ci}
+installiert die im Lockfile festgelegten Stände. Python führt Backend und
+Tooling aus; eine virtuelle Umgebung (\emph{venv}) trennt deren Pakete vom
+übrigen System, während \texttt{uv} oder ersatzweise \texttt{pip} sie
+installiert. Git verwaltet Quellcodeänderungen und wird zum Klonen des
+Repositories benötigt. Rust ist für die native Tauri-Schicht der
+Desktopprofile erforderlich. Chromium ist der Browser für konfigurierte
+Playwright-Tests und wird nur bei Bedarf eingerichtet; auch andere optionale
+Werkzeuge werden profilabhängig behandelt.
+
+\end{beginnerstatement}

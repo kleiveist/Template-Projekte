@@ -1,0 +1,33 @@
+\begin{figure}[htbp]
+  \centering
+  \resizebox{0.72\textwidth}{!}{%
+  \begin{tikzpicture}[node distance=5mm and 11mm]
+    \node[casePrimary,minimum width=50mm] (doctor) {\texttt{doctor}};
+    \node[caseBox,minimum width=50mm,below=of doctor] (install) {\texttt{install}};
+    \node[caseBox,minimum width=50mm,below=of install] (run) {\texttt{run}};
+    \node[caseBox,minimum width=50mm,below=of run] (develop) {Produktcode bearbeiten};
+    \node[caseBox,minimum width=50mm,below=of develop] (test) {\texttt{test --suite all}};
+    \node[caseBox,minimum width=50mm,below=of test] (build) {passendes \texttt{build}-Ziel};
+    \node[caseOptional,minimum width=50mm,below=of build] (release) {\texttt{release check}};
+
+    \node[caseOptional,minimum width=38mm,right=of run] (desktop)
+      {Desktopprofil\\\texttt{tauri run}};
+    \node[caseOptional,minimum width=38mm,right=of build] (targets)
+      {Web / Desktop /\\Container nach Profil};
+
+    \draw[caseFlow] (doctor) -- (install);
+    \draw[caseFlow] (install) -- (run);
+    \draw[caseFlow] (run) -- (develop);
+    \draw[caseFlow] (develop) -- (test);
+    \draw[caseFlow] (test) -- (build);
+    \draw[caseFlow] (build) -- (release);
+    \draw[caseSecondaryFlow] (test.west) to[out=180,in=180,looseness=1.6] (develop.west);
+    \draw[caseSecondaryFlow] (run) -- (desktop);
+    \draw[caseSecondaryFlow] (build) -- (targets);
+  \end{tikzpicture}}
+  \caption{Grundstruktur des Entwicklungsworkflows}
+  \label{fig:developer-workflow}
+  \smallskip
+  {\footnotesize Quelle: Eigene Darstellung auf Grundlage von
+  \textcite{kleiveist2026tooling} und \textcite{kleiveist2026release}.\par}
+\end{figure}

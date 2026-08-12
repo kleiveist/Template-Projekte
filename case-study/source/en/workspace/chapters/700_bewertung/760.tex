@@ -1,0 +1,34 @@
+\subsection{Overall Evaluation}
+\label{subsec:gesamtbewertung}
+
+Table~\ref{tab:template-evaluation} distinguishes criteria that are largely or
+partially addressed from those that have not been conclusively demonstrated.
+These levels are qualitative and measure neither quality nor productivity
+numerically.
+
+\input{workspace/tables/template-evaluation}
+
+The baseline is technically viable for the defined profiles. The core,
+presets, dependencies, and tooling support reuse, standardization, and
+flexibility. The acceptance results support generation, installation, tests,
+builds, PostgreSQL combinations, and Linux packaging
+\parencite{kleiveist2026acceptance}. More recent external runs add evidence
+for web, container, Linux, and macOS paths, but include failures in tooling,
+desktop-profile, and Windows jobs.
+The evidence is therefore robust, but varies in scope by commit and platform.
+
+Limitations include the complexity of central maintenance, manually
+synchronized contracts, and the absence of updates for generated projects.
+Windows packaging, signed releases, notarization, and production cloud
+operation have not been demonstrated. Deliberately omitted provider and domain
+logic, by contrast, is not a defect.
+Table~\ref{tab:template-evaluation} makes the distinction between an addressed
+requirement and the outstanding scope of verification explicit.
+
+Automation and shared workflows provide plausible, but unquantified, potential
+for productivity gains. The current state is suitable as a standardized
+foundation for the intended project families, but not as a finished production
+application or a universal template.
+Whether the central investment is economically worthwhile remains unresolved
+in the absence of usage and cost data.
+\beginnerinput{workspace/statement/700_bewertung/760}

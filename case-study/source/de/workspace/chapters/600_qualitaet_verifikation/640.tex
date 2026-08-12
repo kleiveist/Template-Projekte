@@ -1,0 +1,16 @@
+\subsection{Reproduzierbarkeit}
+\label{subsec:reproduzierbarkeit}
+
+Zwei Generierungen von \texttt{desktop-cloud + postgres} waren auf
+\texttt{1cdfb6e} bei identischen Eingaben bytegleich. \texttt{init --dry-run}
+schrieb nichts; nichtleere Ziele und inkompatible Capabilities wurden vor dem
+Schreiben abgewiesen. Der Nachweis gilt nur für diese Kombination und Umgebung
+\parencite{kleiveist2026acceptance,lamb2022reproducible-builds}.
+
+Frontend-, Cargo- und drei Python-Lockfiles fixieren Abhängigkeiten; npm und
+Cargo verwenden gesperrte Stände, die Container-Baseline zusätzlich Hashes.
+Die hashgebundene Installation wurde geprüft
+\parencite{kleiveist2026ci,kleiveist2026container}. Betriebssystem, Toolchain,
+Registries, Netzwerk und Plattform-SDKs begrenzen dennoch die Reproduktion;
+native Ergebnisse bleiben plattformspezifisch.
+\beginnerinput{workspace/statement/600_qualitaet_verifikation/640}

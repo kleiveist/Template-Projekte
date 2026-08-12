@@ -1,0 +1,28 @@
+\subsection{Developer Onboarding}
+\label{subsec:entwickler-onboarding}
+
+Onboarding follows the sequence of cloning the master, running
+\texttt{doctor}, running \texttt{init}, moving to the target project, running
+\texttt{doctor} again, and then running \texttt{install} and \texttt{run}.
+Product code, configuration, tests, and commits then belong in the derived
+repository.
+Template maintenance, by contrast, takes place in the master and validates the
+entire baseline there
+\parencite{kleiveist2026template,kleiveist2026profiles}.
+This separation prevents product development from inadvertently modifying the
+shared template.
+
+The basic prerequisites are Git, Python 3.11 or later, and Node.js 20 or later.
+Desktop profiles additionally require Rust Stable and platform-specific Tauri
+packages; Docker, PostgreSQL, and PyGitIndex are required only for the
+respective optional tasks. Optional tools therefore do not block every
+profile.
+
+The README and specialized documents organize getting started, tooling,
+profiles, configuration, CI, containers, and releases into separate areas.
+This standardizes the public setup paths, but does not yet demonstrate a
+measurable reduction in onboarding time
+\parencite{kleiveist2026tooling,kleiveist2026configuration,kleiveist2026ci,kleiveist2026release}.
+The documentation structure thus supplements technical onboarding, but does
+not replace an empirical measurement of its duration.
+\beginnerinput{workspace/statement/500_tooling_workflow/570}

@@ -1,0 +1,25 @@
+\subsection{Development Mode}
+\label{subsec:entwicklungsbetrieb}
+
+Figure~\ref{fig:developer-workflow} shows the profile-dependent path from
+diagnostics and installation to quality assurance and delivery.
+
+\input{workspace/figures/tooling/developer-workflow}
+
+\texttt{run} starts Vite and, only when the backend is active, Uvicorn as
+well. In the foreground, cancellation terminates the tracked process groups;
+in detached mode, PID and log data are stored. \texttt{stop} terminates
+tracked processes and, by default, listeners on the configured ports as well;
+\texttt{--tracked-only} restricts this behavior to the tool's own tracked state
+\parencite{kleiveist2026control,kleiveist2026tooling}.
+In the foreground, output from active services is combined. Detached mode, by
+contrast, retains process and log data under \path{tools/.runtime}; this state
+store provides the basis for \texttt{stop}.
+
+The separate desktop path delegates to \texttt{tauri dev} and removes known
+server-side secrets from the child-process environment. It supports foreground
+and background operation. The console merely guides users through the same CLI
+workflows.
+The native development path thus remains separate from general Vite/Uvicorn
+operation without duplicating the command logic.
+\beginnerinput{workspace/statement/500_tooling_workflow/540}

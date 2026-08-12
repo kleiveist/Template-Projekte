@@ -1,0 +1,15 @@
+\begin{beginnerstatement}[In simple terms: Programs during development]
+
+A development server makes an unreleased application accessible on the local
+computer while it is being developed. For this purpose,
+\texttt{run} starts Vite and, when the backend is active, Uvicorn as well.
+Vite serves the frontend, and Uvicorn serves the FastAPI backend. A running
+program is called a process; a port is its numbered access point for
+connections. In the foreground, output remains directly visible in the
+terminal, and cancellation terminates the tracked processes. In the
+background, they continue running in detached mode. A PID identifies a
+process, while a log records its messages. \texttt{stop} terminates the
+tracked processes and, depending on the option, other listeners on their
+configured ports as well.
+
+\end{beginnerstatement}

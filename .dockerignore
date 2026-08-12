@@ -4,6 +4,7 @@
 .dist
 .report
 .archive
+case-study
 **/.venv
 **/__pycache__
 **/.pytest_cache

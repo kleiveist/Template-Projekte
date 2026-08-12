@@ -1,0 +1,26 @@
+\subsection{Teststrategie}
+\label{subsec:teststrategie}
+
+Die Verifikation ordnet jede Beobachtung einem Artefakt, einer ausgeführten
+Prüfung und einem commitgebundenen Ergebnis zu. Testcode allein belegt keine
+Ausführung, eine Workflow-Datei keinen erfolgreichen CI-Lauf.
+Ausführungsergebnisse und Abnahmeprotokoll wiegen daher stärker als Code,
+Konfiguration und Dokumentation
+\parencite{runeson2009case-study,iso25010-2023}.
+
+Vier Ebenen decken die Baseline ab: Tooling-Tests prüfen CLI, Profile,
+Generator, Konfiguration, Release und Repository; Komponententests Schema,
+Backend, Frontend und Tauri/Rust. Integrationstests verbinden PostgreSQL~16,
+Konfiguration und Alembic. Buildprüfungen erzeugen Web-, Container- oder native
+Artefakte \parencite{kleiveist2026ci}.
+
+Der Umfang folgt dem aktiven Profil. \emph{PASS} bezeichnet eine erfolgreiche,
+\emph{FAIL} eine ausgeführte und gescheiterte Prüfung. \emph{Nicht verifiziert}
+bedeutet fehlende Evidenz, \emph{außerhalb des Scopes} eine bewusste Grenze;
+deaktivierte Gegenstände sind nicht anwendbar. Generierung und Strukturprüfung
+adressieren A-01 und A-03, die öffentliche Tooling-Schnittstelle A-04 und
+gültige sowie abgewiesene Capability-Kombinationen A-07. Abbildung~\ref{fig:verification-model}
+ordnet diese Nachweise ein.
+
+\input{workspace/figures/verification/verification-model}
+\beginnerinput{workspace/statement/600_qualitaet_verifikation/610}

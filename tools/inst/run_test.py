@@ -470,7 +470,11 @@ def _run_tools_suite() -> SuiteResult:
         return SuiteResult("tools", "FAIL", "tools/tests missing", time.monotonic() - started)
 
     python = str(_tooling_python())
-    command = [python, "-m", "pytest", "-q", str(tests_dir)]
+    test_paths = [tests_dir]
+    case_study_tests = ROOT / "case-study" / "tests"
+    if case_study_tests.exists():
+        test_paths.append(case_study_tests)
+    command = [python, "-m", "pytest", "-q", *(str(path) for path in test_paths)]
     completed = _run(command, cwd=ROOT)
     return _result_from_completed(
         name="tools",

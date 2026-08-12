@@ -1,0 +1,48 @@
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Evidenzbasierte Gegenüberstellung von Stärken und Grenzen}
+  \label{tab:strengths-limitations}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.14\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Bereich} & \textbf{Stärke und Evidenz} & \textbf{Grenze und Evidenz} & \textbf{Bedeutung} \\
+    \midrule
+    Architektur & Getrennte Frontend-, Backend-, Tauri- und Persistenzgrenzen;
+      gemeinsames Frontend. & Shared Schemas werden nicht automatisch von
+      Frontend und Backend konsumiert. & Wiederverwendung bei klarer
+      Zuständigkeit; Vertragsänderungen bleiben manuell. \\
+    Variabilität & Fünf deklarative Profile; Abhängigkeiten und drei zulässige
+      PostgreSQL-Kombinationen sind abgenommen. & Nur eine auswählbare
+      Capability; direkte CLI trennt \texttt{selectable} nicht strikt. &
+      Kontrollierte Auswahl im aktuellen Katalog, begrenzte Aussage für
+      Erweiterungen. \\
+    Tooling & Gemeinsamer profilabhängiger Einstieg für Diagnose,
+      Installation, Start, Test und Build. & Mehrere Fachwerkzeuge und native
+      Voraussetzungen bleiben erforderlich. & Weniger unterschiedliche
+      Bedienpfade, aber kein technologieunabhängiger Workflow. \\
+    Qualität & Tests, Profilmatrix, Buildpfade und Release-Gate sind im
+      Abnahmeprotokoll erfasst. & Aktuelle Tooling-, Desktopprofil- und
+      Windows-Jobs schlagen fehl; Branch Protection ist nicht nachgewiesen. &
+      Gute lokale Prüfbasis, aber kein durchgehend grüner Remote-Nachweis. \\
+    Reproduzierbarkeit & Zwei gleich konfigurierte Projekte waren im
+      dokumentierten Versuch byte-identisch. & Nachweis nur für eine
+      Kombination und eine Untersuchungsumgebung. & Konkrete Evidenz ohne
+      Anspruch auf vollständige plattformübergreifende Reproduzierbarkeit. \\
+    Betrieb und Plattformen & Web- und Image-Builds, PostgreSQL-Integration
+      sowie unsignierte Linux-/macOS-Pakete sind dokumentiert. & Compose-Start,
+      produktiver Cloudbetrieb, Windows-Paket, Signing und Notarisierung
+      bleiben offen. & Template-Reife ist nicht mit Produktionsreife
+      gleichzusetzen. \\
+    Wartung & Core, Profile, Tooling, Tests und Dokumentation liegen in einer
+      Baseline. & Änderungen können mehrere Profile betreffen; Produktprojekte
+      erhalten keine automatischen Updates. & Zentrale Pflege wird gebündelt,
+      erfordert aber eine breite Regression und Transferprozesse. \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Quelle: Eigene Bewertung auf Grundlage der
+  Kapitel~\ref{sec:architektur}--\ref{sec:qualitaetssicherung-verifikation}
+  sowie des Abnahmeprotokolls und der aktuellen CI-Läufe
+  \parencite{kleiveist2026acceptance,kleiveist2026ci-core-run,kleiveist2026ci-profiles-run,kleiveist2026ci-postgres-run,kleiveist2026ci-desktop-run}.\par}
+\end{table}

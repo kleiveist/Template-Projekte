@@ -1,0 +1,177 @@
+% !TeX program = pdflatex
+\documentclass[11pt,a4paper]{article}
+
+% Optionale Erklärungsebene für technische Neueinsteiger.
+% Die stabilen Einstiegspunkte beginner.tex und scientific.tex wählen die
+% Ausgabe, ohne diese gemeinsame Hauptdatei für einen Build zu verändern.
+\newif\ifbeginnerstatements
+\ifdefined\templateprojectsscientificedition
+  \beginnerstatementsfalse
+\else
+  \beginnerstatementstrue
+\fi
+
+% Zentrale Einstellungen und Pakete
+\input{preamble}
+
+\ifbeginnerstatements
+  \newcommand{\beginnerinput}[1]{%
+    \par
+    \InputIfFileExists{#1.tex}{}{
+      \PackageError{beginnerstatements}%
+        {Beginner-Erklaerung `#1.tex' nicht gefunden}%
+        {Pruefen Sie Pfad und Dateinamen der Beginner-Erklaerung.}%
+    }%
+  }
+\else
+  \newcommand{\beginnerinput}[1]{}
+\fi
+
+% ------------------------------------------------------------
+% Metadaten
+% Projektbezogene Fallstudie in Eigenarbeit ohne institutionellen Träger.
+% ------------------------------------------------------------
+\newcommand{\arbeitstitel}{Konzeption und Bewertung des
+  Technologie-Templates \enquote{Template-Projekte}}
+\newcommand{\arbeituntertitel}{Technische Untersuchung einer
+  wiederverwendbaren Basis für Web-, Cloud- und Desktop-Projekte}
+\newcommand{\arbeitart}{Projektbezogene Fallstudie}
+\newcommand{\projektname}{Template-Projekte}
+\newcommand{\autorname}{Marcel Tenhaft}
+\newcommand{\dokumentstand}{9. August 2026}
+
+% Auf \literatureavailabletrue setzen, sobald echte Quellen zitiert werden.
+\newif\ifliteratureavailable
+\literatureavailabletrue
+
+\begin{document}
+
+% ------------------------------------------------------------
+% Titelblatt
+% ------------------------------------------------------------
+\hypersetup{pageanchor=false}
+\pagenumbering{gobble}
+\thispagestyle{empty}
+
+\begin{titlepage}
+  \centering
+
+  {\Large \arbeitart \par}
+  \vspace{1.8cm}
+
+  {\bfseries\LARGE \arbeitstitel \par}
+  \vspace{0.6cm}
+
+  {\large \arbeituntertitel \par}
+  \vspace{2.5cm}
+
+  \begin{tabularx}{0.82\textwidth}{@{}lX@{}}
+    \textbf{Projekt:}        & \projektname \\
+    \textbf{Verfasser:}      & \autorname \\
+    \textbf{Dokumentstand:}  & \dokumentstand \\
+  \end{tabularx}
+
+  \vfill
+
+  {\small
+  Eigenständig erstellte technische Dokumentation und Bewertung\\
+  des Projekts \enquote{\projektname}
+  \par}
+\end{titlepage}
+
+\hypersetup{pageanchor=true}
+\pagenumbering{Roman}
+\setcounter{page}{1}
+
+% ------------------------------------------------------------
+% Verzeichnisse
+% ------------------------------------------------------------
+\clearpage
+\tableofcontents
+
+\clearpage
+\renewcommand{\listfigurename}{Abbildungsverzeichnis}
+\phantomsection
+\addcontentsline{toc}{section}{Abbildungsverzeichnis}
+\listoffigures
+
+\clearpage
+\renewcommand{\listtablename}{Tabellenverzeichnis}
+\phantomsection
+\addcontentsline{toc}{section}{Tabellenverzeichnis}
+\listoftables
+
+% ------------------------------------------------------------
+% Abkürzungsverzeichnis
+% ------------------------------------------------------------
+\clearpage
+\phantomsection
+\section*{Abkürzungsverzeichnis}
+\addcontentsline{toc}{section}{Abkürzungsverzeichnis}
+
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\textbf{Abk.} & \textbf{Bedeutung} \\
+\hline
+
+API  & Application Programming Interface \\
+AWS  & Amazon Web Services \\
+CI   & Continuous Integration \\
+CLI  & Command Line Interface \\
+CORS & Cross-Origin Resource Sharing \\
+CSP  & Content Security Policy \\
+DB   & Database (Datenbank) \\
+DEB  & Debian-Paketformat \\
+E2E  & End-to-End \\
+GCP  & Google Cloud Platform \\
+HPC  & High Performance Computing \\
+HTTP & Hypertext Transfer Protocol \\
+JSON & JavaScript Object Notation \\
+PG   & PostgreSQL \\
+PID  & Process Identifier \\
+RBAC & Role-Based Access Control \\
+SDK  & Software Development Kit \\
+SQL  & Structured Query Language \\
+TLS  & Transport Layer Security \\
+UI   & User Interface \\
+URL  & Uniform Resource Locator \\
+ZIP  & komprimiertes Archivformat \\
+
+\end{tabularx}
+
+% ------------------------------------------------------------
+% Hauptkapitel
+% Nur diese Datei steuert Reihenfolge und Auswahl der Hauptkapitel.
+% ------------------------------------------------------------
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\input{workspace/chapters/100_einleitung/100}
+\input{workspace/chapters/200_anforderungen/200}
+\input{workspace/chapters/300_architektur/300}
+\input{workspace/chapters/400_projektprofile/400}
+\input{workspace/chapters/500_tooling_workflow/500}
+\input{workspace/chapters/600_qualitaet_verifikation/600}
+\input{workspace/chapters/700_bewertung/700}
+\input{workspace/chapters/800_einsatz_transfer/800}
+\input{workspace/chapters/900_schluss/900}
+
+% ------------------------------------------------------------
+% Literaturverzeichnis
+% Die Bibliographie bleibt bis zur Aufnahme echter Quellen leer.
+% ------------------------------------------------------------
+\clearpage
+\ifliteratureavailable
+  \printbibliography[heading=bibintoc,title={Literaturverzeichnis}]
+\else
+  \phantomsection
+  \section*{Literaturverzeichnis}
+  \addcontentsline{toc}{section}{Literaturverzeichnis}
+\fi
+
+% ------------------------------------------------------------
+% Anhang
+% Bei Bedarf später mit \appendix und app:-Labels ergänzen.
+% ------------------------------------------------------------
+
+\end{document}

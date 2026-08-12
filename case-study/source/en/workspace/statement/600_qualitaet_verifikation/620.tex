@@ -1,0 +1,15 @@
+\begin{beginnerstatement}[In simple terms: Continuous Integration]
+
+\emph{Continuous Integration} (CI) means that checks are run automatically on
+a separate system after source-code changes. In the project examined, GitHub
+Actions provides this service. A \emph{workflow} describes such an automated
+process. Within it, a \emph{job} is an individual group of steps that runs on
+a \emph{runner}, meaning the computer provided for that purpose. A
+\emph{pipeline} is the complete chain of these automated checks. A commit
+denotes a fixed code state; \emph{HEAD} points to the commit currently relevant
+to the working copy or branch under consideration. A green CI run has passed
+all required jobs, while a red run contains at least one failure. The runs for
+commit \texttt{a4487ac} evaluated in the main text are not entirely green, even
+though certain local checks passed.
+
+\end{beginnerstatement}

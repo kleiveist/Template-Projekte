@@ -1,0 +1,19 @@
+\begin{beginnerstatement}[In simple terms: Tauri and the desktop layer]
+
+Tauri uses the existing web frontend and displays it as a desktop application
+in a webview, an embedded area for displaying web content. An operating system
+such as Windows, macOS, or Linux controls the computer; here, Rust forms the
+native application layer, which can interact with the operating system directly
+and provide native functions. A native application is installed and runs on the
+computer rather than exclusively in a conventional browser. Together with
+permissions, a capability describes which native functions are allowed; the
+Content Security Policy (CSP) additionally restricts the content and connections
+that may be used. A sidecar is a separate helper program that can be distributed
+with the application, but the baseline does not provide one for FastAPI. A
+remote API, by contrast, runs on a remote server and is accessed over the
+network. Packaging bundles the application into installable packages, while
+signing cryptographically confirms their origin and integrity. Whether to use a
+remote API, sidecar, or local commands, as well as packaging and signing,
+remains a product decision here.
+
+\end{beginnerstatement}

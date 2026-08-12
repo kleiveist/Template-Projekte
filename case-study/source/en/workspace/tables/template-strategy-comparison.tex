@@ -1,0 +1,34 @@
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \setlength{\tabcolsep}{3pt}
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Qualitative comparison of template strategies}
+  \label{tab:template-strategy-comparison}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\centering\arraybackslash}p{0.12\textwidth}>{\centering\arraybackslash}p{0.11\textwidth}>{\centering\arraybackslash}p{0.12\textwidth}>{\centering\arraybackslash}p{0.13\textwidth}>{\centering\arraybackslash}p{0.12\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Strategy} & \textbf{ongoing reuse} &
+      \textbf{Consistency} & \textbf{Variability} &
+      \textbf{Entry complexity} & \textbf{Maintenance consolidation} &
+      \textbf{Updates to existing projects} \\
+    \midrule
+    Separate template repositories & medium & medium & medium & low &
+      low & manual for each template or project \\
+    Copy-and-paste starter & low after copying & low & high & low &
+      low & no automatic adoption \\
+    Framework-specific starter & high within a narrow scope & high within a narrow scope
+      & low to medium & low & high within the starter & usually manual after
+      generation \\
+    Monolithic universal template & medium & high & low & high & high
+      & depends on the selected derivation method \\
+    Single repository with profiles & high within the defined scope & high & high,
+      controlled & medium & high & centralized in the master, manual in derived
+      projects \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Source: Author's own qualitative comparison based on
+  \textcite{krueger1992software-reuse},
+  \textcite{clements2001software-product-lines},
+  \textcite{github2026repository-template}, and \textcite{vite2026guide}.\par}
+\end{table}

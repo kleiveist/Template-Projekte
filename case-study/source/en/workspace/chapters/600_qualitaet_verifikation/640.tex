@@ -1,0 +1,16 @@
+\subsection{Reproducibility}
+\label{subsec:reproduzierbarkeit}
+
+Two generations of \texttt{desktop-cloud + postgres} on \texttt{1cdfb6e} were
+byte-for-byte identical for identical inputs. \texttt{init --dry-run} wrote
+nothing; nonempty targets and incompatible capabilities were rejected before
+writing. This evidence applies only to this combination and environment
+\parencite{kleiveist2026acceptance,lamb2022reproducible-builds}.
+
+Frontend, Cargo, and three Python lockfiles pin dependencies; npm and Cargo use
+locked versions, and the container baseline additionally uses hashes.
+The hash-verified installation process was tested
+\parencite{kleiveist2026ci,kleiveist2026container}. The operating system,
+toolchain, registries, network, and platform SDKs nevertheless limit
+reproduction; native results remain platform-specific.
+\beginnerinput{workspace/statement/600_qualitaet_verifikation/640}

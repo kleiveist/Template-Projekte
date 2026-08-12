@@ -1,0 +1,26 @@
+\subsection{Continuous Integration}
+\label{subsec:continuous-integration}
+
+Core CI, Profile Matrix, PostgreSQL Integration und Desktop CI prüfen getrennt
+Baseline, fünf Profile, PostgreSQL-Kombinationen und native Pakete. Release
+Validation läuft nur manuell oder für Versionstags. Alle Workflows besitzen
+Leserechte und verwenden \path{tools/control.py}
+\parencite{kleiveist2026ci}.
+
+Die am 9.~August~2026 abgefragten Läufe vom 7.~August gehören zu HEAD
+\texttt{a4487ac} und sind nicht vollständig grün. Core CI war für Backend,
+Schema, Frontend, Web-Build, Compose und beide Images erfolgreich; Tooling,
+Profile und Konfiguration scheiterten. In der Profilmatrix bestanden beide
+Webprofile, die drei Desktopprofile scheiterten beim Projekttest. Die
+PostgreSQL-Integration war für Master und Web-cloud erfolgreich, nicht für die
+beiden Desktopkombinationen. Desktop CI paketierte unter Linux und macOS;
+Windows scheiterte bei der
+Frontend-Installation
+\parencite{kleiveist2026ci-core-run,kleiveist2026ci-profiles-run,kleiveist2026ci-postgres-run,kleiveist2026ci-desktop-run}.
+
+Lokal bestanden am 9.~August~2026 auf demselben HEAD unter Python~3.13.14 alle
+194 Tooling-Tests sowie Schema-, API- und SQLAlchemy-Tests. Das ersetzt weder
+die roten externen Jobs noch die mangels Node.js, Rust und Docker nicht
+ausgeführten Pfade. Release Validation wurde für diesen Commit nicht
+ausgeführt.
+\beginnerinput{workspace/statement/600_qualitaet_verifikation/620}

@@ -1,0 +1,37 @@
+\begin{figure}[H]
+  \centering
+  \resizebox{0.96\textwidth}{!}{%
+  \begin{tikzpicture}[node distance=8mm and 28mm]
+    \node[casePrimary,minimum width=38mm] (vitesource) {Frontend-Quellen};
+    \node[casePrimary,minimum width=38mm,right=of vitesource] (apisource) {FastAPI-Quellen};
+
+    \node[caseBox,minimum width=46mm,below=of vitesource] (frontend)
+      {\texttt{frontend/dist}\\Static Host oder Frontend-Image};
+    \node[caseBox,minimum width=46mm,below=of apisource] (backend)
+      {Backend-Image\\Uvicorn / FastAPI};
+
+    \node[caseBox,minimum width=34mm,below left=of backend] (health)
+      {\texttt{/api/health}\\prozessbezogen};
+    \node[caseBox,minimum width=34mm,below=of backend] (readiness)
+      {\texttt{/api/ready}\\abhängigkeitsbezogen};
+    \node[caseOptional,minimum width=38mm,below=of readiness] (postgres)
+      {PostgreSQL\\explizites Compose-Profil};
+
+    \draw[caseFlow] (vitesource) -- node[left,font=\sffamily\tiny] {Vite-Build} (frontend);
+    \draw[caseFlow] (apisource) -- node[right,font=\sffamily\tiny] {Container-Build} (backend);
+    \draw[caseFlow] (frontend) -- node[above,font=\sffamily\tiny] {HTTP /api} (backend);
+    \draw[caseSecondaryFlow] (backend) -- (health);
+    \draw[caseSecondaryFlow] (backend) -- (readiness);
+    \draw[caseSecondaryFlow] (readiness) -- node[right,font=\sffamily\tiny] {SELECT 1, falls aktiv} (postgres);
+
+    \begin{scope}[on background layer]
+      \node[caseGroup,fit=(frontend)(backend)(health)(readiness)(postgres),
+        label={[font=\sffamily\bfseries\scriptsize,text=caseBlue]below:providerneutrale Einheiten; Docker/Compose als lokale Betriebsgrenze}] {};
+    \end{scope}
+  \end{tikzpicture}}
+  \caption{Providerneutrale Deployment-Architektur}
+  \label{fig:deployment-architecture}
+  \smallskip
+  {\footnotesize Quelle: Eigene Darstellung auf Grundlage von
+  \textcite{kleiveist2026deployment}.\par}
+\end{figure}

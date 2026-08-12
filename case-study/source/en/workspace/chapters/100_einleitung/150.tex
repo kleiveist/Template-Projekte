@@ -1,0 +1,30 @@
+\subsection{Methodology}
+\label{subsec:methodisches-vorgehen}
+
+The investigation follows a technical case-study approach
+\parencite{runeson2009case-study}. An inventory records the structure,
+components, and boundaries of responsibility within the master repository. The
+subsequent architecture analysis examines the frontend, backend, desktop
+integration, interfaces, persistence, and deployment. It distinguishes
+substantiated properties from assumptions and unresolved verification points
+\parencite{kleiveist2026architecture}.
+
+The profile analysis examines the shared core, variants, and optional
+capabilities. In addition, the Python tooling is examined with respect to
+generation, system checks, installation, development, testing, builds, and release
+\parencite{kleiveist2026profiles,kleiveist2026tooling}.
+Internal project descriptions of the architecture, profiles, and tools serve as
+primary sources for the documented state.
+
+Existing tests, build results, and documented acceptance results are mapped to
+the requirements and architecture decisions. External or product-specific
+checks remain separate. This evidence underpins the assessment and the transfer
+of findings to potential customer projects
+\parencite{kleiveist2026acceptance}. Figure~\ref{fig:case-study-method} shows the
+sequence of the investigation.
+Assessment and transfer therefore take place only after the inventory, analysis,
+and verification; unresolved verification points are not treated as confirmed
+properties.
+
+\input{workspace/figures/verification/case-study-method}
+\beginnerinput{workspace/statement/100_einleitung/150}

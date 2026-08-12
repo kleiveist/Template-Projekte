@@ -1,0 +1,39 @@
+\subsection{Geeignete Projekttypen}
+\label{subsec:geeignete-projekttypen}
+
+Die Eignung hängt von Zugriffskanälen, Backend und Persistenz, Deployment,
+nativer Integration sowie Infrastruktur-, Sicherheits- und Betriebsbedarf ab.
+Belegt sind generierbare Kombinationen und geprüfte Profilpfade. Die Stufen
+\emph{gut geeignet}, \emph{bedingt geeignet} und \emph{nicht primär
+vorgesehen} bewerten dagegen qualitativ den Abstand zur Baseline, nicht die
+Erfolgswahrscheinlichkeit eines Projekts
+\parencite{kleiveist2026profiles,kleiveist2026acceptance}.
+Je mehr zentrale Anforderungen außerhalb der vorhandenen Komponenten und
+Nachweise liegen, desto größer sind Anpassungsbedarf und verbleibendes Risiko.
+
+\texttt{web-only} eignet sich für browserbasierte Frontends ohne
+Template-Backend. \texttt{web-cloud} ergänzt zentrale API und providerneutrale
+Deploymentstruktur, etwa für interne Business- und Datenanwendungen.
+PostgreSQL bleibt optional; Authentifizierung, Berechtigungen, Fachmodelle und
+produktive Infrastruktur sind produktspezifisch.
+Damit deckt das Profil die technische Ausgangsstruktur, nicht die konkrete
+Geschäftsanwendung ab.
+
+\texttt{desktop-local} passt zu lokalen Werkzeugen ohne zentrales Backend,
+sofern native Funktionen überschaubar ergänzt werden können; eine lokale
+Datenbank fehlt. \texttt{desktop-cloud} ergänzt zentrale Dienste,
+\texttt{full-platform} zusätzlich den Browserkanal. Der primäre Einsatzbereich
+sind damit Web-, Cloud- und Desktop-orientierte Business-/Full-Stack-Anwendungen.
+Für alle Desktopvarianten müssen weitergehende native Funktionen gezielt
+ergänzt und geprüft werden.
+
+\input{workspace/figures/business/project-suitability-map}
+
+Abbildung~\ref{fig:project-suitability-map} und
+Tabelle~\ref{tab:project-suitability} fassen die Zuordnung zusammen.
+\emph{Geeignet} bedeutet nur, dass die Baseline wesentliche Plattformteile
+abdeckt. Fachlogik, Oberfläche, Integrationen, Produktsicherheit und Betrieb
+bleiben ebenso offen wie die wirtschaftliche Bewertung.
+
+\input{workspace/tables/project-suitability}
+\beginnerinput{workspace/statement/800_einsatz_transfer/810}

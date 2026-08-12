@@ -1,0 +1,17 @@
+\begin{beginnerstatement}[Kurz erklärt: Konfiguration]
+
+Eine Konfiguration ist eine Sammlung von Einstellungen, die festlegt, wie und
+wo ein Programm ausgeführt wird. Eine Umgebungsvariable ist ein Wert, den die
+Laufzeitumgebung dem Programm bereitstellt; eine lokale \texttt{.env}-Datei
+kann solche Werte für die Entwicklung sammeln. \path{environment.toml}
+beschreibt die erlaubten Variablen und mögliche Defaults, also verwendete
+Standardwerte. \path{project-profile.toml} legt dagegen fest, welche
+technischen Bausteine zum Projekt gehören. Ein Override ersetzt einen
+niedriger priorisierten Wert bewusst, und der Resolver ermittelt daraus nach
+einer festen Reihenfolge den tatsächlich geltenden Wert. Ein Secret ist eine
+geheime Angabe wie ein Passwort und darf nicht an den sichtbaren Client
+gelangen. \texttt{DATABASE\_URL} enthält die serverseitige
+Datenbankverbindung und wird maskiert. \texttt{VITE\_API\_BASE\_URL} ist
+dagegen die öffentliche Backend-Adresse, die das Frontend verwenden darf.
+
+\end{beginnerstatement}

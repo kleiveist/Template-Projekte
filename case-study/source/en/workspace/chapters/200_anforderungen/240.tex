@@ -1,0 +1,16 @@
+\subsection{Quality and Maintainability Requirements}
+\label{subsec:qualitaets-wartbarkeitsanforderungen}
+
+The requirements are guided by verifiable characteristics of ISO/IEC~25010
+\parencite{iso25010-2023}. Components and profiles should have clear
+responsibilities, be testable in isolation, and remain maintainable through
+documented decisions. Extensions and technology updates should not require a
+copy of the entire baseline, although they still entail risks.
+
+Identical inputs and configurations should produce traceable generation and
+build results. This strengthens the verifiable relationship between the source-code
+state and the artifact \parencite{lamb2022reproducible-builds}. It should be
+possible to generate target artifacts in a controlled manner, and configuration
+priorities should be comprehensible; server-side secrets remain separate from
+client configuration.
+\beginnerinput{workspace/statement/200_anforderungen/240}

@@ -1,0 +1,31 @@
+\subsection{Maintenance Effort}
+\label{subsec:wartungsaufwand}
+
+The single-repository strategy consolidates the core, features, profiles,
+generator, tests, and documentation. This avoids parallel baseline changes and
+benefits future projects. Repositories that have already been generated must,
+however, incorporate fixes independently.
+The source of truth thus reduces the number of starting points that require
+maintenance, but not the effort needed to migrate existing products.
+
+Central maintenance encompasses several languages, dependency managers,
+toolchains, platforms, and release cycles. This diversity follows from the
+web, backend, desktop, and deployment objectives, but increases the expertise
+required, the breadth of testing, and dependency on the environment.
+Native builds and external services are more maintenance-intensive than a
+purely web-based, technologically homogeneous starter.
+
+Five profiles, six features, and one selectable capability currently limit the
+combination space; acceptance covers five base paths and three permitted
+PostgreSQL extensions \parencite{kleiveist2026acceptance}. Additional
+capabilities expand both the dependencies and the test matrix. A combinatorial
+explosion has not been demonstrated, but increasing maintenance effort is
+plausible.
+With such extensions, the catalog, resolver, configuration contract, test
+matrix, and documentation must remain mutually consistent.
+
+Central maintenance is therefore more demanding than maintenance of a small,
+homogeneous starter, but can consolidate repeated maintenance of the baseline.
+Its economic viability depends on frequency of use, similarity between
+projects, and maintenance time; cost data are unavailable.
+\beginnerinput{workspace/statement/700_bewertung/740}

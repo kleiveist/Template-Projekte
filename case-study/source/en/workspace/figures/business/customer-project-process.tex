@@ -1,0 +1,42 @@
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    node distance=3.5mm,
+    processStep/.style={caseBox,minimum width=69mm,minimum height=7mm},
+    decision/.style={caseBox,diamond,aspect=3.2,inner sep=1.5pt,
+      minimum width=49mm,minimum height=8mm},
+    answer/.style={font=\sffamily\scriptsize,text=black!65,fill=white,inner sep=1pt}
+  ]
+    \node[casePrimary,minimum width=69mm,minimum height=7mm] (request)
+      {Customer requirement};
+    \node[processStep,below=of request] (analysis) {Analyze requirements independently of technology};
+    \node[decision,below=5mm of analysis] (suitability) {Template suitable?};
+    \node[processStep,below=5mm of suitability] (profile) {Select the smallest suitable profile};
+    \node[caseOptional,minimum width=69mm,minimum height=7mm,below=of profile]
+      (capabilities) {Determine optional capabilities};
+    \node[processStep,below=of capabilities] (generate) {Generate an independent project};
+    \node[processStep,below=of generate] (baseline) {Check the technical baseline};
+    \node[processStep,below=of baseline] (domain) {Develop product specifics and domain logic};
+    \node[processStep,below=of domain] (acceptance) {Product testing and customer acceptance};
+    \node[casePrimary,minimum width=69mm,minimum height=7mm,below=of acceptance]
+      (delivery) {Release and delivery};
+
+    \node[caseOptional,minimum width=50mm,text width=44mm,right=22mm of suitability]
+      (alternative) {alternative architecture or custom project setup};
+
+    \draw[caseFlow] (request) -- (analysis);
+    \draw[caseFlow] (analysis) -- (suitability);
+    \draw[caseFlow] (suitability) -- node[answer,right] {yes} (profile);
+    \draw[caseFlow] (suitability.east) -- node[answer,above] {no} (alternative.west);
+    \draw[caseFlow] (profile) -- (capabilities);
+    \draw[caseFlow] (capabilities) -- (generate);
+    \draw[caseFlow] (generate) -- (baseline);
+    \draw[caseFlow] (baseline) -- (domain);
+    \draw[caseFlow] (domain) -- (acceptance);
+    \draw[caseFlow] (acceptance) -- (delivery);
+  \end{tikzpicture}
+  \caption{Vertical transfer process from customer requirement to product project}
+  \label{fig:customer-project-process}
+  \smallskip
+  {\footnotesize Source: Author's own illustration.\par}
+\end{figure}

@@ -1,0 +1,34 @@
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \setlength{\tabcolsep}{3pt}
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Qualitativer Vergleich von Template-Strategien}
+  \label{tab:template-strategy-comparison}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\centering\arraybackslash}p{0.12\textwidth}>{\centering\arraybackslash}p{0.11\textwidth}>{\centering\arraybackslash}p{0.12\textwidth}>{\centering\arraybackslash}p{0.13\textwidth}>{\centering\arraybackslash}p{0.12\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Strategie} & \textbf{fortlaufende Wiederverwendung} &
+      \textbf{Konsistenz} & \textbf{Variabilität} &
+      \textbf{Einstiegs\-komplexität} & \textbf{Pflege\-bündelung} &
+      \textbf{Updates bestehender Projekte} \\
+    \midrule
+    Separate Template-Repositories & mittel & mittel & mittel & niedrig &
+      niedrig & je Vorlage beziehungsweise Projekt manuell \\
+    Copy-Paste-Starter & niedrig nach Kopie & niedrig & hoch & niedrig &
+      niedrig & keine automatische Übernahme \\
+    Framework-spezifischer Starter & hoch im engen Scope & hoch im engen Scope
+      & niedrig bis mittel & niedrig & hoch im Starter & meist manuell nach
+      Generierung \\
+    Monolithisches Universal-Template & mittel & hoch & niedrig & hoch & hoch
+      & abhängig vom gewählten Ableitungsweg \\
+    Single-Repository mit Profilen & hoch im definierten Scope & hoch & hoch,
+      kontrolliert & mittel & hoch & im Master zentral, in abgeleiteten
+      Projekten manuell \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Quelle: Eigene qualitative Gegenüberstellung auf Grundlage
+  von \textcite{krueger1992software-reuse},
+  \textcite{clements2001software-product-lines},
+  \textcite{github2026repository-template} und \textcite{vite2026guide}.\par}
+\end{table}

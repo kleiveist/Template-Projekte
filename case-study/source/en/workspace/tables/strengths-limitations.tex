@@ -1,0 +1,49 @@
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Evidence-based comparison of strengths and limitations}
+  \label{tab:strengths-limitations}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.14\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Area} & \textbf{Strength and evidence} & \textbf{Limitation and evidence} & \textbf{Significance} \\
+    \midrule
+    Architecture & Separate frontend, backend, Tauri, and persistence boundaries;
+      a shared frontend. & Shared schemas are not consumed automatically by the
+      frontend and backend. & Reuse with clear responsibilities; contract
+      changes remain manual. \\
+    Variability & Five declarative profiles; dependencies and three permitted
+      PostgreSQL combinations have passed acceptance. & Only one selectable
+      capability; the direct CLI does not strictly enforce the distinction between
+      \texttt{optional} and \texttt{selectable}. &
+      Controlled selection in the current catalog, with limited implications for
+      extensions. \\
+    Tooling & Shared profile-dependent entry point for diagnostics,
+      installation, startup, testing, and building. & Several specialist tools and native
+      prerequisites remain necessary. & Fewer distinct interaction paths, but no
+      technology-independent workflow. \\
+    Quality & Tests, the profile matrix, build paths, and the release gate are recorded in the
+      acceptance report. & Current tooling, desktop-profile, and
+      Windows jobs fail; Branch Protection has not been demonstrated. &
+      A sound local verification basis, but no consistently successful remote evidence. \\
+    Reproducibility & Two identically configured projects were byte-for-byte identical in the
+      documented experiment. & Evidence covers only one
+      combination and one examination environment. & Specific evidence without
+      claiming complete cross-platform reproducibility. \\
+    Operation and platforms & Web and image builds, PostgreSQL integration,
+      and unsigned Linux/macOS packages are documented. & Compose startup,
+      production cloud operation, a Windows package, signing, and notarization
+      remain outstanding. & Template maturity must not be equated with production
+      readiness. \\
+    Maintenance & Core, profiles, tooling, tests, and documentation reside in one
+      baseline. & Changes may affect multiple profiles; product projects
+      receive no automatic updates. & Central maintenance is consolidated,
+      but requires broad regression testing and transfer processes. \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Source: Author's own evaluation based on
+  Chapters~\ref{sec:architektur}--\ref{sec:qualitaetssicherung-verifikation},
+  the acceptance report, and the current CI runs
+  \parencite{kleiveist2026acceptance,kleiveist2026ci-core-run,kleiveist2026ci-profiles-run,kleiveist2026ci-postgres-run,kleiveist2026ci-desktop-run}.\par}
+\end{table}

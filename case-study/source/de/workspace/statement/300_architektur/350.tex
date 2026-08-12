@@ -1,0 +1,15 @@
+\begin{beginnerstatement}[Kurz erklärt: Gemeinsame Datenregeln]
+
+Eine Schnittstelle ist eine festgelegte Grenze, an der zwei Programmteile
+Informationen austauschen. Ein Contract beschreibt dabei, welches Datenformat
+beide Seiten erwarten. JSON ist ein textbasiertes Format für strukturierte
+Daten, und ein JSON-Schema hält maschinenlesbare Regeln für deren Aufbau fest.
+Validierung prüft, ob konkrete Daten diese Regeln einhalten. Frontend und
+Backend müssen ihre Formate synchron halten, weil eine einseitige Änderung die
+Kommunikation sonst brechen kann. Codegenerierung kann aus einem gemeinsamen
+Contract passenden Code für beide Seiten erzeugen und so diese Abstimmung
+erleichtern. Im untersuchten Stand existieren Schema und Testbeispiele, sie
+werden zur Laufzeit aber nicht automatisch eingebunden; auch eine automatische
+Synchronisierung oder Codegenerierung ist noch nicht umgesetzt.
+
+\end{beginnerstatement}

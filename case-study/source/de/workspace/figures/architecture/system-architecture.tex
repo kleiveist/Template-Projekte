@@ -1,0 +1,45 @@
+\begin{figure}[H]
+  \centering
+  \resizebox{0.96\textwidth}{!}{%
+  \begin{tikzpicture}[node distance=7mm and 10mm]
+    \node[casePrimary,minimum width=48mm] (master)
+      {Master-Repository\\vollständige Baseline};
+    \node[caseBox,minimum width=40mm,below left=of master] (catalog)
+      {\textbf{profiles/}\\Features und Presets};
+    \node[caseBox,minimum width=40mm,below right=of master] (selection)
+      {Profilwahl\\optionale Capabilities};
+    \node[casePrimary,minimum width=48mm,below=11mm of master] (generator)
+      {Generator\\Auswahl und Abhängigkeiten auflösen};
+    \node[caseBox,minimum width=48mm,below=of generator] (project)
+      {abgeleitetes Projekt\\\texttt{project-profile.toml}};
+
+    \node[caseBox,minimum width=30mm,below left=10mm and 52mm of project] (frontend)
+      {Frontend};
+    \node[caseOptional,minimum width=30mm,right=of frontend] (backend)
+      {Backend};
+    \node[caseOptional,minimum width=30mm,right=of backend] (tauri)
+      {Tauri};
+    \node[caseOptional,minimum width=30mm,right=of tauri] (database)
+      {Persistenz};
+
+    \draw[caseFlow] (master) -- (catalog);
+    \draw[caseFlow] (master) -- (selection);
+    \draw[caseFlow] (catalog) -- (generator);
+    \draw[caseFlow] (selection) -- (generator);
+    \draw[caseFlow] (generator) -- (project);
+    \draw[caseFlow] (project) -- (frontend);
+    \draw[caseSecondaryFlow] (project) -- (backend);
+    \draw[caseSecondaryFlow] (project) -- (tauri);
+    \draw[caseSecondaryFlow] (project) -- (database);
+
+    \begin{scope}[on background layer]
+      \node[caseGroup,fit=(frontend)(database),
+        label={[font=\sffamily\scriptsize,text=black!60]below:nur aufgelöste Features werden übernommen}] {};
+    \end{scope}
+  \end{tikzpicture}}
+  \caption{Gesamtarchitektur des Technologie-Templates}
+  \label{fig:system-architecture}
+  \smallskip
+  {\footnotesize Quelle: Eigene Darstellung auf Grundlage von
+  \textcite{kleiveist2026architecture} und \textcite{kleiveist2026profiles}.\par}
+\end{figure}

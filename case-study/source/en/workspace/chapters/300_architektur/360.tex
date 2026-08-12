@@ -1,0 +1,19 @@
+\subsection{Configuration Model}
+\label{subsec:konfigurationsmodell}
+
+Project structure and runtime configuration are separate. The project manifest
+determines the features and is stored in \path{project-profile.toml}. The
+variable contract is defined in \path{config/environment.toml}. For active
+features, the priority order is CLI override, process environment, local
+\texttt{.env}, and contract default. Derived values also remain traceable
+\parencite{kleiveist2026configuration}.
+
+Figure~\ref{fig:configuration-boundaries} shows the security boundaries. Vite
+receives only the approved \texttt{VITE\_API\_BASE\_URL}; FastAPI processes
+server values with explicit types and masks \texttt{DATABASE\_URL}. The tooling
+forwards only relevant values and removes known secret names from the Tauri
+environment. Invalid or missing values result in controlled termination without
+exposing secrets.
+
+\input{workspace/figures/architecture/configuration-boundaries}
+\beginnerinput{workspace/statement/300_architektur/360}

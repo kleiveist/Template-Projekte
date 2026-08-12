@@ -1,0 +1,26 @@
+\begin{figure}[H]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[
+    cell/.style={draw=caseLine,minimum width=24mm,minimum height=9mm,align=center,font=\sffamily\scriptsize},
+    head/.style={cell,fill=caseBlue,text=white,font=\sffamily\bfseries\scriptsize},
+    active/.style={cell,fill=caseBlue!10,text=caseBlue,font=\sffamily\bfseries\scriptsize},
+    optional/.style={cell,fill=caseGreen!12,text=caseGreen!55!black,font=\sffamily\bfseries\scriptsize},
+    incompatible/.style={cell,fill=black!4,text=black!55,font=\sffamily\scriptsize}
+  ]
+    \matrix[matrix of nodes,nodes in empty cells,ampersand replacement=\&,row sep=-\pgflinewidth,column sep=-\pgflinewidth] {
+      |[head,minimum width=32mm]| Profil \& |[head]| Frontend \& |[head]| FastAPI \& |[head]| Tauri \& |[head]| Cloud \& |[head]| PostgreSQL \\
+      |[head,minimum width=32mm]| web-only \& |[active]| enthalten \& |[cell]| -- \& |[cell]| -- \& |[cell]| -- \& |[incompatible]| inkompatibel \\
+      |[head,minimum width=32mm]| web-cloud \& |[active]| enthalten \& |[active]| enthalten \& |[cell]| -- \& |[active]| enthalten \& |[optional]| optional \\
+      |[head,minimum width=32mm]| desktop-local \& |[active]| enthalten \& |[cell]| -- \& |[active]| enthalten \& |[cell]| -- \& |[incompatible]| inkompatibel \\
+      |[head,minimum width=32mm]| desktop-cloud \& |[active]| enthalten \& |[active]| enthalten \& |[active]| enthalten \& |[active]| enthalten \& |[optional]| optional \\
+      |[head,minimum width=32mm]| full-platform \& |[active]| enthalten \& |[active]| enthalten \& |[active]| enthalten \& |[active]| enthalten \& |[optional]| optional \\
+    };
+  \end{tikzpicture}}
+  \caption{Strukturelle Feature-Zuordnung der fünf Profil-Presets}
+  \label{fig:profile-matrix}
+  \smallskip
+  {\footnotesize Quelle: Eigene Darstellung auf Grundlage des Feature-Katalogs
+  und der Profildefinitionen im geprüften Projektstand
+  \parencite{kleiveist2026template,kleiveist2026profiles}.\par}
+\end{figure}

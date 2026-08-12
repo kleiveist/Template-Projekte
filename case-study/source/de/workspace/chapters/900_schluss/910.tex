@@ -1,0 +1,18 @@
+\subsection{Zusammenfassung der Ergebnisse}
+\label{subsec:zusammenfassung-ergebnisse}
+
+Das Master-Template begegnet wiederholtem Setup-Aufwand und divergierenden
+Projektbasen mit einem gemeinsamen Kern und deklarativer Variabilität. Es
+bündelt Generierung, Konfiguration, Verantwortungsgrenzen, Arbeitsabläufe und
+Wartung.
+
+Fünf Profile kombinieren gemeinsames Vite-Frontend, profilabhängiges
+FastAPI-Backend und optionale Tauri-Schicht; PostgreSQL ist nur mit Backend
+wählbar. \texttt{control.py} vereinheitlicht den Entwicklungsweg. Generierte
+Projekte bleiben eigenständig und erhalten keine automatischen Master-Updates.
+
+Die lokale Abnahme eines früheren Commits stützt Profil-, PostgreSQL-, Test-,
+Web-Build- und Linux-Paketierungspfade. Die aktuelle externe CI ist nur
+teilweise erfolgreich; weitere Nachweise fehlen oder sind produktspezifisch.
+Belegt ist damit eine kontrolliert variable Baseline, nicht Produktionsreife
+oder empirische Kundeneignung.

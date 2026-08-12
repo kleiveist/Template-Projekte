@@ -1,0 +1,33 @@
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.12}
+  \caption{Zuordnung technischer Projekttypen zur Template-Baseline}
+  \label{tab:project-suitability}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.19\textwidth}>{\raggedright\arraybackslash}p{0.13\textwidth}>{\raggedright\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Projekttyp} & \textbf{Eignung} & \textbf{Profil} & \textbf{Notwendige Ergänzungen und Grenzen} \\
+    \midrule
+    Browser-Frontend & gut & \texttt{web-only}
+      & Fachlogik und UI; externe APIs möglich, aber kein FastAPI-Backend der Baseline. \\
+    Webanwendung mit API/Cloud & gut & \texttt{web-cloud}
+      & Authentifizierung, Fachmodelle und produktiver Betrieb; PostgreSQL nur bei relationalem Persistenzbedarf. \\
+    lokales Desktop-Werkzeug & gut & \texttt{desktop-local}
+      & Native Kommandos, Packaging und Signing produktspezifisch; keine lokale Datenbank enthalten. \\
+    Desktop mit zentralem Backend & gut & \texttt{desktop-cloud}
+      & Produktive API, Security und Signing; PostgreSQL bleibt optional. \\
+    Browser + Desktop + Cloud & gut & \texttt{full-platform}
+      & Kanalbezogene UX und Tests; Persistenz nur mit separater Capability. \\
+    Anwendung mit hohem nativen Anteil & bedingt & Desktopprofil oder andere Basis
+      & Erheblicher Aufwand für Plattform-APIs, Berechtigungen, systemnahe Dienste oder native UI. \\
+    stark spezialisierte Infrastruktur & bedingt & nach Teilarchitektur
+      & Eignung nur, wenn Client oder Einzeldienst sinnvoll abgrenzbar ist; Infrastruktur nicht vorgegeben. \\
+    Hard Real-Time, Game Engine, native Mobile- oder Embedded-Kernsysteme
+      & nicht primär vorgesehen & kein Profil
+      & Tragende Laufzeit- und Plattformanforderungen liegen außerhalb der Baseline. \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Quelle: Eigene qualitative Zuordnung auf Grundlage von
+  \textcite{kleiveist2026profiles} und \textcite{kleiveist2026acceptance}.\par}
+\end{table}

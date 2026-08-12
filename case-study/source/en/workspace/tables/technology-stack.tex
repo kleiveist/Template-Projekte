@@ -1,0 +1,25 @@
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Declared and resolved technology stack in the examined commit}
+  \label{tab:technology-stack}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.14\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}>{\raggedright\arraybackslash}p{0.22\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Technology} & \textbf{Role in the template} & \textbf{Version / source} & \textbf{Project evidence} \\
+    \midrule
+    Vite & development server and frontend build & range from 6.0.7; lock: 6.4.2 & \path{frontend/package.json}, \path{frontend/package-lock.json} \\
+    TypeScript & static checking of the frontend & range from 5.7.3; lock: 5.9.3 & \path{frontend/package.json}, \path{frontend/tsconfig.json} \\
+    FastAPI & HTTP API and validation & $\geq$0.111, $<$1; production: 0.111.0 & \path{backend/requirements.txt}, \path{backend/requirements-production.txt} \\
+    Tauri & desktop webview and packaging boundary & major version 2; lock: 2.11.5 & \path{src-tauri/Cargo.toml}, \path{src-tauri/Cargo.lock} \\
+    Rust & native composition layer & at least 1.77; edition 2021 & \path{src-tauri/Cargo.toml} \\
+    PostgreSQL & optional relational runtime unit & container: 16.4-alpine3.20 & \path{deployment/compose.yaml} \\
+    SQLAlchemy & engine, session, and model foundation & $\geq$2, $<$3; production: 2.0.36 & \path{backend/requirements-database*.txt} \\
+    Alembic & explicit schema migrations & $\geq$1.13, $<$2; production: 1.14.0 & \path{backend/requirements-database*.txt} \\
+    Psycopg & PostgreSQL driver & $\geq$3.2, $<$4; production: 3.2.3 & \path{backend/requirements-postgres*.txt} \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Source: Author's own compilation based on the examined
+  project state \parencite{kleiveist2026template}.\par}
+\end{table}

@@ -1,0 +1,11 @@
+\subsection{Desktop-local Profile}
+\label{subsec:profil-desktop-local}
+
+\texttt{desktop-local} runs the shared frontend in a Tauri webview. Backend,
+deployment, and database paths are absent \parencite{kleiveist2026profiles}.
+Thus, \emph{local} denotes the absence of a cloud API, not the presence of an
+embedded SQL database. Because \texttt{database} requires a backend,
+PostgreSQL is incompatible.
+Local domain functionality must therefore reside in the frontend or in Tauri
+commands added for the specific product.
+\beginnerinput{workspace/statement/400_projektprofile/440}

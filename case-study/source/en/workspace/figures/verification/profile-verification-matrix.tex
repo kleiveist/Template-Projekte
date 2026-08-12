@@ -1,0 +1,26 @@
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[node distance=5mm]
+    \node[casePrimary,minimum width=125mm,text width=116mm] (acceptance) {
+      Local acceptance, commit \texttt{1cdfb6e}\\
+      PASS: five baseline profiles, three PostgreSQL combinations, and two expected rejections
+    };
+    \node[caseBox,minimum width=125mm,text width=116mm,below=of acceptance] (headci) {
+      External CI, commit \texttt{a4487ac}\\
+      PASS: web profiles, \texttt{web-cloud + postgres}, Core builds, Linux/macOS desktop\\
+      FAIL: tooling job, five desktop profile tests, Windows installation
+    };
+    \node[caseOptional,minimum width=125mm,text width=116mm,below=of headci] (rule) {
+      Interpretation\\
+      Local PASS evidence remains commit-specific; the current remote state is only partially verified.
+    };
+
+    \draw[caseFlow] (acceptance) -- (headci);
+    \draw[caseFlow] (headci) -- (rule);
+  \end{tikzpicture}
+  \caption{Profile verification by evidence state and commit}
+  \label{fig:profile-verification-matrix}
+  \smallskip
+  {\footnotesize Source: Author's own illustration based on
+  \textcite{kleiveist2026acceptance} and the current GitHub Actions runs.\par}
+\end{figure}

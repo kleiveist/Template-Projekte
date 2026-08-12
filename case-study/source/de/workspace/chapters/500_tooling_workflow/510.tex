@@ -1,0 +1,28 @@
+\subsection{Rolle von control.py}
+\label{subsec:rolle-control-py}
+
+\path{tools/control.py} bündelt die öffentlichen Arbeitsabläufe. Seine Befehle
+decken Initialisierung, Diagnose, Installation, Entwicklung, Konfiguration,
+Datenbank, Tests, Builds, Container, Tauri, Versionierung, Release und
+Dokumentation ab. Hilfe und Gruppenansichten strukturieren diese Oberfläche
+\parencite{kleiveist2026control,kleiveist2026tooling}.
+Zu den wichtigsten Einstiegen gehören \texttt{init}, \texttt{doctor},
+\texttt{install}, \texttt{run}, \texttt{test} und \texttt{build}. Die Gruppen
+\texttt{db}, \texttt{tauri}, \texttt{container} und \texttt{release} ergänzen
+nur die jeweils benötigten Fachabläufe.
+
+\input{workspace/figures/tooling/control-command-map}
+
+Die Handler laden Manifest und bei Bedarf Laufzeitkonfiguration und delegieren
+an die jeweiligen Fachwerkzeuge. Diese bleiben eigenständig. Die geführte
+\texttt{console} ruft dieselben Befehle auf und bildet kein zweites System.
+
+Unterschiedliche Exitcodes trennen Hilfe und Erfolg, fachliche Fehler,
+Bedienfehler und Abbruch. Erwartete Profil- und Generierungsfehler erscheinen
+ohne Traceback; unerwartete Exceptions werden protokolliert. Diese Konvention
+unterstützt interaktive Diagnose und CI-Auswertung
+\parencite{kleiveist2026control,kleiveist2026ci}.
+Insbesondere lassen sich erfolgreiche Ausführung, fachlicher Fehlschlag und
+fehlerhafte Bedienung maschinell unterscheiden. Warnungen blockieren den
+Workflow nicht automatisch.
+\beginnerinput{workspace/statement/500_tooling_workflow/510}

@@ -1,0 +1,18 @@
+\subsection{Single-Repository Strategy}
+\label{subsec:single-repository-strategie}
+
+The five profiles are not template forks. The Core, feature implementations,
+profiles, and generator reside in a single maintenance base from which
+independent product projects are created
+\parencite{kleiveist2026profiles,kleiveist2026template}.
+
+The master also contains optional implementations and itself enables
+PostgreSQL. A generated project, by contrast, receives only the Core, resolved
+feature paths, manifest, frontend profile, and an appropriate
+\path{.env.example}. It then remains separate from the unchanged master.
+Centralized maintenance reduces parallel baselines; generated projects are not
+automatically synchronized back to the master.
+This separation protects the maintenance base from product changes.
+Conversely, existing generated products do not benefit from subsequent fixes
+to the master unless those fixes are incorporated deliberately.
+\beginnerinput{workspace/statement/400_projektprofile/480}

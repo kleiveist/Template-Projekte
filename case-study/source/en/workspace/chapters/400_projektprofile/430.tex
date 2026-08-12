@@ -1,0 +1,11 @@
+\subsection{Web-cloud Profile}
+\label{subsec:profil-web-cloud}
+
+\texttt{web-cloud} combines a Vite frontend, a separate FastAPI backend, and
+provider-agnostic deployment files. It has no native desktop layer
+\parencite{kleiveist2026deployment,kleiveist2026profiles}. The database module,
+Alembic, and Psycopg are added only with the compatible PostgreSQL capability,
+which must be selected separately.
+The frontend accesses the separate backend through a public URL. Without the
+capability, the profile remains database-free despite its cloud designation.
+\beginnerinput{workspace/statement/400_projektprofile/430}

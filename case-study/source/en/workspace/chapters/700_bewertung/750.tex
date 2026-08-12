@@ -1,0 +1,41 @@
+\subsection{Comparison with Alternative Template Strategies}
+\label{subsec:vergleich-template-strategien}
+
+The architectural strategies are compared in terms of reuse, consistency,
+variability, entry complexity, maintenance, testability, and adoption of
+updates
+\parencite{krueger1992software-reuse,clements2001software-product-lines}.
+The qualitative levels do not form an overall ranking; high entry complexity,
+for example, is a disadvantage.
+
+\emph{Separate template repositories} remain individually manageable, but can
+diverge. A \emph{copy-and-paste starter} minimizes template logic, but provides
+no channel through which subsequent improvements can be propagated. GitHub
+templates accordingly create a separate, unrelated history
+\parencite{github2026repository-template}.
+Separate repositories therefore give greater weight to organizational
+isolation than to the central consistency of shared components.
+
+\emph{Framework-specific starters} such as \texttt{create-vite} offer a simple
+entry point into a narrow area. The backend, desktop layer, persistence, and
+overall workflow must be added separately when needed
+\parencite{vite2026guide}.
+For a small, homogeneous frontend, this lower entry complexity may be more
+appropriate than the full-stack approach under examination.
+
+A \emph{monolithic universal template} simplifies selection, but burdens small
+projects with unused components. The examined \emph{single repository with
+profiles and capabilities} combines centralized maintenance with selected
+paths. This increases the complexity of the master repository, resolver, and
+test matrix; updates do not reach generated projects automatically.
+It thus combines centralized variability before generation with the autonomy
+of a copied starter afterward.
+
+\input{workspace/tables/template-strategy-comparison}
+
+The profile-based approach is particularly suitable for recurring,
+technically related projects. Small individual projects may benefit from
+framework starters, while organizationally separate product lines may benefit
+from separate repositories. There is no universal winner, but rather a set of
+different trade-offs.
+\beginnerinput{workspace/statement/700_bewertung/750}

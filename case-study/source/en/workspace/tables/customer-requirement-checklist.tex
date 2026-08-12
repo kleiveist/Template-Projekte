@@ -1,0 +1,29 @@
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.1}
+  \caption{Compact checklist for technology-neutral requirements analysis}
+  \label{tab:customer-requirement-checklist}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.43\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Area} & \textbf{Guiding question} & \textbf{Influence on selection} \\
+    \midrule
+    Domain functionality and use & Which workflows, user groups, and locations of use must be supported?
+      & Determines the product scope; does not yet determine a profile. \\
+    Access channels & Will the product be used in a browser, as a desktop application, or through both channels?
+      & Distinguishes web, desktop, and full-platform paths. \\
+    Central services & Must functions or shared data be available on the server side?
+      & Requires a backend-capable cloud profile. \\
+    Persistence and offline operation & Is centralized relational data required; must the client remain operational without a network connection?
+      & PostgreSQL only when a backend is required; local storage and synchronization are separate additions. \\
+    Native integration & Which operating-system APIs, devices, or platform-specific interfaces are required?
+      & Determines the need for Tauri and the distance from the native baseline. \\
+    Integration and operation & Which external systems, target environments, and scaling and operational requirements exist?
+      & Produces product-specific adapters and infrastructure decisions. \\
+    Security and compliance & Which protection, evidence, audit, or regulatory requirements apply?
+      & Requires additional measures and evidence independently of the profile. \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Source: Author's own compilation.\par}
+\end{table}

@@ -1,0 +1,30 @@
+\subsection{System Check and Installation}
+\label{subsec:systempruefung-installation}
+
+The read-only \texttt{doctor} checks runtimes, configuration, paths,
+dependencies, and ports according to the profile. Disabled layers are not an
+error. In general, missing Docker produces only a warning; container,
+database, and Tauri prerequisites have their own stricter diagnostic paths
+\parencite{kleiveist2026tooling,kleiveist2026configuration}.
+
+\texttt{install} sets up only active components: frontend dependencies are
+preferentially installed from the lockfile, and backend dependencies are
+installed in a virtual environment. Database packages, the tooling
+environment, and Chromium are added only when required; for Python, a pip/venv
+fallback is available alongside \texttt{uv}. A local \texttt{.env} remains
+unchanged. \texttt{tauri install} handles native operating-system and Rust
+prerequisites separately.
+Specifically, the frontend uses \texttt{npm ci} when a lockfile is present. An
+active backend receives its own environment and only the profile-dependent
+requirement sets. Chromium is installed only when Playwright is configured;
+disabled layers are skipped.
+
+The README requires Git, Python 3.11 or later, Node.js 20 or later, and Rust
+Stable for desktop profiles. The general Doctor does not check Git or these
+version ranges; the Tauri Doctor accepts any active Rust toolchain. CI, by
+contrast, explicitly sets up the specified major versions of Python and Node.
+Local enforcement therefore differs from the documentation
+\parencite{kleiveist2026template,kleiveist2026ci}.
+This limitation concerns how the prerequisite is checked, not whether the
+documented prerequisite applies.
+\beginnerinput{workspace/statement/500_tooling_workflow/530}

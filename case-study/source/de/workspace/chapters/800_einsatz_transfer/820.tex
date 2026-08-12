@@ -1,0 +1,31 @@
+\subsection{Ungeeignete und eingeschränkt geeignete Projekttypen}
+\label{subsec:ungeeignete-projekttypen}
+
+Eingeschränkt geeignet sind Projekte mit umfangreicher Betriebssystemintegration,
+plattformspezifischer UI, systemnahen Diensten oder Treibern. Die Tauri-Hülle
+belegt dafür keine ausreichende native Basis. Auch stark verteilte
+Infrastruktur sowie besondere Event-Streaming- oder HPC-Anforderungen können
+eine andere Architektur erfordern; die Baseline bleibt höchstens für einen
+abgegrenzten Teil nutzbar.
+
+Hard-Real-Time-Systeme, grafikintensive Spiele, Firmware, Embedded-Systeme und
+native Mobilanwendungen gehören nicht zum primären Zielbereich. Gewöhnliche
+Live-Aktualisierungen machen eine Business-Anwendung nicht zum
+Echtzeitsystem. Einzelne mobile oder hardwarenahe Funktionen sind nicht
+ausgeschlossen; ihre technische Basis liefert das Template jedoch nicht.
+Entscheidend ist daher nicht ein einzelnes Merkmal, sondern ob der technische
+Kern des Produkts von der Baseline getragen wird.
+
+Hohe Sicherheits- oder Compliance-Anforderungen schließen die Baseline nicht
+aus, verlangen aber zusätzliche Evidenz für Schutzbedarf, Audits,
+Zertifizierung und Rechtskonformität. Belegt sind Compose-Validierung und
+Master-Images, nicht Compose-Start oder produktive Bereitstellung
+\parencite{kleiveist2026ci-core-run}. Linux- und macOS-Pakete wurden
+unsigniert gebaut; der Windows-Paketpfad ist fehlgeschlagen
+\parencite{kleiveist2026ci-desktop-run}. Signing und Notarisierung bleiben
+produktspezifisch \parencite{kleiveist2026release}. Auch die benötigten
+TypeScript-, Python-, Rust-, Datenbank- und Deploymentkompetenzen sind zu
+prüfen.
+Fehlen diese Nachweise oder Kompetenzen, ist das Projekt höchstens bedingt
+geeignet.
+\beginnerinput{workspace/statement/800_einsatz_transfer/820}

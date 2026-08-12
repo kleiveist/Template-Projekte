@@ -1,0 +1,34 @@
+\subsection{Tests and Builds}
+\label{subsec:tests-builds}
+
+The eight test suites cover tooling, schema, API, database, PostgreSQL,
+frontend, E2E, and Tauri/Rust. \texttt{test --suite all} provides the complete
+project-wide entry point; reports are optional
+\parencite{kleiveist2026control,kleiveist2026tooling}.
+Among other elements, the tooling suite tests the generator, profiles, and
+configuration; the component suites delegate to Pytest, Vitest, Playwright, or
+Cargo. The test areas therefore remain independently executable.
+
+Selection remains profile-dependent: if a feature is absent, the suite reports
+\texttt{SKIP}; if sources or prerequisites are missing for an active feature,
+it reports \texttt{FAIL}. PostgreSQL without a test URL and E2E without
+Playwright configuration are skipped. The runner can repair missing backend
+environments and manage the development services for E2E.
+This behavior deliberately distinguishes absent features from defective active
+components. A skipped test is therefore not evidence of success.
+
+The build paths remain separate: web produces Vite output and a ZIP; desktop
+delegates the target and bundle to Tauri; and container builds frontend,
+backend, or both images for cloud profiles. \texttt{container validate} checks
+the Compose model without starting it
+\parencite{kleiveist2026container,kleiveist2026release}.
+The web path additionally creates a ZIP package. Desktop builds remain tied to
+an active Tauri feature and the respective target platform.
+
+GitHub Actions uses the same public entry points for the Core, profile
+matrices, PostgreSQL, and desktop targets. CI supplements these with operating
+systems, runtimes, and a temporary PostgreSQL service
+\parencite{kleiveist2026ci}.
+Local and external workflows therefore use comparable entry points, but do not
+run under identical environmental conditions.
+\beginnerinput{workspace/statement/500_tooling_workflow/550}

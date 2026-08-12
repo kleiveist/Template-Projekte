@@ -1,0 +1,15 @@
+\begin{beginnerstatement}[In simple terms: The database layer]
+
+A database provides persistence: data therefore remains available after the
+program has been closed. A relational database organizes data into
+interconnected tables; SQL is the language used to query and modify them.
+PostgreSQL is this template's optional relational database. A connection is the
+communication channel to the database, and the Psycopg database driver provides
+it between Python and PostgreSQL. SQLAlchemy simplifies access: the engine
+manages the technical connection, while a session groups operations on data.
+The schema describes the database structure, such as tables and columns. A
+migration changes this structure in a controlled manner, and Alembic manages
+such changes. The baseline does not yet contain domain models or an initial
+migration; changes must be performed explicitly using Alembic commands.
+
+\end{beginnerstatement}

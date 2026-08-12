@@ -1,0 +1,35 @@
+\subsection{Release- und Packaging-Workflow}
+\label{subsec:release-packaging-workflow}
+
+\texttt{VERSION} ist die zentrale Versionsquelle; Prüfung und schreibende
+Synchronisierung sind getrennt. \texttt{release check} erzeugt keine
+Artefakte. Der Befehl prüft Version, Produktidentität, Tauri-Regeln, Tag und
+Git-Arbeitsbaum. Inkonsistenzen, Platzhalter aus dem Template und ein
+unpassender oder veränderter Stand sind Fehler. Eine fehlende
+Signing-Konfiguration erzeugt dagegen nur eine Warnung.
+Nur das Master-Repository akzeptiert seine kanonische Template-Identität
+\parencite{kleiveist2026release,kleiveist2026control}.
+
+Web liefert Vite-Build und ZIP. Tauri erzeugt auf dem jeweiligen Host native
+Windows-, macOS- oder Linux-Bundles; weitere Wege bestehen für ein portables
+Windows-ZIP und einen Linux-Cross-Build. CI erzeugt nur kurzlebige, unsignierte
+Prüfarbeitsprodukte.
+Diese Pakete prüfen den technischen Packaging-Pfad. Ohne Signatur und
+produktspezifische Freigabe sind sie keine veröffentlichbaren Releases.
+
+\input{workspace/figures/deployment/desktop-release-model}
+
+Signierung und Notarisierung sind produktspezifisch. Das gilt auch für
+Veröffentlichung, App-Stores und Updater. Der Release-Workflow verbindet Tests,
+Web- und Container-Build. Danach folgen Gate und unsignierte Desktopmatrix. Der
+Ablauf veröffentlicht und deployt nicht
+\parencite{kleiveist2026release,kleiveist2026ci}.
+
+Für Cloudprofile prüfen die Containerbefehle Docker, Compose und
+Deployment-Dateien und bauen versionierte Images. Compose simuliert lokal die
+Produktion und führt PostgreSQL optional. Die Basis legt keinen Anbieter fest
+und ersetzt weder Secret-Verwaltung noch einen kontrollierten Migrationsjob
+\parencite{kleiveist2026container,kleiveist2026deployment}.
+Eine Docker-/Compose-Basis ist daher nicht mit einer fertigen Architektur für
+AWS, Azure oder GCP gleichzusetzen.
+\beginnerinput{workspace/statement/500_tooling_workflow/560}
