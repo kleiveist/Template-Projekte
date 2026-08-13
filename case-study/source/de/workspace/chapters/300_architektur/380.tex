@@ -1,0 +1,44 @@
+\subsection{Providerneutrale Persistenzstrategie für Produkt- und Nutzerdaten}
+\label{subsec:providerneutrale-persistenzstrategie}
+
+Die Baseline trennt Template- und Entwicklungsdaten, Laufzeitkonfiguration
+sowie Produkt- und Nutzerdaten. \texttt{profiles/},
+\texttt{project-profile.toml}, \texttt{tools/} und \texttt{shared/}
+beschreiben, erzeugen oder prüfen das Projekt. \texttt{.env},
+\texttt{config/environment.toml}, \texttt{DATABASE\_URL} und
+API-Konfiguration bestimmen dagegen, wie eine Instanz ausgeführt wird.
+Dokumente, Planungsstände, fachliche Datensätze, Medien, Projektdateien und
+Historien entstehen erst bei der Produktnutzung und benötigen einen eigenen
+Verantwortungsbereich und Lebenszyklus. Konfigurationsdateien sind kein
+Nutzerdatenspeicher; versionierte Template-Assets sind keine Laufzeit-Assets
+des fertigen Produkts.
+
+Eine Persistenzentscheidung unterscheidet providerneutral lokale
+Dateispeicherung, eingebettete Datenbanken, entfernte Datenbanken und
+Asset-Speicher. Nicht jedes Produkt benötigt alle vier Klassen. Lokale Dateien
+können etwa JSON, Markdown oder produktspezifische Formate verwenden; eine
+eingebettete Datenbank könnte beispielsweise SQLite nutzen. Die bestehenden
+Capabilities \texttt{database} und \texttt{postgres} implementieren dagegen
+serverseitige SQL-Persistenz mit SQLAlchemy, Alembic und PostgreSQL.
+Asset-Speicher für Bilder, Dokumente, Grafiken oder Binärdateien bleibt von
+strukturierten Daten getrennt. \texttt{local-files},
+\texttt{embedded-database}, \texttt{sqlite}, \texttt{object-storage} und
+Synchronisation sind mögliche Extension Paths, keine implementierten
+Capabilities \parencite{kleiveist2026persistence}.
+
+Jedes Produktprojekt muss die maßgebliche Datenquelle festlegen. Bei einer
+lokalen Anwendung kann ein lokaler Speicher die Source of Truth sein, bei
+einer serverzentrierten Anwendung eine zentrale Datenbank. Offline- oder
+Local-first-Systeme benötigen zusätzlich explizite Regeln für
+Synchronisationsrichtung, Revisionen und Konflikte; eine
+Synchronisationsengine stellt die Baseline nicht bereit. Zur
+Produktentscheidung gehören außerdem Schema- und Versionsstrategie,
+Migration, Backup und Recovery sowie Sicherheitsgrenzen.
+
+Das Template standardisiert somit nicht die Daten selbst, ein universelles
+Format oder einen allgemeinen Storage Provider, sondern die
+Verantwortungsgrenzen und die zu dokumentierenden Entscheidungen für ihren
+Umgang. Speicherformat und Persistenzarchitektur, Plattformprofil und Storage
+Provider, Konfiguration und Nutzerdaten sowie Asset-Speicher und strukturierter
+Datenspeicher bleiben jeweils getrennte Entscheidungen.
+\beginnerinput{workspace/statement/300_architektur/380}

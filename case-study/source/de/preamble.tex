@@ -6,6 +6,10 @@
 \usepackage[T1]{fontenc}
 \usepackage{csquotes}
 
+\ifdefined\XeTeXversion
+  \usepackage{fontspec}
+\fi
+
 % ------------------------------------------------------------
 % Seitenlayout: DIN A4, 2 cm Ränder
 % ------------------------------------------------------------
@@ -27,7 +31,16 @@
 % ------------------------------------------------------------
 % Schrift: TeX Gyre Heros als Arial-ähnliche Schrift
 % ------------------------------------------------------------
-\usepackage{tgheros}
+\ifdefined\XeTeXversion
+  \setsansfont{TeX Gyre Heros}[
+    UprightFont=TeX Gyre Heros,
+    BoldFont=TeX Gyre Heros Bold,
+    ItalicFont=TeX Gyre Heros Italic,
+    BoldItalicFont=TeX Gyre Heros Bold Italic
+  ]
+\else
+  \usepackage{tgheros}
+\fi
 \renewcommand{\familydefault}{\sfdefault}
 
 % ------------------------------------------------------------
@@ -185,8 +198,8 @@
 % ------------------------------------------------------------
 % Hyperlinks
 % ------------------------------------------------------------
+\usepackage{xurl}
 \usepackage[hidelinks]{hyperref}
-\usepackage{url}
 
 % ------------------------------------------------------------
 % Literaturverwaltung mit biblatex-apa
@@ -208,5 +221,7 @@
 \DefineBibliographyStrings{ngerman}{
   nodate = {o\adddot\addspace D\adddot}
 }
+
+\AtBeginBibliography{\raggedright\Urlmuskip=0mu plus 1mu}
 
 \addbibresource{references.bib}

@@ -17,7 +17,7 @@
     Desktop mit zentralem Backend & gut & \texttt{desktop-cloud}
       & Produktive API, Security und Signing; PostgreSQL bleibt optional. \\
     Browser + Desktop + Cloud & gut & \texttt{full-platform}
-      & Kanalbezogene UX und Tests; Persistenz nur mit separater Capability. \\
+      & Kanalbezogene UX und Tests; Profil legt keinen Persistenzprovider fest, PostgreSQL ist optional. \\
     Anwendung mit hohem nativen Anteil & bedingt & Desktopprofil oder andere Basis
       & Erheblicher Aufwand für Plattform-APIs, Berechtigungen, systemnahe Dienste oder native UI. \\
     stark spezialisierte Infrastruktur & bedingt & nach Teilarchitektur
@@ -29,5 +29,5 @@
   \end{tabularx}
   \smallskip
   {\footnotesize Quelle: Eigene qualitative Zuordnung auf Grundlage von
-  \textcite{kleiveist2026profiles} und \textcite{kleiveist2026acceptance}.\par}
+  \textcite{kleiveist2026profiles,kleiveist2026persistence,kleiveist2026acceptance}.\par}
 \end{table}

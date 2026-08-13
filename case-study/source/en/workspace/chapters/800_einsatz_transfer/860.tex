@@ -1,11 +1,13 @@
 \subsection{Transition to Product Development}
 \label{subsec:ueberfuehrung-produktentwicklung}
 
-After generation, the independent product project assumes responsibility for
-domain models, business rules, the user interface, integrations, data, and
-operations. Authentication, authorization, scaling, monitoring, backups, data
-protection, and signing also remain product tasks. The baseline structures
-this work, but does not solve these product-specific tasks.
+After generation, the independent product project decides on domain models,
+user data, persistence providers, assets, schemas and migrations, backup and
+recovery, the security model, and, where applicable, synchronization
+\parencite{kleiveist2026persistence}. Business rules, the user interface,
+integrations, operations, scaling, monitoring, data protection, and signing
+also remain product tasks. The baseline structures this work, but does not
+solve these product-specific tasks.
 
 The master repository and the product have separate lifecycles. There is no
 permanent update or synchronization mechanism. Changes to the master

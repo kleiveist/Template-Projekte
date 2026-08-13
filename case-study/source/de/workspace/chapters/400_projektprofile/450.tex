@@ -3,8 +3,9 @@
 
 \texttt{desktop-cloud} verbindet das Tauri-Frontend über eine öffentliche URL
 mit dem getrennten FastAPI-Backend und ergänzt Deployment-Dateien. PostgreSQL
-ist kompatibel, bleibt aber optional
-\parencite{kleiveist2026profiles,kleiveist2026deployment}.
+ist kompatibel, bleibt aber optional; weder lokaler Speicher noch PostgreSQL
+wird als Source of Truth festgelegt
+\parencite{kleiveist2026profiles,kleiveist2026deployment,kleiveist2026persistence}.
 
 Die technischen Basisfeatures entsprechen \texttt{full-platform}; die
 Profil-ID kennzeichnet jedoch den Desktop-Client als vorgesehenen Produktkanal.

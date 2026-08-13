@@ -30,8 +30,8 @@ backend and, where applicable, browser access.
   \textcite{kleiveist2026profiles}.\par}
 \end{table}
 
-PostgreSQL is only an optional capability for backend-enabled profiles, not a
-separate platform profile \parencite{kleiveist2026profiles}. Public client
-configuration must be separated from server-side values, including secrets; no
-particular cloud platform is assumed.
+PostgreSQL is an optional backend capability, not a platform profile; profiles
+determine neither the format, persistence provider, nor source of truth
+\parencite{kleiveist2026profiles,kleiveist2026persistence}. Client and server
+configuration remain separate; no cloud platform is assumed.
 \beginnerinput{workspace/statement/200_anforderungen/230}

@@ -12,9 +12,9 @@ template
 Figure~\ref{fig:system-architecture} distinguishes the baseline from the derived
 project. The generator resolves the profile and capabilities, copies the
 associated paths, and records the result in
-\texttt{project-profile.toml}. The frontend, backend, Tauri, and persistence
-remain independent components, some of which are optional
-\parencite{kleiveist2026architecture}.
+\texttt{project-profile.toml}. The frontend, backend, Tauri, and server-side SQL
+persistence remain independent components, some of which are optional
+\parencite{kleiveist2026architecture,kleiveist2026persistence}.
 
 \input{workspace/figures/architecture/component-architecture}
 
@@ -25,9 +25,9 @@ deployment control the components outside the product runtime.
 
 \input{workspace/figures/architecture/runtime-architecture}
 
-At runtime, either the browser or a Tauri webview loads the same Vite build
-(Figure~\ref{fig:runtime-architecture}). Backend-enabled profiles communicate
-with FastAPI over HTTP; only the backend accesses persistence when it is
-enabled. This
-keeps the client, server, and data storage separately testable and extensible.
+The browser or a Tauri webview loads the same Vite build
+(Figure~\ref{fig:runtime-architecture}). Backend-enabled profiles use FastAPI
+over HTTP; only the backend accesses the optional PostgreSQL persistence shown.
+Local product storage is separate and is not implemented
+\parencite{kleiveist2026persistence}.
 \beginnerinput{workspace/statement/300_architektur/310}

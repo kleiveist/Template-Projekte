@@ -30,8 +30,9 @@ gegebenenfalls Browserzugriff.
   \textcite{kleiveist2026profiles}.\par}
 \end{table}
 
-PostgreSQL ist nur eine optionale Capability für backendfähige Profile, kein
-eigenes Plattformprofil \parencite{kleiveist2026profiles}. Öffentliche
-Client-Konfiguration und serverseitige Werte einschließlich Geheimnissen sind
-zu trennen; eine bestimmte Cloud-Plattform wird nicht vorausgesetzt.
+PostgreSQL ist eine optionale Backend-Capability, kein Plattformprofil; Profile
+bestimmen weder Format, Persistenzprovider noch Source of Truth
+\parencite{kleiveist2026profiles,kleiveist2026persistence}. Client- und
+Serverkonfiguration bleiben getrennt; eine Cloud-Plattform wird nicht
+vorausgesetzt.
 \beginnerinput{workspace/statement/200_anforderungen/230}

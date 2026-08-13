@@ -23,8 +23,11 @@ infrage, verhindert aber ein vollständig grünes Urteil für den neueren Stand.
 Bewusst ausgeschlossen sind Backend in \texttt{web-only}, Cloud-API in
 \texttt{desktop-local} und PostgreSQL ohne Backend. Auch Fachlogik,
 Authentifizierung, Rollenmodelle, verpflichtende Persistenz, Cloud-Provider
-und native Fachkommandos bleiben produktspezifisch. Der daraus folgende
-Anpassungsaufwand ist keine Abweichung vom Scope.
+und native Fachkommandos bleiben produktspezifisch. Der neue Entscheidungsrahmen
+für Produktpersistenz stellt keine universelle lokale Datei-,
+Embedded-Database- oder Synchronisationsimplementierung bereit. Diese bewusste
+Scope-Grenze ist ein Extension Path, kein Implementierungsfehler
+\parencite{kleiveist2026persistence}.
 
 Nicht abschließend verifiziert sind Compose-Start, produktive Bereitstellung,
 Release Validation und Branch Protection. Linux und macOS wurden unsigniert

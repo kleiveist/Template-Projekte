@@ -1,0 +1,41 @@
+\subsection{Provider-Neutral Persistence Strategy for Product and User Data}
+\label{subsec:providerneutrale-persistenzstrategie}
+
+The baseline separates template and development data, runtime configuration,
+and product and user data. \texttt{profiles/},
+\texttt{project-profile.toml}, \texttt{tools/}, and \texttt{shared/} describe,
+generate, or verify the project. \texttt{.env},
+\texttt{config/environment.toml}, \texttt{DATABASE\_URL}, and API
+configuration instead determine how an instance runs. Documents, planning
+states, domain records, media, project files, and histories arise only through
+product use and require their own area of responsibility and lifecycle.
+Configuration files are not user-data storage; version-controlled template
+assets are not runtime assets of the finished product.
+
+A persistence decision distinguishes provider-neutral local file storage,
+embedded databases, remote databases, and asset storage. Not every product
+requires all four classes. Local files may use JSON, Markdown, or
+product-specific formats; an embedded database could, for example, use
+SQLite. In contrast, the existing \texttt{database} and \texttt{postgres}
+capabilities implement server-side SQL persistence with SQLAlchemy, Alembic,
+and PostgreSQL. Asset storage for images, documents, graphics, or binary files
+remains separate from structured data. \texttt{local-files},
+\texttt{embedded-database}, \texttt{sqlite}, \texttt{object-storage}, and
+synchronization are possible extension paths, not implemented capabilities
+\parencite{kleiveist2026persistence}.
+
+Each product project must identify the authoritative data source. In a local
+application, a local store may be the source of truth; in a server-centered
+application, it may be a central database. Offline or local-first systems
+additionally require explicit rules for synchronization direction, revisions,
+and conflicts; the baseline provides no synchronization engine. The product
+decision also covers the schema and versioning strategy, migration, backup and
+recovery, and security boundaries.
+
+The template therefore standardizes neither the data itself, a universal
+format, nor a general storage provider. It standardizes the boundaries of
+responsibility and the decisions that must be documented for handling data.
+Storage format and persistence architecture, platform profile and storage
+provider, configuration and user data, and asset storage and structured data
+storage remain separate decisions.
+\beginnerinput{workspace/statement/300_architektur/380}

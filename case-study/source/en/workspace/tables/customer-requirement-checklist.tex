@@ -14,8 +14,8 @@
       & Distinguishes web, desktop, and full-platform paths. \\
     Central services & Must functions or shared data be available on the server side?
       & Requires a backend-capable cloud profile. \\
-    Persistence and offline operation & Is centralized relational data required; must the client remain operational without a network connection?
-      & PostgreSQL only when a backend is required; local storage and synchronization are separate additions. \\
+    Persistence and offline operation & Which user data is created; which is structured and which consists of files or assets; what is the source of truth; are offline operation, relational queries, or synchronization required?
+      & Determines the provider, schema, migration, backup, and recovery independently of the profile; PostgreSQL requires a backend. \\
     Native integration & Which operating-system APIs, devices, or platform-specific interfaces are required?
       & Determines the need for Tauri and the distance from the native baseline. \\
     Integration and operation & Which external systems, target environments, and scaling and operational requirements exist?

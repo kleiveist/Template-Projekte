@@ -17,7 +17,7 @@
     Desktop application with central backend & well suited & \texttt{desktop-cloud}
       & Production API, security, and signing; PostgreSQL remains optional. \\
     Browser + desktop + cloud & well suited & \texttt{full-platform}
-      & Channel-specific UX and tests; persistence only with a separate capability. \\
+      & Channel-specific UX and tests; the profile sets no persistence provider, while PostgreSQL is optional. \\
     Application with a high proportion of native code & conditionally suited & desktop profile or another foundation
       & Substantial effort for platform APIs, permissions, system-level services, or a native UI. \\
     Highly specialized infrastructure & conditionally suited & depends on the partial architecture
@@ -29,5 +29,5 @@
   \end{tabularx}
   \smallskip
   {\footnotesize Source: Author's own qualitative mapping based on
-  \textcite{kleiveist2026profiles} and \textcite{kleiveist2026acceptance}.\par}
+  \textcite{kleiveist2026profiles,kleiveist2026persistence,kleiveist2026acceptance}.\par}
 \end{table}

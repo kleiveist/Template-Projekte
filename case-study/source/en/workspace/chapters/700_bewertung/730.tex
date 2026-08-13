@@ -26,7 +26,10 @@ The deliberate exclusions are a backend in \texttt{web-only}, a cloud API in
 \texttt{desktop-local}, and PostgreSQL without a backend. Domain logic,
 authentication, role models, mandatory persistence, cloud providers, and
 native domain-specific commands likewise remain product-specific. The
-resulting adaptation effort is not a deviation from the scope.
+new decision framework for product persistence provides no universal
+local-file, embedded-database, or synchronization implementation. This
+deliberate scope boundary is an extension path, not an implementation defect
+\parencite{kleiveist2026persistence}.
 
 Compose startup, production deployment, Release Validation, and Branch
 Protection have not been conclusively verified. Unsigned Linux and macOS

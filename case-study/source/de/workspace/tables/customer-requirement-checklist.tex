@@ -14,8 +14,8 @@
       & Trennt Web-, Desktop- und Full-platform-Pfade. \\
     Zentrale Dienste & Müssen Funktionen oder gemeinsam genutzte Daten serverseitig bereitstehen?
       & Erfordert ein backendfähiges Cloudprofil. \\
-    Persistenz und Offline-Betrieb & Werden zentrale relationale Daten benötigt; muss der Client ohne Netz arbeitsfähig sein?
-      & PostgreSQL nur bei Backendbedarf; lokale Speicherung und Synchronisation sind separate Ergänzungen. \\
+    Persistenz und Offline-Betrieb & Welche Nutzerdaten entstehen; welche sind strukturiert, welche Dateien oder Assets; was ist die Source of Truth; sind Offline-Betrieb, relationale Abfragen oder Synchronisation nötig?
+      & Bestimmt Provider, Schema, Migration, Backup und Recovery unabhängig vom Profil; PostgreSQL setzt ein Backend voraus. \\
     Native Integration & Welche Betriebssystem-APIs, Geräte oder plattformspezifischen Oberflächen sind notwendig?
       & Bestimmt Tauri-Bedarf und Abstand zur nativen Baseline. \\
     Integration und Betrieb & Welche Fremdsysteme, Zielumgebungen, Skalierungs- und Betriebsanforderungen bestehen?

@@ -50,8 +50,8 @@ def test_case_study_language_sources_keep_matching_structure() -> None:
     en_inventory = {path.relative_to(en_root) for path in en_root.rglob("*") if path.is_file()}
 
     assert de_inventory == en_inventory
-    assert len(list((de_root / "workspace" / "chapters").rglob("*.tex"))) == 65
-    assert len(list((de_root / "workspace" / "statement").rglob("*.tex"))) == 48
+    assert len(list((de_root / "workspace" / "chapters").rglob("*.tex"))) == 66
+    assert len(list((de_root / "workspace" / "statement").rglob("*.tex"))) == 49
     assert len(list((de_root / "workspace" / "figures").rglob("*.tex"))) == 18
     assert len(list((de_root / "workspace" / "tables").rglob("*.tex"))) == 9
 

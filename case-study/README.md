@@ -4,7 +4,7 @@
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
-| Last review | 2026-08-12 |
+| Last review | 2026-08-13 |
 | Audience | Maintainers, reviewers, and readers of the case study |
 
 ## Purpose
@@ -26,7 +26,7 @@ The imported source is based on the [`Latex-Template` repository at commit `a031
 | English | Beginner explanations enabled | [PDF](pdf/template-projects-case-study-en-beginner.pdf) | [beginner.tex](source/en/beginner.tex) |
 | English | Scientific text only | [PDF](pdf/template-projects-case-study-en-scientific.pdf) | [scientific.tex](source/en/scientific.tex) |
 
-The four PDFs are the only canonical release artifacts. Their imported checksums are recorded in [checksums.sha256](pdf/checksums.sha256). The German scientific artifact is retained from upstream commit [`76b8efe`](https://github.com/kleiveist/Latex-Template/commit/76b8efe); the German beginner artifact corresponds to [`32c6eca`](https://github.com/kleiveist/Latex-Template/commit/32c6eca); and the English artifacts were introduced with [`a031406`](https://github.com/kleiveist/Latex-Template/commit/a031406). A future content change must rebuild and review the affected editions from the integrated entry points.
+The four PDFs are the only canonical release artifacts. Their reviewed checksums are recorded in [checksums.sha256](pdf/checksums.sha256). The source history includes the German scientific artifact from upstream commit [`76b8efe`](https://github.com/kleiveist/Latex-Template/commit/76b8efe), the German beginner artifact from [`32c6eca`](https://github.com/kleiveist/Latex-Template/commit/32c6eca), and the English artifacts introduced with [`a031406`](https://github.com/kleiveist/Latex-Template/commit/a031406). The current artifacts are rebuilt and reviewed from the integrated entry points whenever published content changes.
 
 ## Source structure
 
@@ -45,11 +45,11 @@ case-study/
 └── translation-validation.md
 ```
 
-Each language has one source tree. `main.tex` controls chapter order, `preamble.tex` owns shared typesetting settings, and `references.bib` owns the bibliography. The thin edition entry points select whether the 48 beginner explanations are rendered. The existing `workspace/{chapters,figures,statement,tables}` hierarchy remains unchanged so individual sections stay reusable and reviewable.
+Each language has one source tree. `main.tex` controls chapter order, `preamble.tex` owns shared typesetting settings, and `references.bib` owns the bibliography. The thin edition entry points select whether the 49 beginner explanations are rendered. The existing `workspace/{chapters,figures,statement,tables}` hierarchy remains unchanged so individual sections stay reusable and reviewable.
 
 ## Build
 
-This is a master-maintenance helper and therefore intentionally lives beside the publication instead of in the product-facing `tools/control.py` dispatcher. Tectonic is the supported build engine because it coordinates the required TeX, Biber, and rerun sequence. Both `tectonic` and `biber` must be available. The imported English artifacts were validated with Tectonic 0.17.0 and Biber 2.17.
+This is a master-maintenance helper and therefore intentionally lives beside the publication instead of in the product-facing `tools/control.py` dispatcher. Tectonic is the supported build engine because it coordinates the required TeX, Biber, and rerun sequence. Both `tectonic` and `biber` must be available, and TeX Gyre Heros must be installed as a system font so XeTeX can preserve the publication's Unicode glyphs. The current artifacts were validated with Tectonic 0.17.0 and Biber 2.17.
 
 Build all four editions from the repository root:
 
@@ -85,7 +85,7 @@ The build is isolated in a temporary directory and updates the selected files in
 
 ## Verification
 
-Verify the imported PDF artifacts:
+Verify the reviewed PDF artifacts:
 
 ```sh
 python case-study/build.py --verify

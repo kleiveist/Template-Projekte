@@ -5,9 +5,10 @@ their connections. A component is a distinct technical building block. A
 repository is a managed project directory with a history of changes; here, the
 master repository is the central template from which projects are generated.
 The client runs on the user's side and contains the visible frontend, while the
-server runs the backend in the background. A database stores data persistently
-and, in appropriate profiles, is accessed only by the backend. Deployment means
-providing and starting these components in a target environment. Separating
+server runs the backend in the background. A database stores data persistently.
+The optional PostgreSQL database shown here is accessed only by the backend.
+Deployment means providing and starting these components in a target
+environment. Separating
 responsibilities ensures that each component has a clear task and can be tested
 or modified as independently as possible.
 

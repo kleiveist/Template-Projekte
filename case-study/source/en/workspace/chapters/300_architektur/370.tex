@@ -1,4 +1,4 @@
-\subsection{Persistence with PostgreSQL, SQLAlchemy, and Alembic}
+\subsection{Server-Side PostgreSQL Persistence with SQLAlchemy and Alembic}
 \label{subsec:persistenz-postgresql}
 
 PostgreSQL is optional and is not a separate profile. \texttt{postgres} requires
@@ -20,5 +20,5 @@ automatic migrations at FastAPI startup are implemented; changes require
 explicit Alembic commands
 \parencite{alembic2026tutorial,kleiveist2026database}. \texttt{/api/health}
 remains independent of the database, while \texttt{/api/ready} checks
-reachability when persistence is active.
+reachability when the database capability is enabled.
 \beginnerinput{workspace/statement/300_architektur/370}

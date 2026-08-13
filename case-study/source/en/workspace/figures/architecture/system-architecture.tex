@@ -20,7 +20,7 @@
     \node[caseOptional,minimum width=30mm,right=of backend] (tauri)
       {Tauri};
     \node[caseOptional,minimum width=30mm,right=of tauri] (database)
-      {Persistence};
+      {server-side\\SQL persistence};
 
     \draw[caseFlow] (master) -- (catalog);
     \draw[caseFlow] (master) -- (selection);
@@ -41,5 +41,5 @@
   \label{fig:system-architecture}
   \smallskip
   {\footnotesize Source: Author's own illustration based on
-  \textcite{kleiveist2026architecture} and \textcite{kleiveist2026profiles}.\par}
+  \textcite{kleiveist2026architecture,kleiveist2026profiles,kleiveist2026persistence}.\par}
 \end{figure}

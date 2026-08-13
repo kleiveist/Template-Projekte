@@ -1,4 +1,4 @@
-\subsection{Persistenz mit PostgreSQL, SQLAlchemy und Alembic}
+\subsection{Serverseitige PostgreSQL-Persistenz mit SQLAlchemy und Alembic}
 \label{subsec:persistenz-postgresql}
 
 PostgreSQL ist optional und kein eigenes Profil. \texttt{postgres} setzt
@@ -18,6 +18,6 @@ Fachmodelle gibt es keine initiale Revision. Weder \texttt{create\_all()} noch
 automatische Migrationen beim FastAPI-Start sind implementiert; Änderungen
 erfordern explizite Alembic-Kommandos
 \parencite{alembic2026tutorial,kleiveist2026database}. \texttt{/api/health}
-bleibt datenbankunabhängig, \texttt{/api/ready} prüft bei aktiver Persistenz die
-Erreichbarkeit.
+bleibt datenbankunabhängig, \texttt{/api/ready} prüft bei aktivierter
+Datenbankfähigkeit die Erreichbarkeit.
 \beginnerinput{workspace/statement/300_architektur/370}

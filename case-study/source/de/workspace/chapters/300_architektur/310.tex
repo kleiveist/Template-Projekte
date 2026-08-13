@@ -12,9 +12,9 @@ vermeidet getrennte Template-Kopien
 Abbildung~\ref{fig:system-architecture} trennt die Baseline vom abgeleiteten
 Projekt. Der Generator löst Profil und Capabilities auf, übernimmt die
 zugehörigen Pfade und dokumentiert das Ergebnis in
-\texttt{project-profile.toml}. Frontend, Backend, Tauri und Persistenz bleiben
-eigenständige, teils optionale Bausteine
-\parencite{kleiveist2026architecture}.
+\texttt{project-profile.toml}. Frontend, Backend, Tauri und die serverseitige
+SQL-Persistenz bleiben eigenständige, teils optionale Bausteine
+\parencite{kleiveist2026architecture,kleiveist2026persistence}.
 
 \input{workspace/figures/architecture/component-architecture}
 
@@ -25,9 +25,9 @@ Deployment steuern die Komponenten außerhalb der Produktlaufzeit.
 
 \input{workspace/figures/architecture/runtime-architecture}
 
-Zur Laufzeit lädt entweder der Browser oder eine Tauri-Webview denselben
-Vite-Build (Abbildung~\ref{fig:runtime-architecture}). Backendfähige Profile
-kommunizieren über HTTP mit FastAPI; nur das Backend greift auf eine aktivierte
-Persistenz zu. So bleiben Client, Server und Datenhaltung getrennt test- und
-erweiterbar.
+Browser oder Tauri-Webview laden denselben Vite-Build
+(Abbildung~\ref{fig:runtime-architecture}). Backendfähige Profile nutzen
+FastAPI über HTTP; allein das Backend greift auf die dargestellte optionale
+PostgreSQL-Persistenz zu. Lokale Produktspeicher sind davon getrennt und nicht
+implementiert \parencite{kleiveist2026persistence}.
 \beginnerinput{workspace/statement/300_architektur/310}
