@@ -7,13 +7,13 @@
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
-| Last review | 2026-08-06 |
+| Last review | 2026-08-13 |
 | Audience | Backend developers and operators |
 | Related ATP | N/A — template-level optional capability |
 
 ## Purpose
 
-This document defines the optional SQL database capability. PostgreSQL is an optional capability of backend-enabled projects, not a project profile and not a mandatory template dependency.
+This document defines the optional server-side SQL database capability. `database` provides generic backend SQL infrastructure, while `postgres` is its current concrete provider. PostgreSQL is an optional capability of backend-enabled projects, not a project profile, a universal persistence layer, or a mandatory template dependency.
 
 ## Scope
 
@@ -29,6 +29,7 @@ This document defines the optional SQL database capability. PostgreSQL is an opt
 ### Excluded
 
 - business models and repositories;
+- local file storage, embedded desktop databases, asset storage, and synchronization;
 - automatic schema creation or migration during application startup;
 - Docker, deployment, backup, replication, and high availability; and
 - authentication or authorization.
@@ -49,7 +50,9 @@ flowchart TD
     Postgres --> Project
 ```
 
-`database` owns generic SQLAlchemy and Alembic infrastructure. `postgres` owns the Psycopg driver, the PostgreSQL URL example, and PostgreSQL integration tests. This separation permits a later database provider, such as SQLite, to reuse `database` without depending on Psycopg.
+`database` owns generic server-side SQLAlchemy and Alembic infrastructure. `postgres` owns the Psycopg driver, the PostgreSQL URL example, and PostgreSQL integration tests. This separation allows another compatible server-side SQLAlchemy provider to reuse `database` without depending on Psycopg.
+
+An embedded database inside a desktop application has a different runtime and security boundary. A future desktop SQLite implementation may therefore require a separate `embedded-database` capability with `sqlite` as its provider. Neither capability exists in this template.
 
 Generate a PostgreSQL-capable project with:
 
@@ -76,6 +79,17 @@ flowchart LR
 ```
 
 Frontend and Tauri code never receives `DATABASE_URL` and never connects to PostgreSQL directly.
+
+## Position in the persistence architecture
+
+The server-side SQL stack is one implemented branch of the provider-neutral [persistence architecture](persistence-architecture.md):
+
+```text
+generic server-side SQL capability    concrete provider
+database                           -> postgres
+```
+
+It does not define how a product stores local files, embedded desktop data, or assets. It also does not make PostgreSQL the source of truth automatically; a derived product records that decision for its own data. Platform profiles remain independent from persistence choices, subject to the technical rule that the current SQL capability requires a backend.
 
 ## Configuration
 
@@ -129,6 +143,8 @@ Generic unit tests use an in-memory SQLite engine and require no PostgreSQL serv
 python tools/control.py test --suite database
 ```
 
+This in-memory engine is test infrastructure for the SQLAlchemy boundary. It is not a shipped SQLite provider or desktop persistence capability.
+
 The PostgreSQL suite runs only when `DATABASE_URL_TEST` is configured and reachable. Otherwise Pytest reports a skip:
 
 ```sh
@@ -147,6 +163,7 @@ python tools/control.py test --suite postgres
 ## Related documents
 
 - [Framework architecture](architecture.md)
+- [Provider-neutral persistence architecture](persistence-architecture.md)
 - [Project profiles](project-profiles.md)
 - [Runtime configuration](configuration.md)
 - [Deployment architecture](deployment-architecture.md)

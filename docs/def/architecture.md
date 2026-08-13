@@ -7,17 +7,17 @@
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
-| Last review | 2026-08-06 |
+| Last review | 2026-08-13 |
 | Audience | Developers and architects |
 | Related ATP | N/A — template-level architecture |
 
 ## Purpose
 
-This document defines the baseline architecture of the project template, the shared feature modules, and the profile-based scaffold model. It explains how Vite, TypeScript, FastAPI, Tauri and optional server capabilities work together, and how project profiles reuse that same base without becoming separate template implementations. Product-specific projects must update this document when they add deployment units, trust boundaries or framework-level dependencies.
+This document defines the baseline architecture of the project template, the shared feature modules, and the profile-based scaffold model. It explains how Vite, TypeScript, FastAPI, Tauri and optional server capabilities work together, how project profiles reuse that same base without becoming separate template implementations, and where product-defined persistence belongs. Product-specific projects must update their architecture when they add deployment units, data stores, trust boundaries, synchronization services, object stores, or framework-level dependencies.
 
 ## Scope
 
-The architecture covers the web frontend, HTTP backend, desktop shell, shared contracts, optional database infrastructure, provider-neutral container boundary, profile generator, and local development tooling. It does not prescribe a product domain, database schema, authentication provider, cloud vendor, or production credential system.
+The architecture covers the web frontend, HTTP backend, desktop shell, shared contracts, optional server-side database infrastructure, the provider-neutral persistence boundary, provider-neutral container boundary, profile generator, and local development tooling. It does not prescribe a product domain, product-data format, persistence provider, database schema, authentication provider, cloud vendor, or production credential system.
 
 ## System context
 
@@ -40,7 +40,7 @@ flowchart LR
     Backend -.->|Add only when required| External
 ```
 
-The same frontend source supports two hosts. A browser downloads the static build from a web server. Tauri loads the same static build into a native webview. The frontend reaches FastAPI through an explicit HTTP API; it must not depend on backend Python modules or internal file paths.
+The same frontend source supports two hosts. A browser downloads the static build from a web server. Tauri loads the same static build into a native webview. The frontend reaches FastAPI through an explicit HTTP API; it must not depend on backend Python modules or internal file paths. The context diagram shows the implemented baseline and therefore omits future local-file, embedded-database, object-storage, and synchronization providers.
 
 ## Runtime containers
 
@@ -48,10 +48,10 @@ The same frontend source supports two hosts. A browser downloads the static buil
 | --- | --- | --- | --- |
 | Frontend | Vite + TypeScript | Presentation, browser interaction, client-side state and typed API clients | Server secrets, direct database access or Python imports |
 | Backend | FastAPI + Uvicorn | HTTP contracts, validation, application orchestration and server-side integrations | Browser DOM logic or desktop UI concerns |
-| Database capability | SQLAlchemy 2 + Alembic | Server-side persistence configuration, sessions and schema migrations | Product models, automatic startup migrations or client-side database access |
+| Database capability | SQLAlchemy 2 + Alembic | Generic server-side SQL configuration, sessions and schema migrations | Product models, automatic startup migrations, local desktop persistence or client-side database access |
 | PostgreSQL capability | Psycopg 3 | Optional PostgreSQL driver and connectivity checks | Credentials committed to source control |
 | Desktop shell | Tauri 2 + Rust | Native window, packaging and explicitly approved native capabilities | Product business logic that also belongs to the web version |
-| Shared | JSON and static assets | Framework-neutral contracts and examples consumed across boundaries | Executable framework-specific behavior |
+| Shared | JSON and static assets | Version-controlled framework-neutral contracts, examples, and template assets consumed across boundaries | Executable framework-specific behavior or runtime product/user data |
 | Tooling | Python | Local lifecycle commands spanning more than one container | Product runtime behavior |
 
 ## Repository mapping
@@ -70,7 +70,7 @@ backend/app/
 backend/alembic/          Optional Alembic migration environment
 
 shared/
-├── assets/              Cross-runtime static assets
+├── assets/              Version-controlled cross-runtime template assets
 ├── examples/            Contract examples
 └── schema/              JSON Schema or other neutral interface definitions
 
@@ -126,11 +126,19 @@ flowchart TD
     Generator --> Full
 ```
 
-Profiles are configuration presets over reusable features, not independent template implementations. Platform profiles select the runtime shape, while optional capabilities extend a compatible profile without creating another profile. For example, `web-cloud` selects `frontend + backend + cloud`; `--with postgres` adds `postgres`, resolves its `database` dependency, and reuses the same backend implementation.
+Profiles are configuration presets over reusable features, not independent template implementations. Platform profiles select the runtime shape, while optional capabilities extend a compatible profile without creating another profile. For example, `web-cloud` selects `frontend + backend + cloud`; `--with postgres` adds `postgres`, resolves its `database` dependency, and reuses the same backend implementation. Profile selection does not select a product-data format, storage provider, or source of truth.
 
 The master repository keeps the complete baseline. The generator validates the selected profile and capabilities, resolves dependencies, selects core paths plus feature-owned paths, writes `project-profile.toml` for the derived project, and rewrites the frontend profile module when the frontend feature is enabled. This allows the shared tooling to stay in one codebase while generated projects omit disabled runtime layers and dependencies.
 
-## Optional database interaction
+## Product-data persistence boundary
+
+Template and development data, runtime configuration, and product/user data have different owners and lifecycles. `profiles/`, `project-profile.toml`, `tools/`, `docs/`, and `shared/` describe or generate the project. `.env`, `config/environment.toml`, URLs, ports, and credentials configure a runtime. Neither category is a storage location for data created through use of the finished product.
+
+A derived product places persistence behind its domain or application state and documents the selected categories: local file storage, an embedded database, a remote store, and/or asset storage. It also identifies the source of truth, data location, schema and migration strategy, backup and recovery, security boundary, import and export, and any synchronization behavior. The template provides the decision framework in [Provider-neutral persistence architecture](persistence-architecture.md); it deliberately provides no universal persistence interface or default data format.
+
+`desktop-local` therefore does not imply JSON, SQLite, or any other provider. `desktop-cloud` does not imply PostgreSQL and does not make local and server stores equally authoritative. Technical capabilities retain their runtime dependencies: the implemented PostgreSQL path remains server-side and requires a backend.
+
+## Optional server-side database interaction
 
 ```mermaid
 flowchart LR
@@ -176,7 +184,7 @@ flowchart LR
     Public --> Tauri
 ```
 
-Project structure and runtime environment are independent axes. The profile answers what the project contains. Environment values answer how that project runs in development, test, or production. Resolution priority is CLI override, process environment, local `.env`, then contract default.
+Project structure, runtime environment, and product-data persistence are independent axes. The profile answers what the project contains. Environment values answer how that project runs in development, test, or production. The product persistence design answers which user data exists, where it lives, and which store is authoritative. Resolution priority for runtime configuration is CLI override, process environment, local `.env`, then contract default. Runtime configuration must not be used as product/user data storage.
 
 Frontend code receives only explicitly public `VITE_` values. Backend Settings consume server runtime values and secrets. Tooling reads the shared contract directly, while each application runtime keeps a technology-specific adapter instead of depending on a global Python settings module.
 
@@ -287,6 +295,9 @@ That decision changes packaging, updates, observability and the security model, 
 9. Frontend and Tauri code never connect directly to PostgreSQL or receive `DATABASE_URL`.
 10. `project-profile.toml` never stores runtime environment values or secrets.
 11. Client configuration is explicitly public; non-`VITE_` server values never enter the frontend application API.
+12. A platform profile never implies a storage provider, data format or source of truth.
+13. Asset storage and structured data storage remain separate design decisions.
+14. A shared persistence abstraction is introduced only after real use cases establish a common contract.
 
 ## Security boundaries
 
@@ -303,12 +314,13 @@ Database credentials are process environment values and are never written to gen
 When starting a product from this template:
 
 1. Define the first user capability and its acceptance criteria.
-2. Add domain-neutral request and response contracts.
-3. Implement backend behavior behind a router or deliberately choose a local-only Tauri command.
-4. Add a typed frontend adapter and keep rendering independent from transport details.
-5. Add automated tests at the narrowest useful layer.
-6. Create and execute the corresponding ATP.
-7. Update this architecture if a new container, data store, external system or trust boundary is introduced.
+2. Decide whether it creates persistent product/user data and, if so, document the source of truth and persistence boundary.
+3. Add domain-neutral request and response contracts.
+4. Implement backend behavior behind a router or deliberately choose a local-only Tauri command.
+5. Add a typed frontend adapter and keep rendering independent from transport details.
+6. Add automated tests at the narrowest useful layer.
+7. Create and execute the corresponding ATP.
+8. Update the product architecture if a new container, data store, synchronization service, object store, external system or trust boundary is introduced.
 
 ## Verification
 
@@ -335,6 +347,7 @@ python tools/control.py build desktop
 
 - [Project README](../../README.md)
 - [Project profiles](project-profiles.md)
+- [Provider-neutral persistence architecture](persistence-architecture.md)
 - [Optional database feature](database-feature.md)
 - [Runtime configuration](configuration.md)
 - [Deployment architecture](deployment-architecture.md)

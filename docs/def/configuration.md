@@ -7,13 +7,13 @@
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
-| Last review | 2026-08-06 |
+| Last review | 2026-08-13 |
 | Audience | Developers and operators |
 | Related ATP | N/A — template-level configuration contract |
 
 ## Purpose
 
-This document defines one configuration contract with runtime-specific adapters. Project profiles define what a project contains. Environment configuration defines how that project runs. Secrets are server-side runtime configuration and never become client configuration.
+This document defines one configuration contract with runtime-specific adapters. Project profiles define what a project contains. Environment configuration defines how that project runs. Product persistence defines where user data lives and is a separate concern. Secrets are server-side runtime configuration and never become client configuration.
 
 ## Scope
 
@@ -31,8 +31,9 @@ This document defines one configuration contract with runtime-specific adapters.
 - cloud-provider secret stores and vendor-specific deployment adapters;
 - CI configuration;
 - managed secret stores;
-- authentication and authorization; and
-- production credential generation.
+- authentication and authorization;
+- production credential generation; and
+- product/user data storage or persistence-provider selection.
 
 ## Architecture
 
@@ -66,7 +67,7 @@ flowchart TD
     Secrets --> Backend
 ```
 
-`project-profile.toml` contains the profile, optional capabilities, and resolved features. It never contains ports, hosts, environment names, URLs, or credentials. Runtime environments are `development`, `test`, and `production`; they do not create additional project profiles.
+`project-profile.toml` contains the profile, optional capabilities, and resolved features. It never contains ports, hosts, environment names, URLs, credentials, or product/user data. Runtime environments are `development`, `test`, and `production`; they do not create additional project profiles. Likewise, `.env` and `config/environment.toml` configure application execution and must not be used as product-data stores.
 
 ## Configuration sources
 
@@ -97,7 +98,7 @@ The tooling loader reads `.env` without mutating `os.environ`. Runtime launchers
 
 `BACKEND_CORS_ORIGINS` is a comma-separated list. When it is not explicit, tooling derives browser origins from the effective frontend host and port and adds the local Tauri origins. Wildcard origins are invalid. The deprecated `CORS_ORIGINS` name remains accepted for existing local environments, but new configuration uses `BACKEND_CORS_ORIGINS`.
 
-## Local files
+## Local configuration files
 
 The root `.env.example` is a generated-safe contract example and contains placeholders only. The project generator renders it from `config/environment.toml` and includes only variables relevant to the resolved feature set.
 
@@ -174,6 +175,7 @@ python tools/control.py build web
 ## Related documents
 
 - [Framework architecture](architecture.md)
+- [Provider-neutral persistence architecture](persistence-architecture.md)
 - [Project profiles](project-profiles.md)
 - [Database feature](database-feature.md)
 - [Deployment architecture](deployment-architecture.md)

@@ -18,6 +18,7 @@
 - 📝 [Runtime configuration](def/configuration.md)
 - 📝 [Database feature](def/database-feature.md)
 - 📝 [Deployment architecture](def/deployment-architecture.md)
+- 📝 [Provider-neutral persistence architecture](def/persistence-architecture.md)
 - 📝 [Project profiles](def/project-profiles.md)
 
 ## 📁 DEV

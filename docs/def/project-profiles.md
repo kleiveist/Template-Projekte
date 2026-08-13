@@ -7,13 +7,13 @@
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
-| Last review | 2026-08-06 |
+| Last review | 2026-08-13 |
 | Audience | Developers and architects |
 | Related ATP | N/A — template-level profile model |
 
 ## Purpose
 
-This document defines how the repository models project profiles. A profile is a reusable preset over shared features. It is not a separate template implementation.
+This document defines how the repository models project profiles. A profile is a reusable preset over shared features. It is not a separate template implementation and does not prescribe how a product persists user data.
 
 ## Scope
 
@@ -41,7 +41,7 @@ This document defines how the repository models project profiles. A profile is a
 | Optional capability | An additive feature selected with `--with` after choosing a platform profile |
 | Active project profile | The machine-readable manifest at `project-profile.toml` used by tooling inside the current project root |
 
-Profiles define project structure, not runtime environments. `development`, `test`, and `production` use the same profile with different environment values. Ports, hosts, URLs, and secrets never belong in `project-profile.toml`.
+Profiles define project structure, not runtime environments or product-data persistence. `development`, `test`, and `production` use the same profile with different environment values. Ports, hosts, URLs, secrets, user-data formats, and sources of truth never belong in `project-profile.toml`.
 
 ## Single-repository strategy
 
@@ -66,7 +66,7 @@ Each `profiles/<profile-id>.toml` file defines:
 - `features`
 - `order`
 
-Feature definitions can additionally declare `optional`, `selectable`, `requires`, owned scaffold `paths`, and safe `.env.example` entries. Optional capabilities are never hardcoded into platform profile files.
+Feature definitions can additionally declare `optional`, `selectable`, `requires`, and owned scaffold `paths`. Runtime-variable definitions in `config/environment.toml` can declare `required_features`; the generator renders matching safe examples into `.env.example`. Optional capabilities are never hardcoded into platform profile files.
 
 Example:
 
@@ -83,7 +83,7 @@ The active project manifest adds `optional_features` and stores the fully resolv
 
 ## Current profiles
 
-| Profile | Frontend | FastAPI | Tauri | Cloud | PostgreSQL | Enabled profile features |
+| Profile | Frontend | FastAPI | Tauri | Cloud | Current `postgres` capability | Enabled profile features |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | `web-only` | Yes | No | No | No | Not compatible | `frontend` |
 | `web-cloud` | Yes | Yes | No | Yes | Optional | `frontend`, `backend`, `cloud` |
@@ -93,13 +93,24 @@ The active project manifest adds `optional_features` and stores the fully resolv
 
 The master repository selects `postgres` in its own `project-profile.toml` so its complete optional implementation and tests are available for maintenance. This does not modify the `full-platform` preset: a generated full-platform project includes PostgreSQL only when `--with postgres` is supplied.
 
+## Profile and persistence independence
+
+Platform selection and persistence design are separate decisions:
+
+- `desktop-local` includes `frontend + tauri` and no persistence provider. It implies neither JSON nor SQLite. A derived product can later choose no persistence, local files, an embedded database, or a product-specific solution.
+- `desktop-cloud` includes a client and backend but no database provider by default. It implies neither a local store nor PostgreSQL. `--with postgres` adds the existing server-side SQL path; any local or offline store remains a separate product decision.
+- `web-cloud` and `full-platform` can also select `postgres`, but PostgreSQL becomes authoritative only when the product architecture names it as the source of truth.
+- `web-only` has no backend and cannot select the current backend-bound `postgres` capability. This compatibility rule does not prescribe a product-data format.
+
+If a product combines local and remote storage, it documents which store is authoritative and defines any synchronization, revision, and conflict behavior. See [Provider-neutral persistence architecture](persistence-architecture.md) for the decision framework.
+
 ## Feature dependency rules
 
 The current baseline validates these dependencies:
 
 - `tauri` requires `frontend`
 - `cloud` requires `backend`
-- `database` requires `backend`
+- `database` provides server-side SQL infrastructure and requires `backend`
 - `postgres` requires `database`
 
 Future features extend the same dependency model, for example `auth` requiring `backend`.
@@ -163,12 +174,13 @@ The shared tooling reads `project-profile.toml` and adjusts behavior:
 
 To add a future capability:
 
-1. extend `profiles/features.toml` with the new feature, optional metadata, and dependencies;
-2. attach owned paths only when the feature introduces dedicated scaffold content;
-3. mark it selectable when users should choose it with `--with`, without adding it to platform profile presets; and
-4. add tests and documentation in the same change.
+1. establish a realistic reusable use case and a concrete technical contract;
+2. extend `profiles/features.toml` with the implemented feature, optional metadata, and dependencies;
+3. attach owned paths only when the feature introduces dedicated scaffold content or behavior;
+4. mark it selectable when users should choose it with `--with`, without adding it to platform profile presets; and
+5. add tests and documentation in the same change.
 
-This keeps profile growth additive rather than architectural.
+This keeps profile growth additive rather than architectural. Do not add empty catalog entries for documentation-only concepts. Future candidates such as `local-files`, `embedded-database`, or `sqlite` enter the catalog only when they become real reusable capabilities.
 
 ## Verification
 
@@ -181,6 +193,7 @@ python tools/control.py test --suite tools
 ## Related documents
 
 - [Framework architecture](architecture.md)
+- [Provider-neutral persistence architecture](persistence-architecture.md)
 - [Database feature](database-feature.md)
 - [Runtime configuration](configuration.md)
 - [Deployment architecture](deployment-architecture.md)

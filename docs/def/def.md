@@ -10,6 +10,7 @@
 - 📝 [Runtime configuration](configuration.md)
 - 📝 [Database feature](database-feature.md)
 - 📝 [Deployment architecture](deployment-architecture.md)
+- 📝 [Provider-neutral persistence architecture](persistence-architecture.md)
 - 📝 [Project profiles](project-profiles.md)
 
 <!-- AUTO-GENERATED:docs-index END -->

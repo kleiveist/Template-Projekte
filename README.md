@@ -243,7 +243,7 @@ Use `python tools/control.py run` when developing the master template's referenc
 | --- | --- | --- |
 | Web frontend | Vite 6, TypeScript 5, Vitest | Browser user interface and frontend tests |
 | Backend | FastAPI, Uvicorn, Pytest | HTTP API and API tests |
-| Optional database | SQLAlchemy 2.x, Alembic, PostgreSQL, Psycopg 3 | Server-side persistence and explicit migrations |
+| Optional server-side SQL | SQLAlchemy 2.x, Alembic, PostgreSQL, Psycopg 3 | Server-side persistence and explicit migrations |
 | Desktop | Tauri 2, Rust | Native desktop shell for the web frontend |
 | Tooling | Python | Shared setup, development, testing, build, and documentation workflows |
 
@@ -252,6 +252,8 @@ Use `python tools/control.py run` when developing the master template's referenc
 Profiles are reusable presets over shared features. The master repository contains all feature modules, while a generated project's `project-profile.toml` tells `install`, `doctor`, `run`, `test`, and build commands which components are active.
 
 Runtime values are separate from profiles. Use `python tools/control.py config show` to inspect masked effective values and `python tools/control.py config doctor` to validate them. See [Runtime configuration](docs/def/configuration.md) for value priority and security boundaries.
+
+Product/user-data persistence is a third, independent decision. A profile selects the platform shape; it does not select a storage provider, data format, or source of truth. In particular, `desktop-local` implies neither JSON nor SQLite, and `desktop-cloud` implies neither local storage nor PostgreSQL. Derived products document their actual data boundary using the [provider-neutral persistence architecture](docs/def/persistence-architecture.md).
 
 PostgreSQL support adds SQLAlchemy, Alembic, and Psycopg only when selected with `--with postgres`. See [Database feature](docs/def/database-feature.md). Cloud-enabled profiles include provider-neutral Docker boundaries; Docker remains optional for ordinary local development. See [Deployment architecture](docs/def/deployment-architecture.md) and [Container builds](docs/tools/container-builds.md).
 
@@ -277,6 +279,7 @@ The README answers “How do I start?” The linked guides answer “How does it
 - [Tooling Guide](docs/tools/tooling.md): complete command and console reference
 - [Project profiles](docs/def/project-profiles.md): profiles, features, and generation rules
 - [Runtime configuration](docs/def/configuration.md): environment contract and precedence
+- [Provider-neutral persistence architecture](docs/def/persistence-architecture.md): data categories, sources of truth, and provider decisions
 - [Database feature](docs/def/database-feature.md): optional PostgreSQL and migrations
 - [Framework architecture](docs/def/architecture.md): component boundaries
 - [Deployment architecture](docs/def/deployment-architecture.md): production units and health contracts
@@ -310,6 +313,7 @@ English is the only documentation language for this repository and projects deri
 - 📝 [Runtime configuration](docs/def/configuration.md)
 - 📝 [Database feature](docs/def/database-feature.md)
 - 📝 [Deployment architecture](docs/def/deployment-architecture.md)
+- 📝 [Provider-neutral persistence architecture](docs/def/persistence-architecture.md)
 - 📝 [Project profiles](docs/def/project-profiles.md)
 
 ## 📁 DEV
