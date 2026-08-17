@@ -78,12 +78,12 @@ def test_invalid_feature_dependencies_are_detected(tmp_path) -> None:
                 "[features.frontend]",
                 'name = "Frontend"',
                 'description = "Frontend runtime"',
-                'paths = []',
+                "paths = []",
                 "",
                 "[features.tauri]",
                 'name = "Tauri"',
                 'description = "Desktop shell"',
-                'paths = []',
+                "paths = []",
                 'requires = ["frontend"]',
                 "",
             ]
@@ -179,13 +179,13 @@ def test_profile_configuration_can_be_extended_without_breaking_loading(tmp_path
                 "[features.frontend]",
                 'name = "Frontend"',
                 'description = "Frontend runtime"',
-                'paths = []',
+                "paths = []",
                 'future_flag = "safe-to-ignore"',
                 "",
                 "[features.monitoring]",
                 'name = "Monitoring"',
                 'description = "Optional monitoring integration"',
-                'paths = []',
+                "paths = []",
                 'requires = ["frontend"]',
                 "",
             ]
@@ -263,7 +263,7 @@ def test_scaffold_plan_uses_only_profile_feature_paths(
 
     assert all(any(item == prefix or item.startswith(f"{prefix}/") for item in selected) for prefix in expected)
     assert all(not any(item == prefix or item.startswith(f"{prefix}/") for item in selected) for prefix in excluded)
-    assert {"README.md", "docs", "profiles", "shared", "tools"} <= selected
+    assert {"AGENTS.md", "README.md", "docs", "profiles", "shared", "tools"} <= selected
 
 
 def test_catalog_rejects_paths_outside_repository(tmp_path: Path) -> None:
@@ -281,7 +281,7 @@ def test_catalog_rejects_paths_outside_repository(tmp_path: Path) -> None:
                 "[features.frontend]",
                 'name = "Frontend"',
                 'description = "Frontend runtime"',
-                'paths = []',
+                "paths = []",
                 "",
             ]
         ),
@@ -320,13 +320,13 @@ def test_catalog_rejects_unknown_dependencies_and_cycles(tmp_path: Path) -> None
                 "[features.alpha]",
                 'name = "Alpha"',
                 'description = "Alpha feature"',
-                'paths = []',
+                "paths = []",
                 'requires = ["beta", "missing"]',
                 "",
                 "[features.beta]",
                 'name = "Beta"',
                 'description = "Beta feature"',
-                'paths = []',
+                "paths = []",
                 'requires = ["alpha"]',
                 "",
             ]
@@ -414,15 +414,18 @@ def test_master_readme_case_study_links_are_removed_from_scaffold(tmp_path: Path
 def test_init_command_scaffolds_selected_profile(tmp_path: Path) -> None:
     target = tmp_path / "desktop-local-project"
 
-    assert control.main(
-        [
-            "init",
-            "--profile",
-            "desktop-local",
-            "--target-dir",
-            str(target),
-        ]
-    ) == 0
+    assert (
+        control.main(
+            [
+                "init",
+                "--profile",
+                "desktop-local",
+                "--target-dir",
+                str(target),
+            ]
+        )
+        == 0
+    )
 
     assert (target / "frontend").exists()
     assert (target / "src-tauri").exists()
@@ -430,6 +433,7 @@ def test_init_command_scaffolds_selected_profile(tmp_path: Path) -> None:
     assert (target / "docs").exists()
     assert (target / "shared").exists()
     assert (target / "profiles").exists()
+    assert (target / "AGENTS.md").is_file()
     assert not (target / "backend").exists()
     assert 'id = "desktop-local"' in (target / "project-profile.toml").read_text(encoding="utf-8")
     frontend_profile = (target / "frontend" / "src" / "project-profile.ts").read_text(encoding="utf-8")
@@ -458,19 +462,22 @@ def test_init_command_scaffolds_selected_profile(tmp_path: Path) -> None:
 def test_init_command_applies_complete_release_identity(tmp_path: Path) -> None:
     target = tmp_path / "customer-app"
 
-    assert control.main(
-        [
-            "init",
-            "--profile",
-            "desktop-cloud",
-            "--name",
-            "CustomerApp",
-            "--identifier",
-            "com.customer.app",
-            "--target-dir",
-            str(target),
-        ]
-    ) == 0
+    assert (
+        control.main(
+            [
+                "init",
+                "--profile",
+                "desktop-cloud",
+                "--name",
+                "CustomerApp",
+                "--identifier",
+                "com.customer.app",
+                "--target-dir",
+                str(target),
+            ]
+        )
+        == 0
+    )
 
     package = json.loads((target / "frontend" / "package.json").read_text(encoding="utf-8"))
     package_lock = json.loads((target / "frontend" / "package-lock.json").read_text(encoding="utf-8"))
@@ -490,17 +497,20 @@ def test_init_command_applies_complete_release_identity(tmp_path: Path) -> None:
 
 
 def test_init_requires_identifier_for_custom_tauri_identity(tmp_path: Path) -> None:
-    assert control.main(
-        [
-            "init",
-            "--profile",
-            "desktop-local",
-            "--name",
-            "Customer App",
-            "--target-dir",
-            str(tmp_path / "customer-app"),
-        ]
-    ) == 1
+    assert (
+        control.main(
+            [
+                "init",
+                "--profile",
+                "desktop-local",
+                "--name",
+                "Customer App",
+                "--target-dir",
+                str(tmp_path / "customer-app"),
+            ]
+        )
+        == 1
+    )
 
 
 def test_init_command_supports_interactive_profile_selection(monkeypatch, tmp_path: Path) -> None:
@@ -515,16 +525,19 @@ def test_init_command_supports_interactive_profile_selection(monkeypatch, tmp_pa
 def test_init_command_dry_run_does_not_write_files(tmp_path: Path) -> None:
     target = tmp_path / "web-cloud-project"
 
-    assert control.main(
-        [
-            "init",
-            "--profile",
-            "web-cloud",
-            "--target-dir",
-            str(target),
-            "--dry-run",
-        ]
-    ) == 0
+    assert (
+        control.main(
+            [
+                "init",
+                "--profile",
+                "web-cloud",
+                "--target-dir",
+                str(target),
+                "--dry-run",
+            ]
+        )
+        == 0
+    )
 
     assert not target.exists()
 
@@ -641,9 +654,7 @@ def test_desktop_cloud_scaffold_includes_public_api_config_only(tmp_path: Path) 
 def test_web_cloud_with_postgres_scaffolds_database_capability(tmp_path: Path) -> None:
     target = tmp_path / "web-cloud-postgres"
 
-    assert control.main(
-        ["init", "--profile", "web-cloud", "--with", "postgres", "--target-dir", str(target)]
-    ) == 0
+    assert control.main(["init", "--profile", "web-cloud", "--with", "postgres", "--target-dir", str(target)]) == 0
 
     assert (target / "backend" / "app" / "db" / "base.py").exists()
     assert (target / "backend" / "alembic.ini").exists()

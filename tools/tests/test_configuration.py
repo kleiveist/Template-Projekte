@@ -51,11 +51,7 @@ def test_runtime_config_uses_profile_aware_defaults(tmp_path: Path) -> None:
 
 def test_contract_feature_references_exist_in_profile_catalog() -> None:
     catalog = load_catalog(ROOT / "profiles", validate_paths=False)
-    referenced = {
-        feature
-        for variable in CONTRACT.variables
-        for feature in variable.required_features
-    }
+    referenced = {feature for variable in CONTRACT.variables for feature in variable.required_features}
 
     assert referenced <= set(catalog.features)
 
@@ -209,9 +205,7 @@ def test_postgres_requires_database_url(tmp_path: Path) -> None:
 def test_secret_masking_hides_urls_and_plain_secret_values() -> None:
     database_url = "postgresql+psycopg://app:p%40ss@localhost:5432/app"
 
-    assert mask_config_value("DATABASE_URL", database_url) == (
-        "postgresql+psycopg://app:***@localhost:5432/app"
-    )
+    assert mask_config_value("DATABASE_URL", database_url) == ("postgresql+psycopg://app:***@localhost:5432/app")
     assert mask_config_value("AUTH_TOKEN", "token-value") == "<redacted>"
     detail = redact_text(
         f"connection {database_url} failed with password p@ss",

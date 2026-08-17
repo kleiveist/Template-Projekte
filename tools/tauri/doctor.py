@@ -241,7 +241,11 @@ def _print_report(
         logger.status(item.status, f"{item.name:<18} {item.message}")
 
     if previous is not None:
-        changed = [f"{item.name}: {previous[item.name]} -> {item.status}" for item in checks if previous.get(item.name) != item.status]
+        changed = [
+            f"{item.name}: {previous[item.name]} -> {item.status}"
+            for item in checks
+            if previous.get(item.name) != item.status
+        ]
         if changed:
             logger.info("Changes since previous run:")
             for line in changed:

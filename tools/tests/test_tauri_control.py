@@ -140,8 +140,9 @@ def test_tauri_cargo_checks_use_locked_dependencies(monkeypatch) -> None:
     monkeypatch.setattr(
         common,
         "run_command",
-        lambda command, **kwargs: commands.append(command)
-        or common.CommandResult(command=command, cwd=paths.ROOT, returncode=0),
+        lambda command, **kwargs: (
+            commands.append(command) or common.CommandResult(command=command, cwd=paths.ROOT, returncode=0)
+        ),
     )
 
     assert tauri_test._run_cargo_checks() == 0
@@ -216,12 +217,16 @@ def test_tauri_windows_portable_dry_run_uses_cargo_xwin_on_linux(monkeypatch) ->
     calls: list[tuple[list[str], bool]] = []
 
     monkeypatch.setattr(common, "host_os", lambda: "linux")
-    monkeypatch.setattr("tools.tauri.build.windows_portable.shutil.which", lambda name, path=None: "cargo" if name == "cargo" else None)
+    monkeypatch.setattr(
+        "tools.tauri.build.windows_portable.shutil.which", lambda name, path=None: "cargo" if name == "cargo" else None
+    )
     monkeypatch.setattr(
         common,
         "run_command",
-        lambda command, **kwargs: calls.append((command, bool(kwargs.get("dry_run"))))
-        or common.CommandResult(command, paths.ROOT, 0, dry_run=bool(kwargs.get("dry_run"))),
+        lambda command, **kwargs: (
+            calls.append((command, bool(kwargs.get("dry_run"))))
+            or common.CommandResult(command, paths.ROOT, 0, dry_run=bool(kwargs.get("dry_run")))
+        ),
     )
 
     code = control.main(["tauri", "build", "--target", "windows-portable", "--dry-run"])
@@ -242,12 +247,16 @@ def test_tauri_raw_windows_portable_flags_map_to_portable_target(monkeypatch) ->
     calls: list[tuple[list[str], bool]] = []
 
     monkeypatch.setattr(common, "host_os", lambda: "linux")
-    monkeypatch.setattr("tools.tauri.build.windows_portable.shutil.which", lambda name, path=None: "cargo" if name == "cargo" else None)
+    monkeypatch.setattr(
+        "tools.tauri.build.windows_portable.shutil.which", lambda name, path=None: "cargo" if name == "cargo" else None
+    )
     monkeypatch.setattr(
         common,
         "run_command",
-        lambda command, **kwargs: calls.append((command, bool(kwargs.get("dry_run"))))
-        or common.CommandResult(command, paths.ROOT, 0, dry_run=bool(kwargs.get("dry_run"))),
+        lambda command, **kwargs: (
+            calls.append((command, bool(kwargs.get("dry_run"))))
+            or common.CommandResult(command, paths.ROOT, 0, dry_run=bool(kwargs.get("dry_run")))
+        ),
     )
 
     code = control.main(
@@ -319,7 +328,11 @@ def test_tauri_windows_portable_fails_without_cargo_on_linux(monkeypatch) -> Non
 
     monkeypatch.setattr(common, "host_os", lambda: "linux")
     monkeypatch.setattr("tools.tauri.build.windows_portable.shutil.which", lambda name, path=None: None)
-    monkeypatch.setattr(common, "run_command", lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0))
+    monkeypatch.setattr(
+        common,
+        "run_command",
+        lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0),
+    )
     monkeypatch.setattr("tools.tauri.build.windows_portable.logger.fail", messages.append)
 
     code = control.main(["tauri", "build", "--target", "windows-portable"])
@@ -334,7 +347,11 @@ def test_tauri_windows_cross_dry_run_requires_linux_host(monkeypatch) -> None:
     messages: list[str] = []
 
     monkeypatch.setattr(common, "host_os", lambda: "windows")
-    monkeypatch.setattr(common, "run_command", lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0))
+    monkeypatch.setattr(
+        common,
+        "run_command",
+        lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0),
+    )
     monkeypatch.setattr("tools.tauri.build.windows_cross_linux.logger.fail", messages.append)
 
     code = control.main(["tauri", "build", "--target", "windows-cross-linux", "--dry-run"])
@@ -388,7 +405,11 @@ def test_windows_portable_output_path_repairs_owner_directory_permissions(tmp_pa
 def test_tauri_linux_build_accepts_explicit_bundle_selection(monkeypatch) -> None:
     calls: list[list[str]] = []
 
-    monkeypatch.setattr(common, "run_command", lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0))
+    monkeypatch.setattr(
+        common,
+        "run_command",
+        lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0),
+    )
     monkeypatch.setattr(common, "frontend_dependencies_ready", lambda: True)
 
     code = control.main(["tauri", "build", "--target", "linux", "--bundles", "appimage"])
@@ -402,8 +423,14 @@ def test_tauri_linux_build_default_includes_appimage_preflight(monkeypatch) -> N
     preflight: list[bool] = []
 
     monkeypatch.setattr(common, "frontend_dependencies_ready", lambda: True)
-    monkeypatch.setattr(appimage, "_appimage_prerequisites_ready", lambda *args, **kwargs: preflight.append(True) or True)
-    monkeypatch.setattr(common, "run_command", lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0))
+    monkeypatch.setattr(
+        appimage, "_appimage_prerequisites_ready", lambda *args, **kwargs: preflight.append(True) or True
+    )
+    monkeypatch.setattr(
+        common,
+        "run_command",
+        lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0),
+    )
 
     code = control.main(["tauri", "build", "--target", "linux"])
 
@@ -433,7 +460,9 @@ def test_tauri_linux_build_uses_appimage_fallback_when_linuxdeploy_fails(monkeyp
     assert fallback == [False]
 
 
-def test_tauri_linux_build_uses_appimage_fallback_when_before_build_succeeded_then_linuxdeploy_failed(monkeypatch) -> None:
+def test_tauri_linux_build_uses_appimage_fallback_when_before_build_succeeded_then_linuxdeploy_failed(
+    monkeypatch,
+) -> None:
     fallback: list[bool] = []
     output = """
        Running beforeBuildCommand `cd ../frontend && npm run build`
@@ -705,7 +734,9 @@ def test_tauri_build_appimage_dry_run_does_not_install(monkeypatch) -> None:
 
     monkeypatch.setattr(common, "host_os", lambda: "linux")
     monkeypatch.setattr(common, "run_command", fake_run_command)
-    monkeypatch.setattr(appimage, "install_latest", lambda dry_run=False: (_ for _ in ()).throw(AssertionError("should not install")))
+    monkeypatch.setattr(
+        appimage, "install_latest", lambda dry_run=False: (_ for _ in ()).throw(AssertionError("should not install"))
+    )
 
     code = control.main(["tauri", "build", "--appimage", "--dry-run"])
 
@@ -720,7 +751,11 @@ def test_tauri_build_appimage_fails_when_preflight_is_missing(monkeypatch) -> No
     monkeypatch.setattr(common, "host_os", lambda: "linux")
     monkeypatch.setattr(common, "frontend_dependencies_ready", lambda: True)
     monkeypatch.setattr(appimage, "_appimage_prerequisites_ready", lambda: False)
-    monkeypatch.setattr(common, "run_command", lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0))
+    monkeypatch.setattr(
+        common,
+        "run_command",
+        lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0),
+    )
 
     code = control.main(["tauri", "build", "--appimage"])
 
@@ -733,8 +768,16 @@ def test_tauri_build_appimage_can_skip_preflight(monkeypatch) -> None:
 
     monkeypatch.setattr(common, "host_os", lambda: "linux")
     monkeypatch.setattr(common, "frontend_dependencies_ready", lambda: True)
-    monkeypatch.setattr(appimage, "_appimage_prerequisites_ready", lambda: (_ for _ in ()).throw(AssertionError("should skip preflight")))
-    monkeypatch.setattr(common, "run_command", lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0))
+    monkeypatch.setattr(
+        appimage,
+        "_appimage_prerequisites_ready",
+        lambda: (_ for _ in ()).throw(AssertionError("should skip preflight")),
+    )
+    monkeypatch.setattr(
+        common,
+        "run_command",
+        lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0),
+    )
     monkeypatch.setattr(appimage, "install_latest", lambda dry_run=False: 0)
     monkeypatch.setattr(common, "print_build_artifacts", lambda: None)
 
@@ -747,7 +790,9 @@ def test_tauri_build_appimage_can_skip_preflight(monkeypatch) -> None:
 def test_tauri_appimage_command_detection_checks_host_paths(monkeypatch) -> None:
     monkeypatch.setattr(appimage.shutil, "which", lambda binary: None)
     monkeypatch.setattr(appimage, "_host_file_exists", lambda relative_path: relative_path == "usr/bin/patchelf")
-    monkeypatch.setattr(common, "command_output", lambda command: (_ for _ in ()).throw(AssertionError("should not shell out")))
+    monkeypatch.setattr(
+        common, "command_output", lambda command: (_ for _ in ()).throw(AssertionError("should not shell out"))
+    )
 
     assert appimage._command_available("patchelf") is True
 
@@ -775,7 +820,7 @@ def test_tauri_appimage_libfuse_detection_accepts_versioned_library(monkeypatch,
 
 def test_tauri_detects_arch_like_host_from_os_release(tmp_path) -> None:
     os_release = tmp_path / "os-release"
-    os_release.write_text('ID=cachyos\nID_LIKE=arch\n', encoding="utf-8")
+    os_release.write_text("ID=cachyos\nID_LIKE=arch\n", encoding="utf-8")
 
     assert linux_install._distro_from_os_release(os_release) == "arch"
 
@@ -839,7 +884,11 @@ def test_tauri_build_fails_when_frontend_dependencies_are_missing(monkeypatch) -
         "missing_frontend_dependency_paths",
         lambda: [paths.FRONTEND_DIR / "node_modules" / "@types" / "node"],
     )
-    monkeypatch.setattr(common, "run_command", lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0))
+    monkeypatch.setattr(
+        common,
+        "run_command",
+        lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0),
+    )
 
     code = control.main(["tauri", "build", "--target", "linux"])
 
@@ -920,7 +969,9 @@ def test_tauri_run_foreground_uses_current_terminal(monkeypatch) -> None:
     calls: list[list[str]] = []
 
     monkeypatch.setattr(common, "tauri_cli_command", lambda *args: ["tauri", *args])
-    monkeypatch.setattr(run, "_run_detached", lambda command: (_ for _ in ()).throw(AssertionError("should not detach")))
+    monkeypatch.setattr(
+        run, "_run_detached", lambda command: (_ for _ in ()).throw(AssertionError("should not detach"))
+    )
 
     def fake_run_command(command: list[str], **kwargs) -> common.CommandResult:
         calls.append(command)
@@ -970,9 +1021,7 @@ def test_tauri_follow_ctrl_c_stops_process_group(monkeypatch, tmp_path) -> None:
 
 
 def test_tauri_package_has_no_bare_imports_or_legacy_tokens() -> None:
-    legacy_pattern = re.compile(
-        r"FMDFlashcard|fmdflashcard|fmd-desktop|apps/fmd-desktop|com\.fmd\.flashcard|AppInsall"
-    )
+    legacy_pattern = re.compile(r"FMDFlashcard|fmdflashcard|fmd-desktop|apps/fmd-desktop|com\.fmd\.flashcard|AppInsall")
     bare_import_pattern = re.compile(r"from\s+(doctor|console|installuix|installuixubu)\s+import")
 
     scanned = list((paths.ROOT / "tools" / "tauri").rglob("*.py"))

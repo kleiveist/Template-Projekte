@@ -176,9 +176,7 @@ def _print_plan(plan: ScaffoldPlan) -> None:
     if plan.profile.optional_features:
         logger.info(f"Optional capabilities: {', '.join(plan.profile.optional_features)}")
     logger.info(f"Target directory: {plan.target_dir}")
-    logger.info(
-        f"Project identity: {plan.identity.name} ({plan.identity.slug}, {plan.identity.identifier})"
-    )
+    logger.info(f"Project identity: {plan.identity.name} ({plan.identity.slug}, {plan.identity.identifier})")
     logger.info("Scaffold paths:")
     for source in plan.paths:
         logger.info(f"  - {source.relative_to(plan.project_root).as_posix()}")

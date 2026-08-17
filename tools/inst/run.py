@@ -363,7 +363,7 @@ def _stream_foreground(payload: dict, processes: list[subprocess.Popen]) -> int:
             q.put((name, line.rstrip()))
 
     threads = []
-    for item, process in zip(payload["services"], processes):
+    for item, process in zip(payload["services"], processes, strict=True):
         t = threading.Thread(target=reader, args=(item["name"], process), daemon=True)
         t.start()
         threads.append(t)
@@ -377,7 +377,7 @@ def _stream_foreground(payload: dict, processes: list[subprocess.Popen]) -> int:
         except queue.Empty:
             pass
 
-        for item, process in zip(payload["services"], processes):
+        for item, process in zip(payload["services"], processes, strict=True):
             code = process.poll()
             if code is not None:
                 if code == 0:
@@ -420,7 +420,7 @@ def run_command(args: argparse.Namespace) -> int:
         processes, payload = _start_detached(services)
         time.sleep(2)
 
-        for item, process in zip(payload["services"], processes):
+        for item, process in zip(payload["services"], processes, strict=True):
             code = process.poll()
             if code is not None:
                 logger.fail(f"Service failed early: {item['name']} (code={code})")
@@ -429,9 +429,7 @@ def run_command(args: argparse.Namespace) -> int:
 
         logger.ok("Services started in detached mode")
         for item in payload["services"]:
-            logger.ok(
-                f"service:{item['name']:<9} pid={item['pid']} port={item['port']} log={item['log_file']}"
-            )
+            logger.ok(f"service:{item['name']:<9} pid={item['pid']} port={item['port']} log={item['log_file']}")
         return 0
 
     processes, payload = _start_foreground(services)

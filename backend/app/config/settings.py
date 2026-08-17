@@ -10,10 +10,7 @@ from pydantic import AliasChoices, Field, SecretStr, ValidationError, field_vali
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_CORS_ORIGINS = (
-    "http://127.0.0.1:5173,http://localhost:5173,"
-    "http://tauri.localhost,tauri://localhost"
-)
+DEFAULT_CORS_ORIGINS = "http://127.0.0.1:5173,http://localhost:5173,http://tauri.localhost,tauri://localhost"
 HOST_LABEL = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?")
 
 

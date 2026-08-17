@@ -108,11 +108,7 @@ def run_command(
         return CommandResult(command=command, cwd=resolved_cwd, returncode=0, dry_run=True)
 
     try:
-        environment = {
-            name: value
-            for name, value in os.environ.items()
-            if not is_server_only_name(name)
-        }
+        environment = {name: value for name, value in os.environ.items() if not is_server_only_name(name)}
         for name in remove_env or set():
             environment.pop(name, None)
         environment.update(env or {})
@@ -137,9 +133,7 @@ def run_command(
 
 def command_output(command: list[str], *, cwd: Path | None = None) -> tuple[bool, str]:
     try:
-        completed = subprocess.run(
-            prepare_command(command), cwd=cwd, capture_output=True, text=True, check=False
-        )
+        completed = subprocess.run(prepare_command(command), cwd=cwd, capture_output=True, text=True, check=False)
     except OSError as exc:
         return False, str(exc)
     output = (completed.stdout or completed.stderr or "").strip()

@@ -15,8 +15,52 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  quality:
+    name: Core / Code Quality & Architecture
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: tools/requirements.txt
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Set up Rust stable with quality components
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt,clippy
+          rustup default stable
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-quality-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-quality-
+            ${{ runner.os }}-cargo-
+      - name: Install quality dependencies
+        run: python tools/control.py install --skip-backend --skip-playwright
+      - name: Install native Tauri prerequisites
+        run: python tools/control.py tauri install --skip-rust --skip-node --skip-frontend
+      - name: Run code quality and architecture gate
+        run: python tools/control.py quality
+      - name: Verify repository files are unchanged
+        run: git diff --exit-code
+
   tooling:
     name: Core / Tooling, Profiles & Configuration
+    needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -41,6 +85,7 @@ jobs:
 
   backend:
     name: Core / Backend, Database & Schema
+    needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -69,6 +114,7 @@ jobs:
 
   frontend:
     name: Core / Frontend & Web Build
+    needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -95,6 +141,7 @@ jobs:
 
   container:
     name: Core / Container Build
+    needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

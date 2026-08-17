@@ -35,9 +35,7 @@ def _status_priority(status: str) -> int:
 
 def _command_version(command: list[str], cwd: Path | None = None) -> tuple[bool, str]:
     try:
-        completed = subprocess.run(
-            prepare_command(command), cwd=cwd, capture_output=True, text=True, check=False
-        )
+        completed = subprocess.run(prepare_command(command), cwd=cwd, capture_output=True, text=True, check=False)
     except OSError as exc:
         return False, str(exc)
 
@@ -125,7 +123,9 @@ def _check_project_structure() -> list[CheckResult]:
         if frontend.exists() and (frontend / "package.json").exists():
             results.append(CheckResult("frontend", "OK", "frontend scaffold is present"))
         else:
-            results.append(CheckResult("frontend", "FAIL", "frontend scaffold missing (expected frontend/package.json)"))
+            results.append(
+                CheckResult("frontend", "FAIL", "frontend scaffold missing (expected frontend/package.json)")
+            )
 
         node_modules = frontend / "node_modules"
         if node_modules.exists():
@@ -342,7 +342,11 @@ def _print_report(checks: list[CheckResult], overall: str, previous: dict[str, s
         logger.status(item.status, f"{item.name:<14} {item.message}")
 
     if previous is not None:
-        changed = [f"{item.name}: {previous[item.name]} -> {item.status}" for item in checks if previous.get(item.name) != item.status]
+        changed = [
+            f"{item.name}: {previous[item.name]} -> {item.status}"
+            for item in checks
+            if previous.get(item.name) != item.status
+        ]
         if changed:
             logger.info("Changes since previous run:")
             for line in changed:

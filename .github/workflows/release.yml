@@ -41,12 +41,14 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Set up Rust stable
         run: |
-          rustup toolchain install stable --profile minimal
+          rustup toolchain install stable --profile minimal --component rustfmt,clippy
           rustup default stable
       - name: Install verification dependencies
         run: python tools/control.py install --skip-playwright
       - name: Install Tauri system dependencies
         run: python tools/control.py tauri install --skip-rust --skip-node --skip-frontend
+      - name: Run code quality and architecture gate
+        run: python tools/control.py quality
       - name: Run release-independent tests
         run: python tools/control.py test --suite all
       - name: Build web release artifact

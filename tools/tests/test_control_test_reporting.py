@@ -218,6 +218,7 @@ def test_configured_postgres_suite_invokes_integration_tests(monkeypatch, tmp_pa
 
 def test_e2e_bootstrap_runs_cleanup_before_service_start(monkeypatch) -> None:
     from tools.inst import run_test
+
     monkeypatch.setattr(run_test, "_e2e_configured", lambda: True)
 
     calls: list[tuple[str, object]] = []
@@ -247,6 +248,7 @@ def test_e2e_bootstrap_runs_cleanup_before_service_start(monkeypatch) -> None:
 
 def test_e2e_bootstrap_cleanup_failure_skips_service_start(monkeypatch) -> None:
     from tools.inst import run_test
+
     monkeypatch.setattr(run_test, "_e2e_configured", lambda: True)
 
     def fake_run(cmd: list[str], cwd=None) -> subprocess.CompletedProcess[str]:
@@ -265,6 +267,7 @@ def test_e2e_bootstrap_cleanup_failure_skips_service_start(monkeypatch) -> None:
 
 def test_e2e_bootstrap_no_start_skips_cleanup(monkeypatch) -> None:
     from tools.inst import run_test
+
     monkeypatch.setattr(run_test, "_e2e_configured", lambda: True)
 
     monkeypatch.setattr(
@@ -287,6 +290,7 @@ def test_e2e_bootstrap_no_start_skips_cleanup(monkeypatch) -> None:
 
 def test_all_suite_e2e_bootstrap_runs_cleanup(monkeypatch) -> None:
     from tools.inst import run_test
+
     monkeypatch.setattr(run_test, "_e2e_configured", lambda: True)
 
     cleanup_calls = 0

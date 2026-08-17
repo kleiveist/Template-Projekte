@@ -29,10 +29,7 @@ def load_build_module():
 def test_case_study_document_matrix_and_entrypoints() -> None:
     build = load_build_module()
 
-    assert {
-        (document.language, document.edition, document.output_name)
-        for document in build.DOCUMENTS
-    } == {
+    assert {(document.language, document.edition, document.output_name) for document in build.DOCUMENTS} == {
         ("de", "beginner", "template-projects-case-study-de-beginner.pdf"),
         ("de", "scientific", "template-projects-case-study-de-scientific.pdf"),
         ("en", "beginner", "template-projects-case-study-en-beginner.pdf"),

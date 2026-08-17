@@ -41,9 +41,7 @@ DOCUMENTS = (
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Build the PDF editions of the Template Projects case study."
-    )
+    parser = argparse.ArgumentParser(description="Build the PDF editions of the Template Projects case study.")
     parser.add_argument(
         "--language",
         choices=("all", "de", "en"),
@@ -94,9 +92,7 @@ def resolve_executable(explicit_path: str | None, command: str, label: str) -> s
     executable = shutil.which(command)
     if executable:
         return executable
-    raise FileNotFoundError(
-        f"{label} was not found. Install {label} or pass --{command} <path>."
-    )
+    raise FileNotFoundError(f"{label} was not found. Install {label} or pass --{command} <path>.")
 
 
 def verify_checksums() -> None:
@@ -150,9 +146,7 @@ def verify_checksums() -> None:
 def build(documents: tuple[Document, ...], tectonic: str, biber: str) -> None:
     PDF_DIR.mkdir(parents=True, exist_ok=True)
     environment = os.environ.copy()
-    environment["PATH"] = os.pathsep.join(
-        (str(Path(biber).parent), environment.get("PATH", ""))
-    )
+    environment["PATH"] = os.pathsep.join((str(Path(biber).parent), environment.get("PATH", "")))
 
     with tempfile.TemporaryDirectory(prefix="template-projects-case-study-") as temporary:
         temporary_dir = Path(temporary)
@@ -170,8 +164,7 @@ def build(documents: tuple[Document, ...], tectonic: str, biber: str) -> None:
             )
             if completed.returncode != 0:
                 raise RuntimeError(
-                    f"Tectonic failed for {document.language}/{document.edition} "
-                    f"with exit code {completed.returncode}."
+                    f"Tectonic failed for {document.language}/{document.edition} with exit code {completed.returncode}."
                 )
 
             generated_pdf = build_dir / f"{document.edition}.pdf"

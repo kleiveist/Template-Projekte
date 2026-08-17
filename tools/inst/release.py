@@ -166,7 +166,9 @@ def _placeholder_checks() -> list[ReleaseCheck]:
                 )
             )
     if not checks:
-        checks.append(ReleaseCheck("template-identity", "OK", "release identity contains no known template placeholders"))
+        checks.append(
+            ReleaseCheck("template-identity", "OK", "release identity contains no known template placeholders")
+        )
     return checks
 
 
@@ -180,22 +182,19 @@ def _tauri_security_checks() -> list[ReleaseCheck]:
         return [ReleaseCheck("tauri-security", "FAIL", f"Could not read Tauri security configuration: {exc}")]
     csp = config.get("app", {}).get("security", {}).get("csp")
     hardened_csp = (
-        isinstance(csp, str)
-        and "default-src 'self'" in csp
-        and "'unsafe-eval'" not in csp
-        and "*" not in csp
+        isinstance(csp, str) and "default-src 'self'" in csp and "'unsafe-eval'" not in csp and "*" not in csp
     )
     checks = [
         ReleaseCheck(
             "tauri-csp",
             "OK" if hardened_csp else "WARN",
-            "Tauri CSP is explicitly restricted"
-            if hardened_csp
-            else "Tauri CSP is not production hardened.",
+            "Tauri CSP is explicitly restricted" if hardened_csp else "Tauri CSP is not production hardened.",
         )
     ]
     permissions = capabilities.get("permissions", [])
-    unexpected = [item for item in permissions if item != "core:default"] if isinstance(permissions, list) else ["invalid"]
+    unexpected = (
+        [item for item in permissions if item != "core:default"] if isinstance(permissions, list) else ["invalid"]
+    )
     checks.append(
         ReleaseCheck(
             "tauri-capabilities",

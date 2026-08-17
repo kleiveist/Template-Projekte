@@ -67,7 +67,9 @@ Use '<command> --help' before an unfamiliar or destructive operation.
     doctor_parser.add_argument("--json", action="store_true", help="print machine-readable JSON")
     doctor_parser.add_argument("--watch", action="store_true", help="repeat checks until interrupted")
     doctor_parser.add_argument("--interval", type=int, default=5, help="seconds between checks (default: 5)")
-    doctor_parser.epilog = "examples:\n  python tools/control.py tauri doctor\n  python tools/control.py tauri doctor --json"
+    doctor_parser.epilog = (
+        "examples:\n  python tools/control.py tauri doctor\n  python tools/control.py tauri doctor --json"
+    )
 
     install_parser = tauri_subparsers.add_parser(
         "install",
@@ -92,7 +94,9 @@ Use '<command> --help' before an unfamiliar or destructive operation.
         description="Copy the newest AppImage, icon and desktop entry into the current user's environment.",
         formatter_class=TauriHelpFormatter,
     )
-    install_appimage_parser.add_argument("--dry-run", action="store_true", help="show target files without writing them")
+    install_appimage_parser.add_argument(
+        "--dry-run", action="store_true", help="show target files without writing them"
+    )
     install_appimage_parser.epilog = "example:\n  python tools/control.py tauri install-appimage --dry-run"
 
     run_parser = tauri_subparsers.add_parser(
@@ -101,15 +105,17 @@ Use '<command> --help' before an unfamiliar or destructive operation.
         description="Start Tauri in the background by default and follow its log. Ctrl+C stops it.",
         formatter_class=TauriHelpFormatter,
     )
-    run_parser.add_argument("--detach", action="store_true", help="compatibility flag; background is already the default")
+    run_parser.add_argument(
+        "--detach", action="store_true", help="compatibility flag; background is already the default"
+    )
     run_parser.add_argument("--foreground", action="store_true", help="run directly in the current terminal")
-    run_parser.add_argument("--no-follow", action="store_true", help="return after background start without following logs")
+    run_parser.add_argument(
+        "--no-follow", action="store_true", help="return after background start without following logs"
+    )
     run_parser.add_argument("--frontend-host", help="override FRONTEND_HOST")
     run_parser.add_argument("--frontend-port", type=int, help="override FRONTEND_PORT")
     run_parser.epilog = (
-        "examples:\n"
-        "  python tools/control.py tauri run --foreground\n"
-        "  python tools/control.py tauri run --no-follow"
+        "examples:\n  python tools/control.py tauri run --foreground\n  python tools/control.py tauri run --no-follow"
     )
 
     build_parser = tauri_subparsers.add_parser(
@@ -176,8 +182,7 @@ def main(args: argparse.Namespace) -> int:
         command = getattr(args, "tauri_command", None)
         if command in {"doctor", "install", "test"}:
             logger.info(
-                f"Tauri {command} skipped because the feature is disabled by active profile "
-                f"'{profile.profile_id}'."
+                f"Tauri {command} skipped because the feature is disabled by active profile '{profile.profile_id}'."
             )
             return 0
         logger.fail(f"Tauri feature is disabled by active profile '{profile.profile_id}'.")

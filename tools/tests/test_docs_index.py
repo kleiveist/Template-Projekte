@@ -35,9 +35,7 @@ def test_generated_empty_labels_are_translated_but_authored_text_is_preserved(tm
     )
     index = docs / "index.md"
     index.write_text(
-        "<!-- AUTO-GENERATED:docs-index START -->\n"
-        "- ⏭️ (keine Seiten)\n"
-        "<!-- AUTO-GENERATED:docs-index END -->\n",
+        "<!-- AUTO-GENERATED:docs-index START -->\n- ⏭️ (keine Seiten)\n<!-- AUTO-GENERATED:docs-index END -->\n",
         encoding="utf-8",
     )
 
@@ -59,9 +57,7 @@ def test_index_command_uses_explicit_pygitindex_and_normalizes_output(monkeypatc
     def fake_run(command: list[str], cwd: Path, check: bool) -> subprocess.CompletedProcess[str]:
         calls.append((command, cwd))
         (docs / "index.md").write_text(
-            "<!-- AUTO-GENERATED:docs-index START -->\n"
-            "- ⏭️ (keine Seiten)\n"
-            "<!-- AUTO-GENERATED:docs-index END -->\n",
+            "<!-- AUTO-GENERATED:docs-index START -->\n- ⏭️ (keine Seiten)\n<!-- AUTO-GENERATED:docs-index END -->\n",
             encoding="utf-8",
         )
         return subprocess.CompletedProcess(command, 0)

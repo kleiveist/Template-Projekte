@@ -43,24 +43,23 @@ function readRootDotenv(path: string): Record<string, string> {
 
 export default defineConfig(() => {
   const projectRoot = fileURLToPath(new URL("..", import.meta.url));
-  const env = { ...readRootDotenv(resolve(projectRoot, ".env")), ...process.env };
+  const env = {
+    ...readRootDotenv(resolve(projectRoot, ".env")),
+    ...process.env
+  };
   const frontendHost = env.FRONTEND_HOST || "127.0.0.1";
   const frontendPort = parsePort(env.FRONTEND_PORT, 5173);
   const backendEnabled = enabledFeatures.some((feature) => feature === "backend");
   const backendHost = clientHost(env.BACKEND_HOST || "127.0.0.1");
   const backendPort = parsePort(env.BACKEND_PORT, 8000);
-  const apiBaseUrl = backendEnabled
-    ? env.VITE_API_BASE_URL || `http://${backendHost}:${backendPort}`
-    : undefined;
+  const apiBaseUrl = backendEnabled ? env.VITE_API_BASE_URL || `http://${backendHost}:${backendPort}` : undefined;
 
   return {
     // Vite's implicit mode files are disabled so every adapter uses only the root .env contract.
     envDir: resolve(projectRoot, ".vite-env-disabled"),
     // Public values are explicitly defined below instead of exposing every process VITE_* value.
     envPrefix: [],
-    define: apiBaseUrl
-      ? { "import.meta.env.VITE_API_BASE_URL": JSON.stringify(apiBaseUrl) }
-      : {},
+    define: apiBaseUrl ? { "import.meta.env.VITE_API_BASE_URL": JSON.stringify(apiBaseUrl) } : {},
     server: {
       host: frontendHost,
       port: frontendPort,

@@ -51,13 +51,12 @@ def test_readiness_fails_closed_when_database_is_enabled_without_url(monkeypatch
     assert response.json() == {"status": "unavailable"}
 
 
-def test_readiness_checks_database_without_exposing_error(monkeypatch) -> None:
+def test_readiness_checks_database_without_exposing_error() -> None:
     settings = BackendSettings(
         _env_file=None,
         DATABASE_URL="postgresql+psycopg://app:secret@database:5432/app",
     )
-    application = create_app(settings, database_enabled=True)
-    monkeypatch.setattr("app.api.health._database_ready", lambda: False)
+    application = create_app(settings, database_enabled=True, database_probe=lambda: False)
 
     async def request() -> httpx.Response:
         transport = httpx.ASGITransport(app=application)

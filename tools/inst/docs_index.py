@@ -97,9 +97,7 @@ def main(args: argparse.Namespace) -> int:
     script = find_script(args.script)
     if script is None:
         logger.fail("PyGitIndex was not found.")
-        logger.info(
-            "Set PYGITINDEX_PATH or pass '--script /path/to/PyGitIndex.py', then run this command again."
-        )
+        logger.info("Set PYGITINDEX_PATH or pass '--script /path/to/PyGitIndex.py', then run this command again.")
         return 1
 
     command = _command_for(script, args)

@@ -37,8 +37,7 @@ def main(args: argparse.Namespace) -> int:
             fresh_appimage = appimage._fresh_appimage_from_snapshot(appimage_snapshot)
             if fresh_appimage is not None:
                 logger.warn(
-                    "Tauri linuxdeploy failed, but it produced "
-                    f"{fresh_appimage.name}; continuing with that AppImage."
+                    f"Tauri linuxdeploy failed, but it produced {fresh_appimage.name}; continuing with that AppImage."
                 )
                 logger.ok("Linux Tauri build completed")
                 common.print_build_artifacts()

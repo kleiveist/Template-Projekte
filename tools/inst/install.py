@@ -181,17 +181,11 @@ def _inspect_backend_venv(py: Path, venv_dir: Path) -> tuple[bool, str]:
 
     configured_version = _read_venv_version(venv_dir)
     if configured_version and not configured_version.startswith(f"{runtime}."):
-        return False, (
-            f"venv interpreter mismatch: pyvenv.cfg version={configured_version}, "
-            f"runtime={runtime}"
-        )
+        return False, (f"venv interpreter mismatch: pyvenv.cfg version={configured_version}, runtime={runtime}")
 
     runtime_prefix = Path(str(state.get("prefix", ""))).resolve()
     if runtime_prefix != venv_dir.resolve():
-        return False, (
-            "venv prefix mismatch: "
-            f"expected={venv_dir.resolve()}, runtime={runtime_prefix}"
-        )
+        return False, (f"venv prefix mismatch: expected={venv_dir.resolve()}, runtime={runtime_prefix}")
 
     if not site_packages:
         return False, "venv probe did not return a site-packages directory"
@@ -280,7 +274,10 @@ def _install_backend_with_pip(backend_dir: Path, requirements: list[Path]) -> tu
     pip_upgrade = _run([str(py), "-m", "pip", "install", "--upgrade", "pip"], cwd=ROOT)
     elapsed = time.monotonic() - started
     if pip_upgrade.returncode != 0:
-        return False, f"pip upgrade failed after {elapsed:.1f}s: {_tail((pip_upgrade.stdout or '') + (pip_upgrade.stderr or ''))}"
+        return (
+            False,
+            f"pip upgrade failed after {elapsed:.1f}s: {_tail((pip_upgrade.stdout or '') + (pip_upgrade.stderr or ''))}",
+        )
     logger.info(f"pip upgrade completed in {elapsed:.1f}s")
 
     logger.info("Installing backend requirements")
@@ -291,7 +288,10 @@ def _install_backend_with_pip(backend_dir: Path, requirements: list[Path]) -> tu
     )
     elapsed = time.monotonic() - started
     if pip_install.returncode != 0:
-        return False, f"pip install failed after {elapsed:.1f}s: {_tail((pip_install.stdout or '') + (pip_install.stderr or ''))}"
+        return (
+            False,
+            f"pip install failed after {elapsed:.1f}s: {_tail((pip_install.stdout or '') + (pip_install.stderr or ''))}",
+        )
     logger.info(f"Backend requirements installed in {elapsed:.1f}s")
 
     return True, "pip/venv backend install completed"
@@ -335,7 +335,9 @@ def _install_backend() -> StepResult:
     logger.info("uv not found; using pip/venv fallback for backend installation")
     pip_ok, pip_msg = _install_backend_with_pip(backend_dir, requirements)
     if pip_ok:
-        return StepResult("backend", "OK", "installed dependencies with the supported pip/venv fallback (uv is optional)")
+        return StepResult(
+            "backend", "OK", "installed dependencies with the supported pip/venv fallback (uv is optional)"
+        )
     return StepResult("backend", "FAIL", f"backend install failed without uv: {pip_msg}")
 
 

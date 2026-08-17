@@ -39,6 +39,11 @@ def test_core_ci_uses_supported_runtimes_and_public_tooling() -> None:
 
     assert 'python-version: "3.11"' in content
     assert 'node-version: "20"' in content
+    assert "name: Core / Code Quality & Architecture" in content
+    assert "rustup toolchain install stable --profile minimal --component rustfmt,clippy" in content
+    assert "python tools/control.py install --skip-backend --skip-playwright" in content
+    assert "python tools/control.py quality" in content
+    assert content.count("needs: quality") == 4
     assert "python tools/control.py test --suite tools" in content
     assert "python tools/control.py test --suite schema" in content
     assert "python tools/control.py test --suite api" in content
@@ -53,7 +58,12 @@ def test_core_ci_uses_supported_runtimes_and_public_tooling() -> None:
     assert "actions/checkout@v7" in content
     assert "actions/setup-python@v7" in content
     assert "actions/setup-node@v7" in content
+    assert "actions/cache@v6" in content
     assert "\nenv:\n  DATABASE_URL:" not in content
+    assert content.index("python tools/control.py quality") < content.index(
+        "python tools/control.py test --suite tools"
+    )
+    assert content.index("python tools/control.py quality") < content.index("python tools/control.py build web")
 
 
 def test_profile_matrix_generates_and_tests_every_profile() -> None:
@@ -75,14 +85,18 @@ def test_profile_matrix_generates_and_tests_every_profile() -> None:
     assert "python tools/control.py build web" in content
     assert "python tools/control.py container validate" in content
     assert "python tools/control.py tauri doctor" in content
+    assert "python tools/control.py quality" in content
+    assert "rustup toolchain install stable --profile minimal --component rustfmt,clippy" in content
     assert "actions/checkout@v7" in content
     assert "actions/setup-python@v7" in content
     assert "actions/setup-node@v7" in content
     assert "actions/cache@v6" in content
+    assert content.index("python tools/control.py quality") < content.index("python tools/control.py test --suite all")
 
 
 def test_postgres_ci_uses_isolated_service_health_check_and_migration() -> None:
     content = _workflow("postgres.yml")
+    generated_content = content.split("  generated-postgres:", maxsplit=1)[1]
 
     assert "image: postgres:16" in content
     assert "POSTGRES_PASSWORD: test-password" in content
@@ -98,9 +112,14 @@ def test_postgres_ci_uses_isolated_service_health_check_and_migration() -> None:
     for profile_id in ("web-cloud", "desktop-cloud", "full-platform"):
         assert f"profile: {profile_id}" in content
     assert "python tools/control.py container validate" in content
+    assert "python tools/control.py quality" in generated_content
+    assert "rustup toolchain install stable --profile minimal --component rustfmt,clippy" in generated_content
     assert "actions/checkout@v7" in content
     assert "actions/setup-python@v7" in content
     assert "actions/setup-node@v7" in content
+    assert generated_content.index("python tools/control.py quality") < generated_content.index(
+        "python tools/control.py test --suite all"
+    )
 
 
 def test_desktop_ci_builds_unsigned_native_artifacts_on_each_platform() -> None:
@@ -129,6 +148,8 @@ def test_release_validation_is_explicit_and_never_publishes() -> None:
     assert '"v*.*.*"' in content
     assert "branches:" not in content
     assert "python tools/control.py release check" in content
+    assert "python tools/control.py quality" in content
+    assert "rustup toolchain install stable --profile minimal --component rustfmt,clippy" in content
     assert "python tools/control.py build web" in content
     assert "python tools/control.py build container" in content
     assert "uses: ./.github/workflows/desktop.yml" in content
@@ -136,3 +157,4 @@ def test_release_validation_is_explicit_and_never_publishes() -> None:
     assert "secrets." not in content
     assert "publish" not in content.lower()
     assert "deploy" not in content.lower()
+    assert content.index("python tools/control.py quality") < content.index("python tools/control.py test --suite all")

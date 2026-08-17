@@ -15,6 +15,7 @@
 ## 📁 DEF
 - 🗂️ [Overview](def/def.md)
 - 📝 [Framework architecture](def/architecture.md)
+- 📝 [Code quality and architecture governance](def/code-quality.md)
 - 📝 [Runtime configuration](def/configuration.md)
 - 📝 [Database feature](def/database-feature.md)
 - 📝 [Deployment architecture](def/deployment-architecture.md)

@@ -18,8 +18,9 @@ def test_frontend_install_uses_npm_ci_when_lockfile_exists(monkeypatch, tmp_path
     monkeypatch.setattr(
         install,
         "_run",
-        lambda command, cwd=None: calls.append((command, cwd))
-        or subprocess.CompletedProcess(command, 0, stdout="", stderr=""),
+        lambda command, cwd=None: (
+            calls.append((command, cwd)) or subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+        ),
     )
 
     result = install._install_frontend()
@@ -39,8 +40,9 @@ def test_frontend_install_falls_back_without_lockfile(monkeypatch, tmp_path: Pat
     monkeypatch.setattr(
         install,
         "_run",
-        lambda command, cwd=None: calls.append(command)
-        or subprocess.CompletedProcess(command, 0, stdout="", stderr=""),
+        lambda command, cwd=None: (
+            calls.append(command) or subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+        ),
     )
 
     assert install._install_frontend().status == "OK"

@@ -123,7 +123,8 @@ def _tooling_runtime_ready(python: Path) -> bool:
     if not python.exists():
         return False
     completed = _run([str(python), "-c", "import jsonschema, pytest"], cwd=ROOT)
-    return completed.returncode == 0
+    ruff = _run([str(python), "-m", "ruff", "--version"], cwd=ROOT)
+    return completed.returncode == 0 and ruff.returncode == 0
 
 
 def _needs_backend_runtime(selected_suites: list[str]) -> bool:
@@ -257,8 +258,7 @@ def _run_schema_suite() -> SuiteResult:
     valid_path = ROOT / "shared" / "examples" / "valid.json"
     invalid_path = ROOT / "shared" / "examples" / "invalid.json"
     detail = (
-        "Schema: shared/schema/input.schema.json; "
-        "examples: shared/examples/valid.json, shared/examples/invalid.json"
+        "Schema: shared/schema/input.schema.json; examples: shared/examples/valid.json, shared/examples/invalid.json"
     )
 
     if not schema_path.exists() or not valid_path.exists() or not invalid_path.exists():
@@ -749,6 +749,32 @@ def _write_report_if_requested(
     return True
 
 
+def _bootstrap_failure_result(suite: str) -> SuiteResult:
+    return SuiteResult(
+        suite,
+        "FAIL",
+        "service bootstrap failed before e2e could run",
+        0.0,
+        detail="See service-bootstrap failure details above.",
+    )
+
+
+def _run_selected_suite(suite: str, *, bootstrap_failed: bool) -> SuiteResult:
+    if suite == "e2e" and bootstrap_failed:
+        return _bootstrap_failure_result(suite)
+    runners = {
+        "schema": _run_schema_suite,
+        "api": _run_api_suite,
+        "database": _run_database_suite,
+        "postgres": _run_postgres_suite,
+        "frontend": _run_frontend_suite,
+        "e2e": _run_e2e_suite,
+        "tools": _run_tools_suite,
+        "tauri": _run_tauri_suite,
+    }
+    return runners[suite]()
+
+
 def main(args: argparse.Namespace) -> int:
     if getattr(args, "report", None) == "done":
         removed = report_writer.clean_reports(ROOT)
@@ -772,50 +798,9 @@ def main(args: argparse.Namespace) -> int:
         results.append(preflight)
 
     try:
-        if bootstrap.status == "FAIL":
-            for suite in selected_suites:
-                if suite == "e2e":
-                    results.append(
-                        SuiteResult(
-                            suite,
-                            "FAIL",
-                            "service bootstrap failed before e2e could run",
-                            0.0,
-                            detail="See service-bootstrap failure details above.",
-                        )
-                    )
-                elif suite == "schema":
-                    results.append(_run_schema_suite())
-                elif suite == "api":
-                    results.append(_run_api_suite())
-                elif suite == "database":
-                    results.append(_run_database_suite())
-                elif suite == "postgres":
-                    results.append(_run_postgres_suite())
-                elif suite == "frontend":
-                    results.append(_run_frontend_suite())
-                elif suite == "tools":
-                    results.append(_run_tools_suite())
-                elif suite == "tauri":
-                    results.append(_run_tauri_suite())
-        else:
-            for suite in selected_suites:
-                if suite == "schema":
-                    results.append(_run_schema_suite())
-                elif suite == "api":
-                    results.append(_run_api_suite())
-                elif suite == "database":
-                    results.append(_run_database_suite())
-                elif suite == "postgres":
-                    results.append(_run_postgres_suite())
-                elif suite == "frontend":
-                    results.append(_run_frontend_suite())
-                elif suite == "e2e":
-                    results.append(_run_e2e_suite())
-                elif suite == "tools":
-                    results.append(_run_tools_suite())
-                elif suite == "tauri":
-                    results.append(_run_tauri_suite())
+        results.extend(
+            _run_selected_suite(suite, bootstrap_failed=bootstrap.status == "FAIL") for suite in selected_suites
+        )
     finally:
         _stop_services_if_started(started_by_runner)
 

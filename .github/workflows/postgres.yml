@@ -115,7 +115,7 @@ jobs:
       - name: Set up Rust stable
         if: matrix.desktop
         run: |
-          rustup toolchain install stable --profile minimal
+          rustup toolchain install stable --profile minimal --component rustfmt,clippy
           rustup default stable
       - name: Generate PostgreSQL profile project
         run: >-
@@ -133,6 +133,9 @@ jobs:
         if: matrix.desktop
         working-directory: .generated/ci-${{ matrix.profile }}-postgres
         run: python tools/control.py tauri install --skip-rust --skip-node --skip-frontend
+      - name: Run generated project quality gate
+        working-directory: .generated/ci-${{ matrix.profile }}-postgres
+        run: python tools/control.py quality
       - name: Diagnose generated project
         working-directory: .generated/ci-${{ matrix.profile }}-postgres
         run: python tools/control.py doctor

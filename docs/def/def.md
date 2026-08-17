@@ -7,6 +7,7 @@
 
 ## 📄 Pages
 - 📝 [Framework architecture](architecture.md)
+- 📝 [Code quality and architecture governance](code-quality.md)
 - 📝 [Runtime configuration](configuration.md)
 - 📝 [Database feature](database-feature.md)
 - 📝 [Deployment architecture](deployment-architecture.md)
