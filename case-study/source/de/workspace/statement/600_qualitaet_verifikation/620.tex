@@ -11,7 +11,9 @@ Commit bezeichnet einen festen Codezustand; \emph{HEAD} zeigt auf den Commit,
 der für die betrachtete Arbeitskopie oder den Zweig gerade maßgeblich ist.
 Eine grüne CI hat alle verlangten Jobs bestanden, eine rote CI enthält
 mindestens einen Fehlschlag. Die im
-Haupttext ausgewerteten Läufe für Commit \texttt{a4487ac} sind nicht
-vollständig grün, auch wenn bestimmte lokale Prüfungen bestanden.
+Haupttext ausgewerteten Läufe für \texttt{a4487ac} und
+\texttt{461fc751} sind commitgebundene Momentaufnahmen. Beim neueren Stand war
+der Master-Quality-Job grün, mehrere Profil- und Windows-Pfade aber nicht.
+Ein grüner Job macht deshalb nicht automatisch die gesamte CI grün.
 
 \end{beginnerstatement}

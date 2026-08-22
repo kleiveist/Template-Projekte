@@ -18,12 +18,26 @@ aktives Backend erhält eine eigene Umgebung und nur die profilabhängigen
 Anforderungssätze. Chromium wird ausschließlich bei konfiguriertem Playwright
 installiert; deaktivierte Schichten werden übersprungen.
 
+Für backendhaltige generierte Profile besteht am untersuchten Stand eine
+Governance-relevante Installationsabweichung. \texttt{install} kann Ruff über
+\path{backend/.venv} bereitstellen und danach auf eine eigene
+\path{tools/.venv} verzichten; der Quality-Adapter sucht Ruff jedoch nur in
+\path{tools/.venv} oder im globalen Suchpfad. In einem frisch erzeugten
+\texttt{web-cloud}-Profil endete die Installation deshalb erfolgreich, der
+anschließende Quality-Befehl meldete jedoch, Ruff sei nicht verfügbar. Der Core-CI-
+Job vermeidet diese Konstellation durch \texttt{install --skip-backend}; die
+generierten Backend-Profiljobs tun dies nicht. Der dokumentierte lokale Pfad
+\texttt{install} $\rightarrow$ \texttt{quality} ist damit noch nicht in allen
+Profilen zuverlässig. Diese technische Abweichung wurde für die
+Nachdokumentation nicht korrigiert
+\parencite{kleiveist2026quality-implementation,kleiveist2026quality-ci}.
+
 Die README fordert Git, Python ab 3.11, Node.js ab 20 und für Desktopprofile
 Rust Stable. Der allgemeine Doctor prüft Git und diese Versionsbereiche nicht;
 der Tauri-Doctor akzeptiert jede aktive Rust-Toolchain. CI richtet die
 festgelegten Python- und Node-Hauptversionen dagegen explizit ein. Damit weicht
 die lokale Durchsetzung von der Dokumentation ab
-\parencite{kleiveist2026template,kleiveist2026ci}.
+\parencite{kleiveist2026governance-snapshot,kleiveist2026ci}.
 Diese Grenze betrifft die Prüfung der Voraussetzung, nicht deren dokumentierte
 Gültigkeit.
 \beginnerinput{workspace/statement/500_tooling_workflow/530}

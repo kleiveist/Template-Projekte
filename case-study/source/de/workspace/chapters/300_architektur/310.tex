@@ -21,7 +21,26 @@ SQL-Persistenz bleiben eigenständige, teils optionale Bausteine
 Die Komponententrennung in Abbildung~\ref{fig:component-architecture} hält
 Client, Server, native Integration und gemeinsame Artefakte auseinander.
 Profile und Konfiguration beschreiben Struktur und Laufzeitwerte; Tooling und
-Deployment steuern die Komponenten außerhalb der Produktlaufzeit.
+Deployment steuern die Komponenten außerhalb der Produktlaufzeit. Seit
+\texttt{461fc751} gehört die Quality-Governance zu diesem Entwicklungs- und
+CI-Bereich. Sie untersucht Laufzeitquellen, wird aber weder ausgeliefert noch
+Teil des HTTP-, Tauri- oder Persistenzdatenflusses
+\parencite{kleiveist2026governance-snapshot}.
+
+Lokale Entwickler, Coding Agents und GitHub Actions rufen
+\path{tools/control.py} auf. Der Dispatcher delegiert an die getrennte
+Quality-Orchestrierung; diese verbindet zentrale Policy, Repository-Scan,
+sprachspezifische Werkzeuge, Backend- und Frontend-Architekturprüfungen,
+Exception-Behandlung sowie Reporting. Abbildung~\ref{fig:verification-model}
+stellt diesen Kontrollfluss in Abschnitt~\ref{subsec:teststrategie} dar. Die
+Architekturentscheidung ergänzt die vorhandene Laufzeitarchitektur um eine
+Prüfschicht, nicht um eine weitere Produktkomponente.
+
+Der Governance-Commit korrigierte zugleich die zuvor direkte Kopplung des
+Health-Routers an SQLAlchemy und \path{app.db}: Der Router delegiert nun an
+einen Service; konkrete Infrastruktur wird in \path{backend/app/main.py}
+verdrahtet. Dies bildet einen beobachtbaren Vorher-Nachher-Fall der später
+automatisierten Backend-Grenzen \parencite{kleiveist2026governance-commit}.
 
 \input{workspace/figures/architecture/runtime-architecture}
 

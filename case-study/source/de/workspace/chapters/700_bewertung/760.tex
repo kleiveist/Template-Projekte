@@ -7,15 +7,31 @@ qualitativ und messen weder Qualität noch Produktivität numerisch.
 
 \input{workspace/tables/template-evaluation}
 
-Die Baseline ist für die definierten Profile technisch tragfähig. Kern,
-Presets, Abhängigkeiten und Tooling unterstützen Wiederverwendung,
-Standardisierung und Flexibilität. Die Abnahme stützt Generierung,
-Installation, Tests, Builds, PostgreSQL-Kombinationen und Linux-Packaging
-\parencite{kleiveist2026acceptance}. Neuere externe Läufe ergänzen Web-,
-Container-, Linux- und macOS-Nachweise, enthalten aber Fehler in Tooling-,
-Desktopprofil- und Windows-Jobs.
-Die Evidenz ist damit belastbar, aber nach Commit und Plattform unterschiedlich
-weitreichend.
+Die Governance-Erweiterung verbessert die technische Durchsetzung ausgewählter
+Codequalitäts- und Architekturregeln. Zentrale Konfiguration, stabile
+Regelkennungen, Grenzwert-, Exception- und Architekturtests sowie lokale und
+CI-basierte Einstiegspunkte sind implementiert. Der kombinierte Lauf mit 333
+bestandenen Tests, davon 135 fokussierte Quality- und Workflowtests, sowie der
+erfolgreiche Master-Quality-Job stützen diese Einordnung.
+
+Die Aufwertung bleibt begrenzt: Der vollständige lokale Lauf scheiterte an
+Rust-Systembibliotheken, Quality-Schritte backendhaltiger Profile sind nicht
+grün, und die normative 900-LOC-Grenze ist technisch unterdrückbar. Zudem
+messen die Regeln ausgewählte Strukturindikatoren, nicht langfristige
+Wartbarkeit oder Clean Code. Die Governance ist damit deutlich erweitert, aber
+über Profile, Werkzeuge und Plattformen noch nicht abschließend verifiziert.
+
+Die frühere Abnahme stützt die technische Tragfähigkeit der definierten Profile
+für die dort geprüften Pfade. Kern, Presets, Abhängigkeiten und Tooling
+unterstützen Wiederverwendung, Standardisierung und Flexibilität. Belegt sind
+Generierung, Installation, Tests, Builds, PostgreSQL-Kombinationen und
+Linux-Packaging
+\parencite{kleiveist2026acceptance}. Externe Läufe auf \texttt{461fc751}
+ergänzen ein grünes Master-Quality-Gate sowie Web-, Container-, Linux- und
+macOS-Nachweise; Backendprofil-Quality, weitere Projekttests und Windows
+bleiben fehlerhaft
+\parencite{kleiveist2026governance-core-run,kleiveist2026governance-profiles-run,kleiveist2026governance-desktop-run}.
+Die Evidenz ist damit nach Commit und Plattform unterschiedlich weitreichend.
 
 Grenzen sind zentrale Pflegekomplexität, manuell synchronisierte Verträge und
 fehlende Updates generierter Projekte. Windows-Paketierung, signierte Releases,

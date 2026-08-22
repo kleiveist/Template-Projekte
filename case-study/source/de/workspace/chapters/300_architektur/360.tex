@@ -8,6 +8,14 @@ Priorität CLI-Override, Prozessumgebung, lokale \texttt{.env}, Vertragsdefault.
 Auch abgeleitete Werte bleiben nachvollziehbar
 \parencite{kleiveist2026configuration}.
 
+Die dritte zentrale Konfigurationsart, \path{config/code-quality.toml}, gehört
+nicht zur Laufzeitauflösung. Sie definiert Schema-Version, unterstützte
+Endungen, Excludes, Schwellenwerte, Schichtabbildungen und Exceptions für das
+Entwicklungs- und CI-Gate \parencite{kleiveist2026quality-config}. Dadurch
+bleiben Produktprofil, Laufzeitwerte und Quality-Policy getrennte Verträge.
+Die Quality Engine liest das Profilmanifest allerdings nicht selbst; ihre
+Komponentenwahl folgt der vorhandenen erzeugten Verzeichnisstruktur.
+
 Abbildung~\ref{fig:configuration-boundaries} zeigt die Sicherheitsgrenzen.
 Vite erhält nur die freigegebene \texttt{VITE\_API\_BASE\_URL}; FastAPI
 verarbeitet Serverwerte typisiert und maskiert \texttt{DATABASE\_URL}. Das

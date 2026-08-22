@@ -8,17 +8,59 @@ Scope-Grenzen erzeugen zwar Anpassungsbedarf, sind aber keine fehlgeschlagene
 Anforderung. Fehlende Verifikation erlaubt noch kein positives oder negatives
 technisches Urteil.
 
+Die reguläre Klassifikation der Dateigröße ist eindeutig: 900 Code-LOC sind
+zulässig und ergeben \emph{STRONG\_WARNING}; 901 Code-LOC ergeben
+\texttt{CQ001 ERROR}. Die Projektdokumentation definiert 900 LOC als absolute
+Obergrenze. Die Liste zulässiger Ausnahmen enthält technisch jedoch auch
+\texttt{CQ001}; ein exakt passender Eintrag kann den
+901-LOC-Fehler unterdrücken und den Gate-Status auf PASS setzen. Für die
+vollständige Kette von 901 LOC über \texttt{CQ001} und Exception bis zum
+Gate-Status fehlt ein integrierter Regressionstest. Die Policy ist damit als
+absolute Grenze beabsichtigt und dokumentiert, am untersuchten Stand aber
+unterdrückbar. Diese Abweichung darf weder durch eine pauschale Erfolgsaussage noch durch eine
+Änderung des technischen Projekts verdeckt werden.
+
+Weitere Exception-Grenzen liegen in der Validierung. Führende Schrägstriche
+werden vor der Absolutheitsprüfung entfernt, sodass absolute POSIX- und
+Windows-Pfade normalisiert statt wie dokumentiert verworfen werden. Eine
+Exception für eine existierende, aber ausgeschlossene oder nicht gescannte
+Datei bleibt gültig; optionale Symbole werden nicht gegen den Quelltext
+geprüft. Ablaufdatum, unbekannte IDs, Duplikate und nicht vorhandene Dateien
+werden dagegen getestet und als Fehler behandelt. Befristung und Begründung
+unterstützen Governance, verhindern wiederholte Verlängerung oder zu breite
+Excludes aber nicht automatisch; ein Reviewprozess bleibt erforderlich.
+
+LOC, Scope-Größe und zyklomatische Komplexität sind Strukturindikatoren, keine
+Messung von Verständlichkeit, Kohäsion oder fachlicher Richtigkeit.
+Importanalysen erfassen direkte statisch auflösbare Beziehungen, nicht jede
+dynamische, transitive oder semantische Architekturverletzung. Der
+Frontend-Resolver ignoriert unbekannte Aliase; Routerlogik unterhalb der
+Größenschwelle und dünne Tauri-Adapter bleiben teilweise oder vollständig
+Reviewgegenstand. Eine Datei unter 900 LOC kann deshalb weiterhin strukturell
+problematisch sein.
+
+Die profilbezogene Anwendbarkeit folgt vorhandenen Dateien und nicht dem
+Manifest; der Reporter besitzt keinen eigenen SKIP-Status. Hinzu kommen die
+Ruff-Auflösungsabweichung backendhaltiger generierter Profile und veraltete
+öffentliche Dokumentationspfade: README und Tooling-Guide nennen den
+Quality-Einstieg nicht vollständig, die CI-Dokumentation beschreibt noch die
+ältere Jobstruktur. Der Dry-Run bestätigt ausstehende Index- und
+Backlinksynchronisierung. Diese Befunde begrenzen die Verständlichkeit und
+Profilreife der ansonsten zentralen Governance.
+
 Die Bündelung im Master erhöht die interne Komplexität: Änderungen an Core,
 Generator oder Katalog erfordern Regressionstests über mehrere Profile.
 Außerdem nutzen Frontend und Backend die gemeinsamen JSON-Schemata nicht zur
 Laufzeit; Vertragsänderungen bleiben manuell. Die direkte CLI-Auswahl trennt
 \texttt{optional} und \texttt{selectable} schwächer als der Dialog. Beide
-Abweichungen erzeugen Wartungs- oder Fehlbedienungsrisiken. Auf dem
-untersuchten HEAD kommen widersprüchliche Nachweise hinzu: Webprofile und der
-lokale Tooling-Lauf bestanden, externe Tooling-, Desktopprofil- und
-Windows-Prüfungen scheiterten.
-Dieser Befund stellt die frühere commitgebundene Abnahme nicht rückwirkend
-infrage, verhindert aber ein vollständig grünes Urteil für den neueren Stand.
+Abweichungen erzeugen Wartungs- oder Fehlbedienungsrisiken. Hinzu kommen
+commitabhängig widersprüchliche Nachweise: Auf \texttt{a4487ac} bestanden
+Webprofile und lokale Tooling-Tests, während externe Tooling-, Desktopprofil-
+und Windows-Prüfungen scheiterten. Auf \texttt{461fc751} bestand das
+Master-Quality-Gate, backendhaltige Profil-Gates und Windows dagegen nicht.
+Diese Befunde stellen frühere commitgebundene Abnahmen nicht rückwirkend
+infrage, verhindern aber ein vollständig grünes Urteil für den
+Governance-Stand.
 
 Bewusst ausgeschlossen sind Backend in \texttt{web-only}, Cloud-API in
 \texttt{desktop-local} und PostgreSQL ohne Backend. Auch Fachlogik,
@@ -33,7 +75,7 @@ Nicht abschließend verifiziert sind Compose-Start, produktive Bereitstellung,
 Release Validation und Branch Protection. Linux und macOS wurden unsigniert
 paketiert, Windows scheiterte. Signing, Notarisierung, Veröffentlichung und
 produktiver Cloudbetrieb bleiben produkt- oder infrastrukturspezifisch
-\parencite{kleiveist2026ci-core-run,kleiveist2026ci-desktop-run,kleiveist2026acceptance}.
+\parencite{kleiveist2026governance-core-run,kleiveist2026governance-desktop-run,kleiveist2026acceptance}.
 Die Paketergebnisse belegen daher weder signierte Releases noch produktiven
 Cloudbetrieb. Bewertet wird die Template-Baseline, nicht die Produktionsreife
 eines Produkts.

@@ -21,10 +21,12 @@
       Installation, Start, Test und Build. & Mehrere Fachwerkzeuge und native
       Voraussetzungen bleiben erforderlich. & Weniger unterschiedliche
       Bedienpfade, aber kein technologieunabhängiger Workflow. \\
-    Qualität & Tests, Profilmatrix, Buildpfade und Release-Gate sind im
-      Abnahmeprotokoll erfasst. & Aktuelle Tooling-, Desktopprofil- und
-      Windows-Jobs schlagen fehl; Branch Protection ist nicht nachgewiesen. &
-      Gute lokale Prüfbasis, aber kein durchgehend grüner Remote-Nachweis. \\
+    Qualität & Zentrale Policy, 13 Rule IDs, Exception- und Architekturtests;
+      135 fokussierte Tests und grüner Master-Quality-Job. & Backendhaltige
+      generierte Profile scheitern im Quality-Schritt; lokaler Gesamtlauf durch
+      Rust-Systembibliotheken begrenzt; \texttt{CQ001} unterdrückbar. &
+      Definierte Verstöße werden reproduzierbarer erkannt; allgemeine
+      Codequalität oder Wartbarkeit ist nicht garantiert. \\
     Reproduzierbarkeit & Zwei gleich konfigurierte Projekte waren im
       dokumentierten Versuch byte-identisch. & Nachweis nur für eine
       Kombination und eine Untersuchungsumgebung. & Konkrete Evidenz ohne
@@ -44,5 +46,6 @@
   {\footnotesize Quelle: Eigene Bewertung auf Grundlage der
   Kapitel~\ref{sec:architektur}--\ref{sec:qualitaetssicherung-verifikation}
   sowie des Abnahmeprotokolls und der aktuellen CI-Läufe
-  \parencite{kleiveist2026acceptance,kleiveist2026ci-core-run,kleiveist2026ci-profiles-run,kleiveist2026ci-postgres-run,kleiveist2026ci-desktop-run}.\par}
+  \parencite{kleiveist2026acceptance,kleiveist2026ci-core-run,kleiveist2026ci-profiles-run,kleiveist2026ci-postgres-run,kleiveist2026ci-desktop-run,kleiveist2026quality-implementation,kleiveist2026governance-core-run,kleiveist2026governance-profiles-run}.
+  \par}
 \end{table}

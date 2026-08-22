@@ -10,17 +10,25 @@
       PASS: Webprofile, \texttt{web-cloud + postgres}, Core-Builds, Linux/macOS-Desktop\\
       FAIL: Tooling-Job, fünf Desktop-Profiltests, Windows-Installation
     };
-    \node[caseOptional,minimum width=125mm,text width=116mm,below=of headci] (rule) {
+    \node[caseBox,minimum width=125mm,text width=116mm,below=of headci] (governance) {
+      Governance-Nachtrag, technische Basis \texttt{461fc751}\\
+      PASS: 333 Pytest-Tests mit Nachdokumentation, davon 135 fokussiert; Master-Quality-Job\\
+      FAIL: Backendprofil-Quality; lokaler Gesamtlauf durch Rust-Systembibliotheken begrenzt
+    };
+    \node[caseOptional,minimum width=125mm,text width=116mm,below=of governance] (rule) {
       Einordnung\\
-      Lokale PASS-Nachweise bleiben commitgebunden; der aktuelle Remote-Stand ist nur teilweise verifiziert.
+      PASS-Nachweise bleiben commitgebunden; kein untersuchter neuer Stand ist durchgehend grün.
     };
 
     \draw[caseFlow] (acceptance) -- (headci);
-    \draw[caseFlow] (headci) -- (rule);
+    \draw[caseFlow] (headci) -- (governance);
+    \draw[caseFlow] (governance) -- (rule);
   \end{tikzpicture}
   \caption{Profilverifikation nach Evidenzstand und Commit}
   \label{fig:profile-verification-matrix}
   \smallskip
   {\footnotesize Quelle: Eigene Darstellung auf Grundlage von
-  \textcite{kleiveist2026acceptance} und den aktuellen GitHub-Actions-Läufen.\par}
+  \textcite{kleiveist2026acceptance},
+  \textcite{kleiveist2026governance-snapshot} und den ausgewerteten
+  GitHub-Actions-Läufen.\par}
 \end{figure}

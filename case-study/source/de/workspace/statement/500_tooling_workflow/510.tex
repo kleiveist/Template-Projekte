@@ -12,4 +12,11 @@ meldet. Ein Traceback zeigt bei einem unerwarteten Python-Fehler die Kette der
 aufgerufenen Programmstellen; erwartete Bedien- und Profilfehler werden hier
 ohne einen solchen technischen Detailbericht ausgegeben.
 
+Der neue Befehl \texttt{quality} koordiniert solche Prüfwerkzeuge. Ein Linter
+sucht bestimmte Fehler und Regelverletzungen, ein Formatter prüft die
+Schreibweise des Codes. Eine Rule ID ist eine kurze eindeutige Kennung wie
+\texttt{CQ001}; damit lässt sich ein Befund trotz wechselnder Erklärung
+wiedererkennen. Der Dispatcher nimmt den Befehl an, während die eigentliche
+Quality-Logik in eigenen Modulen liegt.
+
 \end{beginnerstatement}

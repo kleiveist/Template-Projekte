@@ -4,7 +4,14 @@
 Die Untersuchung folgt einer technischen Fallstudie
 \parencite{runeson2009case-study}. Eine Bestandsaufnahme erfasst Struktur,
 Komponenten und Verantwortungsgrenzen des Master-Repository. Die anschließende
-Architekturanalyse betrachtet Frontend, Backend, Desktop-Integration,
+Analyse bindet den Beobachtungsstand an Branch \texttt{main}, Version
+\texttt{0.1.0} und Commit
+\path{461fc7519e0db638330904a7496c488e8a0d18bc}; der Arbeitsbaum war zu Beginn
+sauber. Der Governance-Commit wird seinem Parent \texttt{0cbe1ba} in einem
+Vorher-Nachher-Vergleich gegenübergestellt
+\parencite{kleiveist2026governance-snapshot,kleiveist2026governance-commit}.
+
+Die Architekturanalyse betrachtet Frontend, Backend, Desktop-Integration,
 Schnittstellen, Persistenz und Deployment. Sie trennt belegte Eigenschaften
 von Annahmen und offenen Prüfpunkten \parencite{kleiveist2026architecture}.
 
@@ -15,10 +22,25 @@ Systemprüfung, Installation, Entwicklung, Tests, Builds und Release betrachtet
 Projektinterne Architektur-, Profil- und Werkzeugbeschreibungen dienen dabei
 als Primärquellen für den dokumentierten Stand.
 
-Vorhandene Tests, Build-Ergebnisse und dokumentierte Abnahmen werden den
-Anforderungen und Architekturentscheidungen zugeordnet. Externe oder
-produktspezifische Prüfungen bleiben getrennt. Diese Evidenz trägt die
-Bewertung und den Transfer auf mögliche Kundenprojekte
+Für die Governance werden Konfiguration, Implementierung, Grenzwert- und
+Regressionstests, CLI-Exitcodes, Workflow-Dateien, lokale Kommandoausgaben und
+aktuelle CI-Läufe abgeglichen. Eine interne Beweismatrix ordnet jeder zentralen
+Behauptung Repository-, Test- und gegebenenfalls CI-Belege sowie ein Zielkapitel
+zu. Die Aussage, dass 901 Code-LOC regulär einen Fehler auslösen, beruht damit
+auf Konfiguration, Klassifikation, dem Test des Übergangs 900/901 und der
+nicht ignorierten Rückgabe des Quality-Befehls; festgestellte Gegenbeispiele
+werden als Einschränkung ausgewiesen.
+
+Am 22.~August~2026 wurden Hilfebefehle, fokussierte und vollständige
+Quality-Läufe, 333 direkt ausführbare Tooling- und Fallstudientests sowie die
+öffentlichen Pfade \texttt{doctor}, \texttt{test --suite all},
+\texttt{build web} und \texttt{docs index --dry-run} ausgeführt.
+Die technische Basis blieb dabei Commit \texttt{461fc751}; die
+Fallstudientests prüften zugleich den entstehenden, noch nicht versionierten
+deutschen Dokumentstand. Fehlende
+Systembibliotheken, Dienste oder Toolchains werden weder als Erfolg noch als
+Test des deaktivierten Gegenstands gewertet. Externe oder produktspezifische
+Prüfungen bleiben getrennt. Diese Evidenz ergänzt die frühere Abnahme
 \parencite{kleiveist2026acceptance}. Abbildung~\ref{fig:case-study-method}
 zeigt die Abfolge der Untersuchung.
 Bewertung und Transfer folgen damit erst nach Bestandsaufnahme, Analyse und

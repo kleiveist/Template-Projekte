@@ -6,9 +6,27 @@ Produktentwicklung. Ohne gemeinsame Baseline unterscheiden sich Struktur,
 Werkzeuge, Konfiguration und Build-Prozesse; getrennte Ausgangsstände erhöhen
 den Wartungsaufwand und können technisch auseinanderlaufen.
 
+Die erste untersuchte Baseline besaß bereits getrennte Laufzeitkomponenten,
+Tests, Builds, CI und dokumentierte Architekturgrenzen. Größen-,
+Komplexitäts- und ausgewählte Abhängigkeitsregeln waren jedoch nicht durch ein
+gemeinsames repositoryweites Gate operationalisiert. Der Parent-Stand
+\texttt{0cbe1ba} des späteren Governance-Commits enthielt beispielsweise in
+einem FastAPI-Router direkte Importe von SQLAlchemy und \path{app.db};
+\texttt{461fc751} verlagerte die Bereitschaftslogik in einen Service und die
+Infrastrukturverdrahtung in den Composition Root
+\parencite{kleiveist2026governance-commit}. Damit ist die Lücke nicht allein
+aus einer Zielbeschreibung, sondern an einer korrigierten Schichtverletzung
+beobachtbar.
+
+Bei kurzen Änderungszyklen, einschließlich KI-gestützter Entwicklung, kann
+eine nur dokumentierte Regel spät sichtbar werden. Daraus folgt keine
+allgemeine Aussage über die Qualität KI-erzeugten Codes, sondern ein Bedarf an
+früher, reproduzierbarer Rückmeldung im betrachteten Entwicklungsablauf.
+
 Das Template muss daher Standardisierung und Flexibilität verbinden: Eine
 gemeinsame Basis soll Wiederverwendung ermöglichen, ohne Projekte mit
 unnötigen Komponenten zu belasten. Untersucht wird, wie Projektprofile und
 optionale Erweiterungen diesen Zielkonflikt lösen und wo Anpassungsbedarf bleibt
-\parencite{kleiveist2026architecture,kleiveist2026profiles}.
+\parencite{kleiveist2026architecture,kleiveist2026profiles} sowie wie die
+später ergänzte Governance diese Variabilität respektiert.
 \beginnerinput{workspace/statement/100_einleitung/120}

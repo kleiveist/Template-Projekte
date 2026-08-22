@@ -13,4 +13,10 @@ Zielumgebung bereitzustellen und zu starten. Die Trennung von
 Verantwortlichkeiten sorgt dafür, dass jeder Baustein eine klare Aufgabe hat
 und möglichst eigenständig getestet oder geändert werden kann.
 
+Die Quality-Governance läuft beim Entwickeln oder in CI. Sie liest
+Projektdateien und meldet Verstöße, gehört aber nicht zur später laufenden
+Anwendung. Das Frontend sendet deshalb keine Daten an das Quality Gate, und das
+Backend ruft es im Produktbetrieb nicht auf. Es ist eine Prüfschicht außerhalb
+des normalen Laufzeitdatenflusses.
+
 \end{beginnerstatement}

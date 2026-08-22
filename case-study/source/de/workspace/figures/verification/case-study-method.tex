@@ -2,11 +2,11 @@
   \centering
   \scalebox{1.15}{%
   \begin{tikzpicture}[node distance=6mm]
-    \node[casePrimary,minimum width=78mm] (capture) {Template erfassen};
+    \node[casePrimary,minimum width=78mm] (capture) {Snapshot und Governance-Diff erfassen};
     \node[caseBox,minimum width=78mm,below=of capture] (architecture) {Architektur analysieren};
     \node[caseBox,minimum width=78mm,below=of architecture] (profiles) {Profilmodell untersuchen};
-    \node[caseBox,minimum width=78mm,below=of profiles] (tooling) {Tooling untersuchen};
-    \node[caseBox,minimum width=78mm,below=of tooling] (verification) {Verifikationsdaten auswerten};
+    \node[caseBox,minimum width=78mm,below=of profiles] (tooling) {Tooling und Governance untersuchen};
+    \node[caseBox,minimum width=78mm,below=of tooling] (verification) {Konfiguration, Tests und CI triangulieren};
     \node[caseOptional,minimum width=78mm,below=of verification] (evaluation) {Stärken und Grenzen bewerten};
     \node[caseOptional,minimum width=78mm,below=of evaluation] (transfer) {Einsatzmöglichkeiten ableiten};
 

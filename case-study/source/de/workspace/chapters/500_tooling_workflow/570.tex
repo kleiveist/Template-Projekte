@@ -6,7 +6,7 @@ Zielprojekt, erneut \texttt{doctor}, \texttt{install} und \texttt{run}.
 Produktcode, Konfiguration, Tests und Commits gehören danach in das abgeleitete
 Repository. Template-Wartung arbeitet dagegen im Master und prüft dort die
 gesamte Baseline
-\parencite{kleiveist2026template,kleiveist2026profiles}.
+\parencite{kleiveist2026governance-snapshot,kleiveist2026profiles}.
 Diese Trennung verhindert, dass Produktentwicklung versehentlich die gemeinsame
 Vorlage verändert.
 
@@ -14,6 +14,23 @@ Grundvoraussetzungen sind Git, Python ab 3.11 und Node.js ab 20. Desktopprofile
 benötigen zusätzlich Rust Stable und plattformspezifische Tauri-Pakete;
 Docker, PostgreSQL und PyGitIndex nur für die jeweiligen optionalen Aufgaben.
 Optionale Werkzeuge blockieren damit nicht jedes Profil.
+
+\path{AGENTS.md} stellt die Repository-Policy auch unterstützenden Coding
+Agents bereit. Sie bezeichnet 900 Code-LOC als zulässige absolute Obergrenze,
+fordert ab 600 LOC eine Prüfung und oberhalb von 750 LOC regelmäßig einen
+Aufteilungsplan, untersagt die bloße Abschwächung von Regeln und verlangt dünne
+Router, Adapter, Tauri-Kommandos und Composition Roots. Nach strukturellen
+Codeänderungen soll vor der Übergabe das vollständige Quality Gate laufen;
+anschließend sind relevante Tests auszuführen. Bei subsystemübergreifenden
+Änderungen gilt die vollständige anwendbare Suite. Verbleibende Befunde sind
+offenzulegen
+\parencite{kleiveist2026agents}.
+
+Die Agentendatei ist ein expliziter normativer Kontext, kein empirischer
+Wirksamkeitsnachweis. Ihre Existenz belegt weder, dass ein konkretes Modell die
+Regeln zuverlässig befolgt, noch dass agentengestützter Code dadurch
+automatisch sauber ist. Technisch durchgesetzte Regeln, menschliches Review und
+Modellverhalten bleiben getrennte Ebenen.
 
 README und Fachdokumente trennen Einstieg, Tooling, Profile, Konfiguration, CI,
 Container und Release. Das vereinheitlicht die öffentlichen Setup-Pfade,

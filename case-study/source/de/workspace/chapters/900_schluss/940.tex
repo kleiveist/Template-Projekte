@@ -1,17 +1,28 @@
 \subsection{Ausblick}
 \label{subsec:ausblick}
 
-Kurzfristig sind die roten Tooling-, Desktopprofil- und Windows-CI-Pfade auf
-einem festen Commit zu korrigieren. Compose-Start mit Health und Readiness,
-Release Validation und Branch Protection sollen die technische Evidenz
-ergänzen, ohne Produktreife zu beanspruchen.
+Kurzfristig sind Ruff in generierten Backendprofilen konsistent auffindbar zu
+machen, die dokumentierten Exception-Abweichungen zu beheben oder korrekt zu
+beschreiben und die vom Dry-Run ausgewiesenen Dokumentationslinks zu
+synchronisieren. Danach sollten die Prüfungen des Masters, der fünf Profile und
+der PostgreSQL-Varianten sowie der Rust-/Tauri- und Windows-Pfade auf demselben
+Commit vollständig wiederholt werden.
+Compose-Start mit Health und Readiness, Release Validation und Branch
+Protection sollen die Evidenz ergänzen, ohne Produktreife zu beanspruchen.
 
-Mittelfristig benötigen konkrete Produkte Signierung, Notarisierung und einen
-Updater. Auch Credentials, Deployment, Authentifizierung und RBAC bleiben
-produktspezifisch. Für die Baseline bieten sich drei Schritte an: gemeinsame
-Contracts automatisieren, Capabilities strenger wählen und generierte Projekte
-kontrolliert synchronisieren.
+Mittelfristig bieten sich reale negative Ruff-, ESLint- und Rust-Fixtures an.
+Ergänzend fehlen ein integrierter 901-LOC-Exception-Gate-Fall, Tests für
+absolute und ausgeschlossene Exception-Pfade sowie die Erkennung unbenutzter
+Exceptions oder ungültiger Symbole. Die vorhandenen JSON-Berichte könnten um SARIF,
+Pull-Request-Anmerkungen und Trenddarstellungen ergänzt werden. False Positives
+und die Angemessenheit der Schwellen sollten pro Profil oder Projekttyp
+beobachtet werden. Für die Baseline bleiben außerdem automatisierte gemeinsame
+Contracts, strengere Capability-Auswahl und kontrollierte Synchronisierung
+generierter Projekte mögliche Erweiterungen.
 
-Langfristig sollte eine projektübergreifende Vergleichsstudie Onboarding,
-ersten Build, Setup-Fehler und Pflegeaufwand messen. Reale Kundenprojekte
-könnten die Profil- und Eignungskriterien prüfen.
+Konkrete Produkte benötigen weiterhin Signierung, Notarisierung, Updater,
+Credentials, Deployment, Authentifizierung und RBAC. Langfristig sollte eine
+projektübergreifende Vergleichsstudie Onboarding, ersten Build, Setup-Fehler,
+Refactoring-Häufigkeit, Defekte und Pflegeaufwand messen. Ein kontrollierter
+Vergleich agentengestützter Entwicklung mit und ohne Gate könnte prüfen, ob die
+technische Regelerkennung über den beobachteten Snapshot hinaus wirkt.

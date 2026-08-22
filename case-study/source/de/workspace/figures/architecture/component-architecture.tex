@@ -23,12 +23,12 @@
     \node[caseBox,minimum width=46mm,below=of contracts] (profiles)
       {\textbf{profiles/}\\Features und Presets};
     \node[caseBox,minimum width=46mm,below=of profiles] (config)
-      {\textbf{config/}\\Variablenvertrag};
+      {\textbf{config/}\\Laufzeit- und Quality-Policy};
     \node[caseBox,minimum width=46mm,below=of config] (shared)
       {\textbf{shared/}\\Schema, Beispiele, Assets};
 
     \node[caseBox,minimum width=46mm,below=of lifecycle] (tools)
-      {\textbf{tools/}\\Generierung und Steuerung};
+      {\textbf{tools/}\\Generierung, Steuerung, Quality};
     \node[caseBox,minimum width=46mm,below=of tools] (deployment)
       {\textbf{deployment/}\\providerneutrale Artefakte};
     \node[caseBox,minimum width=46mm,below=of deployment] (docs)
@@ -44,9 +44,10 @@
       \node[caseGroup,fit=(lifecycle)(tools)(deployment)(docs)] {};
     \end{scope}
   \end{tikzpicture}}
-  \caption{Komponenten und Verantwortungsgrenzen im Master Repository}
+  \caption{Komponenten und Verantwortungsgrenzen im Master-Repository}
   \label{fig:component-architecture}
   \smallskip
   {\footnotesize Quelle: Eigene Darstellung auf Grundlage von
-  \textcite{kleiveist2026architecture}.\par}
+  \textcite{kleiveist2026architecture} und
+  \textcite{kleiveist2026quality-implementation}.\par}
 \end{figure}

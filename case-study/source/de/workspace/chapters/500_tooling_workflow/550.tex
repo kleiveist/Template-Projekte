@@ -1,6 +1,95 @@
 \subsection{Tests und Builds}
 \label{subsec:tests-builds}
 
+Die Governance trennt repositoryspezifische Regeln von etablierten
+Sprachwerkzeugen. Scanner, Severity, Rule IDs, Excludes, Exceptions,
+Architekturregeln und Gesamtbericht bleiben im gemeinsamen Quality-Paket;
+Linting, Typprüfung und Formatierung werden an die jeweilige Werkzeugkette
+delegiert. Tabelle~\ref{tab:quality-language-tools} fasst die Abdeckung
+zusammen.
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Sprachspezifische Werkzeuge und Grenzen im Quality Gate}
+  \label{tab:quality-language-tools}
+  \begin{tabularx}{\textwidth}{@{}p{0.13\textwidth}p{0.28\textwidth}>{\raggedright\arraybackslash}X p{0.25\textwidth}@{}}
+    \toprule
+    \textbf{Bereich} & \textbf{Werkzeuge} & \textbf{automatisiert} &
+      \textbf{wesentliche Grenze} \\
+    \midrule
+    Python & Tokenizer, Python-AST, Ruff & LOC, Funktions- und Klassengröße,
+      McCabe-Komplexität, Verschachtelung, Parameter, Lint und Format &
+      Syntaxfehler können im fokussierten Größenlauf Scope-Metriken auslassen. \\
+    JS/TS & eigener LOC-Lexer, TypeScript-AST, ESLint, TypeScript-Compiler,
+      Prettier & LOC, Klassen und Importe, Funktionsmetriken, Lint, Typen,
+      Format & Architekturauflösung nur für bekannte relative und konfigurierte
+      Alias-Pfade. \\
+    Rust/Tauri & LOC-Lexer, rustfmt, Clippy, Cargo & Dateigröße, Format,
+      Funktionslänge, Parameter, kognitive Komplexität, Compilercheck &
+      keine strukturierten CQ-Warnbänder für Clippy; Adaptersemantik bleibt
+      Review. \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Quelle: Eigene Darstellung nach
+  \textcite{kleiveist2026quality-implementation}.\par}
+\end{table}
+
+Deklariert ist Ruff \texttt{>=0.14,<1.0}; lokal wurde Version~0.16.4
+ausgeführt. Das Frontend-Lockfile fixiert ESLint~9.39.5, Prettier~3.9.6,
+TypeScript~5.9.3 und typescript-eslint~8.67.0. CI verwendet Rust Stable mit
+rustfmt und Clippy; das Tauri-Manifest nennt Rust~1.77 als Mindestversion.
+Diese Stände erhöhen die Nachvollziehbarkeit des Snapshots, bleiben aber
+zeit- und umgebungsabhängig.
+
+Der Scanner berücksichtigt \path{.py}, \path{.ts}, \path{.tsx}, \path{.js},
+\path{.jsx}, \path{.mjs}, \path{.cjs} und \path{.rs}. Physische Zeilen werden
+von Code-LOC unterschieden: Leerzeilen und reine Kommentarzeilen zählen nicht,
+Code mit nachgestelltem Kommentar dagegen einmal. Python-Docstrings und andere
+mehrzeilige Zeichenketten zählen als Code. Für JavaScript-/C-artige Syntax
+behandelt ein eigener Lexer Blockkommentare; für Rust zusätzlich verschachtelte
+Blockkommentare und Raw Strings. Dies ist keine vollständige Parseranalyse.
+\path{.mjs} und \path{.cjs} erhalten Datei-LOC und normale anwendbare
+Frontendchecks, aber keine repositoryeigenen Scope-Metriken oder
+Architekturprüfung.
+
+Ausgeschlossen sind die Verzeichnisse \path{.cache}, \path{.dist},
+\path{.generated}, \path{.git}, \path{.pytest_cache}, \path{.venv},
+\path{__pycache__}, \path{coverage}, \path{dist}, \path{generated},
+\path{node_modules}, \path{target} und \path{vendor}; außerdem
+\path{Cargo.lock}, \path{package-lock.json} sowie die konfigurierten Pfade
+\path{build/**}, \path{backend/build/**}, \path{frontend/dist/**},
+\path{src-tauri/gen/**} und \path{src-tauri/target/**}. Das allgemeine
+Verzeichnis \path{build} ist bewusst nicht global ausgeschlossen, sodass
+handgeschriebene Tooling-Pfade mit diesem Namen sichtbar bleiben. Excludes
+begrenzen grundsätzlich den Prüfbereich, etwa für generierte oder externe
+Artefakte; zu breite Muster könnten jedoch relevanten Code unsichtbar machen.
+
+Exceptions bilden davon getrennte, befristete Abweichungen für handgeschriebene
+Dateien. Pflichtfelder sind bekannte CQ- oder AR-ID, exakter relativer Pfad,
+eine mindestens zehn Zeichen lange Begründung und ISO-Ablaufdatum; optional
+wird ein Symbol exakt abgeglichen. Die Datei muss existieren, Duplikate und
+unbekannte IDs werden abgewiesen. Das Ablaufdatum gilt einschließlich, erst am
+Folgetag entsteht \texttt{EX002}; eine Unterdrückung bleibt im Report sichtbar.
+Die Implementierung prüft dagegen weder, ob die Datei vom Scanner erfasst wird,
+noch ob das optionale Symbol tatsächlich im Quelltext existiert. Weitere
+Abweichungen behandelt Abschnitt~\ref{subsec:schwaechen-grenzen}.
+
+Im Backend ordnet eine Python-AST-Analyse Importe vier Schichten zu. Sie
+unterscheidet API, Application/Services, Domain und Infrastructure. Erkannt
+werden konfigurierte verbotene Richtungen, direkte Domain-Abhängigkeiten auf
+sieben Framework-Wurzeln und direkte Datenbankimporte in Routern. Handler
+oberhalb von 50 Code-LOC erzeugen ebenfalls \texttt{AR004}. Im Frontend werden Grenzen zwischen
+Application, Features, API, UI und Shared sowie featureübergreifende interne
+Importe geprüft; der öffentliche Root-\path{index.*} des Ziel-Features bleibt
+zulässig. Literal auflösbare \texttt{import()}- und \texttt{require()}-Aufrufe
+werden berücksichtigt; nicht statisch auflösbare dynamische und transitive
+Abhängigkeiten sowie unbekannte Aliase bleiben außerhalb. Eine Router-Heuristik
+kann semantische Geschäftslogik nicht vollständig bestimmen; dünne
+Tauri-Kommandos sind ausschließlich Review-Regel.
+
 Die acht Testsuiten decken Tooling, Schema, API, Datenbank, PostgreSQL,
 Frontend, E2E und Tauri/Rust ab. \texttt{test --suite all} bildet den
 vollständigen projektbezogenen Einstieg; Berichte sind optional

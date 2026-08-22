@@ -3,9 +3,20 @@
 
 Core CI, Profile Matrix, PostgreSQL Integration und Desktop CI prüfen getrennt
 Baseline, fünf Profile, PostgreSQL-Kombinationen und native Pakete. Release
-Validation läuft nur manuell oder für Versionstags. Alle Workflows besitzen
-Leserechte und verwenden \path{tools/control.py}
-\parencite{kleiveist2026ci}.
+Validation läuft nur manuell oder für Versionstags. Seit Governance~v1 besitzt
+Core CI bei Pull Request, Push auf \texttt{main} und manueller Ausführung einen
+vorgelagerten Ubuntu-Quality-Job mit Python~3.11, Node~20, Rust Stable,
+rustfmt, Clippy, Caches und Tauri-Systempaketen. Er ruft \texttt{quality} über
+\path{tools/control.py} auf. \texttt{continue-on-error} ist nicht gesetzt;
+Tooling, Backend, Frontend und Container deklarieren \texttt{needs: quality}
+\parencite{kleiveist2026quality-ci}.
+
+Die Profilmatrix führt das Gate nach Generierung und Installation für alle
+fünf Scaffolds vor Tests und Build aus; der generierte PostgreSQL-Pfad tut dies
+für drei Backendprofile. Der Release-Workflow setzt Quality vor Tests und
+Artefakte. Desktop CI und der direkte PostgreSQL-Job haben dagegen kein eigenes
+Gate. Die Reihenfolge
+\enquote{Quality vor Tests vor Build} gilt daher nicht pauschal für jeden Workflow.
 
 Die am 9.~August~2026 abgefragten Läufe vom 7.~August gehören zu HEAD
 \texttt{a4487ac} und sind nicht vollständig grün. Core CI war für Backend,
@@ -18,7 +29,29 @@ Windows scheiterte bei der
 Frontend-Installation
 \parencite{kleiveist2026ci-core-run,kleiveist2026ci-profiles-run,kleiveist2026ci-postgres-run,kleiveist2026ci-desktop-run}.
 
-Lokal bestanden am 9.~August~2026 auf demselben HEAD unter Python~3.13.14 alle
+Die am 22.~August~2026 ausgewerteten Läufe für \texttt{461fc751} zeigen ein
+erneut gemischtes Bild. Im Core-Lauf war der neue Quality-Job einschließlich
+unverändertem Arbeitsbaum erfolgreich; Backend, Frontend und Container
+bestanden, während Tooling-, Profil- und Konfigurationstests den
+Gesamtworkflow scheitern ließen. In der Profilmatrix bestand
+\texttt{web-only}; \texttt{desktop-local} bestand zunächst Quality und
+scheiterte später im Projekttest. \texttt{web-cloud},
+\texttt{desktop-cloud} und \texttt{full-platform} scheiterten bereits im
+Quality-Schritt. Der direkte PostgreSQL-Integrationsjob bestand, die drei
+generierten PostgreSQL-Profile scheiterten im Quality-Schritt. Desktop CI
+baute unter Linux und macOS, während Windows erneut bei der
+Frontend-Installation scheiterte
+\parencite{kleiveist2026governance-core-run,kleiveist2026governance-profiles-run,kleiveist2026governance-postgres-run,kleiveist2026governance-desktop-run}.
+
+Öffentliche Metadaten belegen Job und Schrittstatus, die Protokollarchive waren
+ohne Berechtigung nicht abrufbar. Die in
+Abschnitt~\ref{subsec:systempruefung-installation} beschriebene frische lokale
+Reproduktion erklärt die Profilfehler plausibel durch die Ruff-Auflösung; dies
+ist eine aus Implementierung, Workflow und Reproduktion abgeleitete Erklärung,
+kein direktes Zitat aus den CI-Logs. Der grüne Core-Quality-Job belegt damit
+das blockierende Gate im Master-Workflow, nicht die Profilverträglichkeit.
+
+Lokal bestanden am 9.~August~2026 auf \texttt{a4487ac} unter Python~3.13.14 alle
 194 Tooling-Tests sowie Schema-, API- und SQLAlchemy-Tests. Das ersetzt weder
 die roten externen Jobs noch die mangels Node.js, Rust und Docker nicht
 ausgeführten Pfade. Release Validation wurde für diesen Commit nicht

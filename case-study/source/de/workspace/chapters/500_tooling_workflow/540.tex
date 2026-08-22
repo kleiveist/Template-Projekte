@@ -6,6 +6,13 @@ Diagnose und Installation bis zu Qualitätssicherung und Auslieferung.
 
 \input{workspace/figures/tooling/developer-workflow}
 
+Nach einer Änderung liegt \texttt{quality} vor Tests und Build. Warnungen
+bleiben im Report sichtbar und führen zurück in den Bearbeitungszyklus, ohne
+allein zu blockieren; ein aktiver Fehler beendet den Befehl mit Exitcode~1.
+Dieser lokale Einstieg entspricht dem Quality-Aufruf in Core-, Profil- und
+Release-Workflows, nicht jedoch einer Behauptung identischer
+Ausführungsumgebungen.
+
 \texttt{run} startet Vite und nur bei aktivem Backend zusätzlich Uvicorn. Im
 Vordergrund beendet ein Abbruch die erfassten Prozessgruppen; im abgekoppelten
 Modus werden PID- und Logdaten gespeichert. \texttt{stop} beendet erfasste

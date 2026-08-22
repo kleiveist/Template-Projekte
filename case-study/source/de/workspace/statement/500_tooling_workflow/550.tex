@@ -13,4 +13,13 @@ Pfad etwa zur Web-Ausgabe oder zu einem Desktop-Paket. Ein ZIP bündelt Dateien
 in einem Archiv; ein Container-Image verpackt eine Laufzeitumgebung, aus der
 ein Container gestartet werden kann.
 
+Ein AST ist eine Baumdarstellung der Sprachstruktur, mit der etwa Importe,
+Funktionen oder Klassen erkannt werden. Ein Exclude nimmt Dateien grundsätzlich
+aus dem Prüfbereich, beispielsweise generierte Artefakte. Eine Exception
+unterdrückt dagegen zeitlich begründet einen konkreten Befund an einer
+handgeschriebenen Datei. Beides muss eng gefasst sein, weil sonst relevante
+Probleme unsichtbar werden können. Statische Analyse führt den Code nicht wie
+einen Testfall aus; sie untersucht seine Struktur und kann deshalb nicht jede
+fachliche oder dynamische Verletzung erkennen.
+
 \end{beginnerstatement}

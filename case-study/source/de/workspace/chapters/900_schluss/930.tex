@@ -8,15 +8,40 @@ offizielle Dokumentation ersetzen keine unabhängige Replikation.
 Commitgebundene Befunde bleiben dadurch gültig, ihre Übertragung auf andere
 Stände oder Projekte aber begrenzt.
 
-Die Evidenz ist heterogen: Einer früheren, überwiegend Linux-basierten Abnahme
-stehen gemischte aktuelle CI-Ergebnisse gegenüber. Ohne Coverage-Messung,
-Compose-Start und erfolgreiche Plattformläufe entsteht kein umfassender
-Qualitäts- oder Produktionsnachweis; unsignierte Pakete ersetzen keine
-Produktreleases.
+\paragraph{Konstruktvalidität.}
+Code-LOC, Funktions- und Klassengröße sowie Komplexität bilden ausgewählte
+Strukturmerkmale ab. Sie messen weder fachliche Verständlichkeit, Kohäsion noch
+korrekte Verantwortungsverteilung. Importregeln erfassen nicht jede
+dynamische, transitive oder semantische Architekturverletzung. Insbesondere
+900 Code-LOC sind eine großzügige projektspezifische Obergrenze und kein
+universelles Wartbarkeitskriterium.
 
-Übertragbar sind vor allem drei Prinzipien: zentrale Baseline, deklarative
-Variabilität und gemeinsame Tooling-Einstiege. Produktivität und Eignung wurden
-nur qualitativ bewertet; Zeitmessungen, Vergleichsgruppen, Kundenfälle und
-Wirtschaftsdaten fehlen.
-Diese Lücken begrenzen insbesondere Aussagen zur tatsächlichen Wirkung im
-Projektalltag.
+\paragraph{Interne Validität.}
+Die Auswertung stammt aus dem Projekt selbst. Fixtures für Grenzwerte und
+Architektur können auf die implementierten Regeln zugeschnitten sein.
+Nachgebildete Ruff- und ESLint-Ausgaben sowie die fehlende
+negative Rust-Fixture begrenzen den Integrationsnachweis. Hinzu kommen fehlende
+integrierte Tests für die 901-LOC-Ausnahme bis zum Gate-Status sowie für
+absolute und ausgeschlossene Exception-Pfade. Bestandene Tests schließen
+Fehler außerhalb der geprüften Fälle nicht aus.
+
+\paragraph{Externe Validität.}
+Untersucht wird ein einzelnes profilbasiertes Template. Grenzwerte und
+Architekturabbildung sind nicht ohne Weiteres auf kleine Starter, große
+Enterprise-Systeme oder generierte Codebasen übertragbar. Übertragbar sind
+eher die Prinzipien zentraler Policy, deklarativer Variabilität und gemeinsamer
+Prüfeinstiege als die konkreten Zahlenwerte.
+
+\paragraph{Reliabilität.}
+Ergebnisse hängen von Commit, Toolversionen, Betriebssystem, Paketregistries
+und nativen Bibliotheken ab. Die abweichenden Master- und Profilergebnisse
+sowie der lokal fehlgeschlagene Rust-/Tauri-Pfad zeigen diese Abhängigkeit.
+Ohne Coverage-Messung, Compose-Start und erfolgreiche Plattformläufe entsteht
+kein umfassender Qualitäts- oder Produktionsnachweis.
+
+\paragraph{Langzeitwirkung.}
+Die Untersuchung belegt die technische Erkennung definierter Verstöße zum
+Beobachtungszeitpunkt. Wartungsaufwand, Defektrate, Refactoring-Häufigkeit,
+Entwicklungszeit und Modellbefolgung wurden nicht longitudinal gemessen. Das
+Quality Gate garantiert daher weder Clean Code noch eine kausale Verbesserung
+langfristiger Wartbarkeit.

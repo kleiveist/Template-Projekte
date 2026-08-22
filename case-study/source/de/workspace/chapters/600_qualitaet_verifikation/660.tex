@@ -5,13 +5,21 @@ Tabelle~\ref{tab:external-verification-items} trennt fehlgeschlagene Prüfungen,
 fehlende Evidenz und bewusste Produktgrenzen. Rote CI-Jobs sind reale Fehler;
 ein nicht gestarteter Compose-Verbund ist dagegen nicht verifiziert.
 
-Der aktuelle Core-Job belegt Compose-Validierung und beide Master-Images, aber
-weder \texttt{docker compose up} noch produktives Deployment. Linux- und
-macOS-Pakete wurden auf \texttt{a4487ac} unsigniert gebaut; Windows nicht.
-Branch Protection war mangels API-Berechtigung nicht lesbar. Signing,
-Notarisierung, Updater, produktive Zugangsdaten und Authentifizierung/RBAC
-benötigen ein Produkt und externe Infrastruktur
-\parencite{kleiveist2026ci-core-run,kleiveist2026ci-desktop-run,kleiveist2026release}.
+Der Core-Lauf auf \texttt{461fc751} belegt ein grünes Master-Quality-Gate,
+Compose-Validierung und beide Images, aber weder
+\texttt{docker compose up} noch produktives Deployment. Generierte
+backendhaltige Profile besitzen dagegen keinen grünen Quality-Nachweis. Lokal
+bleiben Rust-/Tauri-Prüfungen mangels Systembibliotheken unvollständig;
+PostgreSQL und E2E wurden ohne Dienst beziehungsweise Konfiguration
+übersprungen. Diese Fälle sind FAIL oder SKIP, nicht PASS.
+
+Linux- und macOS-Pakete wurden auf \texttt{461fc751} unsigniert gebaut;
+Windows nicht. Branch Protection war mangels API-Berechtigung nicht lesbar.
+Der erfolgreiche Dokumentations-Dry-Run meldete noch zu synchronisierende
+Index- und Backlink-Änderungen. Signing, Notarisierung, Updater, produktive
+Zugangsdaten und Authentifizierung/RBAC benötigen ein Produkt und externe
+Infrastruktur
+\parencite{kleiveist2026governance-core-run,kleiveist2026governance-desktop-run,kleiveist2026release}.
 
 \input{workspace/tables/external-verification-items}
 \beginnerinput{workspace/statement/600_qualitaet_verifikation/660}

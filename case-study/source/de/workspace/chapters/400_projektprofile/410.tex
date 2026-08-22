@@ -10,10 +10,28 @@ Dabei bezeichnet \emph{Core} die Pfade jedes Produktprojekts. Ein
 ein \emph{Profil} eine zulässige Feature-Kombination. Eine \emph{Capability}
 erweitert ein Profil optional und ist selbst kein Plattformprofil. Das
 \emph{Manifest} dokumentiert die Auswahl im generierten Projekt
-\parencite{kleiveist2026profiles,kleiveist2026template}.
+\parencite{kleiveist2026profiles,kleiveist2026governance-snapshot}.
 Zum Core gehören unter anderem Versionsstand, Konfiguration, Dokumentation,
 Profilbeschreibungen, gemeinsame Artefakte und Tooling. Technische
 Laufzeitkomponenten liegen dagegen in den jeweils ausgewählten Feature-Pfaden.
+
+Governance~v1 erweitert den Core um \path{AGENTS.md},
+\path{config/code-quality.toml}, die Quality-Dokumentation und
+\path{tools/quality/}; der Generator übernimmt diese Pfade in alle fünf
+Profile \parencite{kleiveist2026quality-policy}. Komponentenabhängige Checks
+werden aus der erzeugten Struktur abgeleitet: Frontendwerkzeuge setzen ein
+vorhandenes \path{frontend/package.json}, Rustprüfungen ein
+\path{src-tauri/Cargo.toml} und Architekturprüfungen den jeweiligen Quellpfad
+voraus. Ein regulär erzeugtes \texttt{web-only}-Projekt benötigt daher keine
+Rust-Toolchain.
+
+Diese Verträglichkeit ist struktur-, nicht manifestbasiert. Ein im Manifest
+aktives, aber versehentlich fehlendes Subsystem kann im Quality-Report als
+\enquote{not enabled} mit erfolgreichem Check erscheinen; einen eigenen
+\texttt{SKIP}-Status besitzt der Reporter nicht. Manifestkonsistenz bleibt
+Aufgabe von Doctor, Profil- und Generatorprüfungen. Die Aussage, das Gate
+respektiere Profile, gilt deshalb für regulär erzeugte Scaffolds, nicht für
+beliebig inkonsistente Verzeichniszustände.
 
 \input{workspace/figures/profiles/profile-model}
 
@@ -41,7 +59,7 @@ fest. Das Tooling validiert es und behandelt nur aktive Dienste und Workflows.
 Das Master-Manifest verwendet \texttt{full-platform + postgres}, ohne das
 Preset selbst zu verändern. Laufzeitwerte, Ports, URLs und Geheimnisse gehören
 dagegen zum getrennten Konfigurationsmodell
-\parencite{kleiveist2026configuration,kleiveist2026template}.
+\parencite{kleiveist2026configuration,kleiveist2026governance-snapshot}.
 Im Manifest bleiben angeforderte optionale Features und das aufgelöste Ergebnis
 getrennt sichtbar. Diese Unterscheidung macht transitive Abhängigkeiten
 nachvollziehbar.

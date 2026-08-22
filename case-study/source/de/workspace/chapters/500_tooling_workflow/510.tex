@@ -3,26 +3,80 @@
 
 \path{tools/control.py} bündelt die öffentlichen Arbeitsabläufe. Seine Befehle
 decken Initialisierung, Diagnose, Installation, Entwicklung, Konfiguration,
-Datenbank, Tests, Builds, Container, Tauri, Versionierung, Release und
+Datenbank, Quality, Tests, Builds, Container, Tauri, Versionierung, Release und
 Dokumentation ab. Hilfe und Gruppenansichten strukturieren diese Oberfläche
-\parencite{kleiveist2026control,kleiveist2026tooling}.
+\parencite{kleiveist2026control,kleiveist2026quality-implementation}.
 Zu den wichtigsten Einstiegen gehören \texttt{init}, \texttt{doctor},
-\texttt{install}, \texttt{run}, \texttt{test} und \texttt{build}. Die Gruppen
-\texttt{db}, \texttt{tauri}, \texttt{container} und \texttt{release} ergänzen
-nur die jeweils benötigten Fachabläufe.
+\texttt{install}, \texttt{run}, \texttt{quality}, \texttt{test} und
+\texttt{build}. Die Gruppen \texttt{db}, \texttt{tauri},
+\texttt{container} und \texttt{release} ergänzen nur die jeweils benötigten
+Fachabläufe.
 
 \input{workspace/figures/tooling/control-command-map}
 
-Die Handler laden Manifest und bei Bedarf Laufzeitkonfiguration und delegieren
-an die jeweiligen Fachwerkzeuge. Diese bleiben eigenständig. Die geführte
-\texttt{console} ruft dieselben Befehle auf und bildet kein zweites System.
+Der Governance-Commit teilte den zuvor 592 physische Zeilen umfassenden
+Dispatcher auf. \path{tools/control.py} umfasst im untersuchten Stand 197
+Zeilen und fungiert als Composition Root; Parserdefinitionen liegen in
+\path{tools/control_parser.py}, die eigentliche Prüfung im modularen Paket
+\path{tools/quality/}. Eine Rückabhängigkeit dieses Pakets auf den Dispatcher
+besteht nicht. Die Bewertung folgt damit Verantwortung, Kopplung und
+Delegation und nicht allein der Dateilänge
+\parencite{kleiveist2026governance-commit}.
 
-Unterschiedliche Exitcodes trennen Hilfe und Erfolg, fachliche Fehler,
-Bedienfehler und Abbruch. Erwartete Profil- und Generierungsfehler erscheinen
-ohne Traceback; unerwartete Exceptions werden protokolliert. Diese Konvention
-unterstützt interaktive Diagnose und CI-Auswertung
-\parencite{kleiveist2026control,kleiveist2026ci}.
-Insbesondere lassen sich erfolgreiche Ausführung, fachlicher Fehlschlag und
-fehlerhafte Bedienung maschinell unterscheiden. Warnungen blockieren den
-Workflow nicht automatisch.
+Ohne Aktion entspricht \texttt{quality} dem Unterbefehl \texttt{check}.
+Fokussierte Aktionen sind \texttt{size}, \texttt{complexity},
+\texttt{architecture}, \texttt{lint} und \texttt{format}; als Optionen stehen
+\texttt{--config} und \texttt{--format text|json} bereit. Jede Aktion lädt die
+Policy, scannt das Repository und validiert Exceptions. Die vollständige
+Aktion verbindet zusätzlich Größen- und Komplexitätsregeln,
+Architekturprüfung, Sprachwerkzeuge, Compiler- und Formatchecks.
+
+Exitcode~0 setzt erfolgreiche Toolchecks voraus; aktive Fehlerbefunde dürfen
+nicht vorliegen. Ein nicht unterdrückter \emph{ERROR}-Befund oder ein
+fehlgeschlagenes erforderliches Werkzeug liefert~1. Parser-, Konfigurations-
+und Scanfehler liefern~2, ein Tastaturabbruch auf Dispatcher-Ebene~130. Die
+Stufen \emph{INFO}, \emph{WARNING} und die starke Warnung blockieren allein
+nicht. \emph{INFO} wird im Modell und JSON-Report gezählt, aber von keiner
+v1-Regel erzeugt. Externe Lint-, Compiler- und Formatfehler erscheinen als
+fehlgeschlagene Checks mit Werkzeugausgabe, nicht immer als strukturiertes
+Finding mit CQ-ID.
+
+Tabelle~\ref{tab:quality-rule-groups} verdichtet die 13 implementierten
+Regelkennungen. Die CQ-Severity hängt von der jeweiligen Schwelle ab; AR- und
+EX-Befunde sind Fehler.
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Regelgruppen der Governance~v1}
+  \label{tab:quality-rule-groups}
+  \begin{tabularx}{\textwidth}{@{}p{0.15\textwidth}p{0.31\textwidth}>{\raggedright\arraybackslash}X p{0.16\textwidth}@{}}
+    \toprule
+    \textbf{Gruppe} & \textbf{Regel-IDs} & \textbf{Prüfgegenstand} &
+      \textbf{Severity} \\
+    \midrule
+    Codequalität & \texttt{CQ001}, \texttt{CQ002},
+      \texttt{CQ101}--\texttt{CQ104}, \texttt{CQ201} & Datei-, Funktions-
+      und Klassengröße, Komplexität, Verschachtelung und Parameter &
+      schwellenabhängig \\
+    Architektur & \texttt{AR001}--\texttt{AR004} & Schicht- und
+      Frameworkabhängigkeiten, Feature-Interna und Router-Heuristik & ERROR \\
+    Exceptions & \texttt{EX001}, \texttt{EX002} & ungültige oder abgelaufene
+      Ausnahmeeinträge & ERROR \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Quelle: Eigene Darstellung nach
+  \textcite{kleiveist2026quality-implementation}.\par}
+\end{table}
+
+Repository-Findings enthalten Pfad, optionale Zeile und Symbol, ID, Name,
+Severity, Istwert, Schwelle, Detail und Handlungsempfehlung. Unterdrückte
+Befunde bleiben einschließlich Begründung sichtbar; die Summary zählt
+Severity-Stufen und Exceptions. Der Textbericht weist INFO nicht gesondert
+aus, der JSON-Bericht schon. Außerdem stammt die Zahl \texttt{files\_checked}
+praktisch nur aus der Größenprüfung, weshalb fokussierte Komplexitäts- und
+Architekturläufe trotz geprüfter Quellen null Dateien melden können. Diese
+Reporting-Grenze verändert den Befundstatus nicht.
 \beginnerinput{workspace/statement/500_tooling_workflow/510}

@@ -13,4 +13,14 @@ Die hashgebundene Installation wurde geprüft
 \parencite{kleiveist2026ci,kleiveist2026container}. Betriebssystem, Toolchain,
 Registries, Netzwerk und Plattform-SDKs begrenzen dennoch die Reproduktion;
 native Ergebnisse bleiben plattformspezifisch.
+
+Für die Governance erhöhen die versionierte TOML-Policy, feste Rule IDs,
+Grenzwerttests und derselbe öffentliche Quality-Einstieg lokal und in CI die
+Nachvollziehbarkeit. Dies bedeutet nicht, dass jede Umgebung dasselbe
+Gesamtergebnis liefert. Der lokale vollständige Lauf scheiterte an nativen
+Tauri-Bibliotheken, während der Core-Quality-Job bestand; generierte
+Backendprofile scheiterten wiederum an der abweichenden Ruff-Auflösung.
+Reproduzierbar sind damit insbesondere Policy, Klassifikation und geprüfte
+Grenzfälle. Die vollständige Werkzeugausführung bleibt von Installation,
+Toolversionen und Systembibliotheken abhängig.
 \beginnerinput{workspace/statement/600_qualitaet_verifikation/640}

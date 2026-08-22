@@ -12,4 +12,62 @@ Build-Ergebnisse liefern. Dies stärkt die prüfbare Beziehung zwischen
 Quellstand und Artefakt \parencite{lamb2022reproducible-builds}. Zielartefakte
 sollen kontrolliert erzeugbar und Konfigurationsprioritäten verständlich sein;
 serverseitige Geheimnisse bleiben von Client-Konfiguration getrennt.
+
+Governance~v1 ergänzt funktional das Laden und Validieren einer versionierten
+Policy, die Auswahl unterstützter Quelldateien, Code- und physische
+Zeilenzählung, Scope-Metriken, Architekturregeln, Excludes, befristete
+Exceptions sowie Text- und JSON-Reporting. Befunde sollen Pfad, optionale
+Zeile und Symbol, Regel-ID und -name, Severity, Istwert, Schwelle, Erläuterung
+und Handlungshinweis zuordnen. Nichtfunktional werden ein gemeinsamer lokaler
+und CI-Einstieg, eine vom Dispatcher getrennte Quality-Logik, kontrollierte
+Fehler bei ungültiger Konfiguration und die Verträglichkeit mit erzeugten
+Profilen verlangt \parencite{kleiveist2026quality-policy}.
+
+Tabelle~\ref{tab:quality-thresholds} gibt die implementierte reguläre
+Klassifikation wieder. \emph{WARNING} und \emph{STRONG\_WARNING} informieren,
+ohne allein den Exitcode zu verändern; \emph{ERROR} blockiert, sofern keine
+greifende Exception vorliegt.
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Projektspezifische Schwellenwerte der Governance~v1}
+  \label{tab:quality-thresholds}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X>{\centering\arraybackslash}p{0.13\textwidth}>{\centering\arraybackslash}p{0.15\textwidth}>{\centering\arraybackslash}p{0.18\textwidth}>{\centering\arraybackslash}p{0.13\textwidth}@{}}
+    \toprule
+    \textbf{Messgröße} & \textbf{PASS} & \textbf{WARNING} &
+      \textbf{STRONG\_WARNING} & \textbf{ERROR} \\
+    \midrule
+    Code-LOC je Datei       & 0--600  & 601--750 & 751--900 & ab 901 \\
+    physische Zeilen        & 0--1200 & ab 1201  & --       & -- \\
+    Code-LOC je Funktion    & 0--50   & 51--80   & 81--120  & ab 121 \\
+    Code-LOC je Klasse      & 0--300  & 301--500 & 501--700 & ab 701 \\
+    zyklomatische Komplexität & 1--10 & 11--15   & 16--20   & ab 21 \\
+    Verschachtelungstiefe   & 0--3    & 4        & 5        & ab 6 \\
+    Parameter je Funktion   & 0--5    & 6--8     & 9--10    & ab 11 \\
+    FastAPI-Handler, Code-LOC & 0--50 & --       & --       & ab 51 \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Quelle: Eigene Darstellung nach
+  \textcite{kleiveist2026quality-config}.\par}
+\end{table}
+
+Die Grenze von 900 Codezeilen ist eine projektspezifische
+Governance-Entscheidung, kein allgemeingültiger wissenschaftlicher
+Clean-Code-Grenzwert: 900 LOC sind zulässig, liegen aber bereits in der starken
+Warnzone; 901 LOC werden regulär als \texttt{CQ001 ERROR} klassifiziert. Ebenso
+operationalisieren 120 Funktions-, 700 Klassenzeilen, Komplexität~20, fünf
+Verschachtelungsebenen und zehn Parameter die Policy dieses Repository. Die
+Quelle von McCabe begründet die zyklomatische Metrik, nicht den hier gewählten
+Schwellenwert~20 \parencite{mccabe1976complexity}.
+
+Das Dateilimit ist ein äußeres Sicherheitsnetz. Eine Datei mit 850 LOC kann
+trotz zulässigem Hard-Limit problematisch sein; eine Datei mit 200 LOC kann
+hohe Komplexität, ungünstige Abhängigkeiten oder vermischte Verantwortungen
+besitzen. Die Metriken sind automatisierbare Indikatoren und ersetzen weder
+fachliche Codeprüfung noch eine empirische Wartbarkeitsmessung. Die technische
+Unterdrückbarkeit von \texttt{CQ001} wird deshalb gesondert als Abweichung in
+Abschnitt~\ref{subsec:schwaechen-grenzen} bewertet.
 \beginnerinput{workspace/statement/200_anforderungen/240}

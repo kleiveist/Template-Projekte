@@ -4,15 +4,18 @@
 \paragraph{Fragestellung 1: Adressierte Anforderungen.}
 Das Template adressiert die Anforderungen durch eine generierbare Baseline,
 klare Komponenten, Profile, gemeinsame Workflows, zentrale Pflege und
-versionierte Konfiguration. Getrennte Laufzeit- und Prüfpfade stützen dies;
+versionierte Konfiguration. Seit Governance~v1 werden ausgewählte Größen-,
+Komplexitäts- und Abhängigkeitsregeln zusätzlich über zentrale Policy, lokale
+CLI und CI operationalisiert. Getrennte Laufzeit- und Prüfpfade stützen dies.
 Fachlogik, Authentifizierung, Berechtigungen und Produktivbetrieb bleiben
-produktspezifisch.
+produktspezifisch; eine vollständige semantische Architekturprüfung bleibt
+Reviewaufgabe.
 
 \paragraph{Fragestellung 2: Varianten für Web, Cloud und Desktop.}
 Fünf Presets kombinieren das gemeinsame Frontend mit Backend-, Cloud- und
 Tauri-Bausteinen; PostgreSQL wird nur bei Backendfähigkeit ergänzt. Generierte
 Projekte enthalten überwiegend benötigte Pfade. \texttt{desktop-cloud} und
-\texttt{full-platform} sind technisch gleich gescaffoldet und semantisch
+\texttt{full-platform} sind technisch gleich generiert und semantisch
 abgegrenzt.
 
 \paragraph{Fragestellung 3: Wiederverwendung.}
@@ -23,10 +26,12 @@ bestehende Produktprojekte erhalten keine automatischen Updates.
 
 \paragraph{Fragestellung 4: Reduktion wiederkehrender Aufwände.}
 Automatisierte oder einheitliche Profilwahl, Generierung, Diagnose,
-Installation, Start, Tests und Builds schaffen plausibles Einsparpotenzial.
-Zeit-, Aufwands- und Vergleichsdaten fehlen jedoch; eine
-Produktivitätssteigerung ist unter Einbezug zentraler Pflege und mehrerer
-Toolchains nicht nachgewiesen.
+Installation, Start, Quality, Tests und Builds schaffen plausibles
+Einsparpotenzial. Rule IDs und Handlungshinweise vereinheitlichen die
+Rückmeldung für Menschen und Coding Agents. Zeit-, Aufwands- und
+Vergleichsdaten fehlen jedoch; eine Produktivitätssteigerung oder geringere
+Fehlerquote ist unter Einbezug zentraler Pflege und mehrerer Toolchains nicht
+nachgewiesen.
 
 \paragraph{Fragestellung 5: Projekteignung.}
 Das Template eignet sich als Basis für verwandte Web-, Desktop- und
@@ -39,7 +44,12 @@ Einstufung ist keine universelle Eignungszusage.
 \paragraph{Fragestellung 6: Grenzen, Wartungsaufwände und Risiken.}
 Grenzen sind wachsende Regressionsbreite, manuelle Vertragssynchronisierung,
 die nicht strikt getrennte Capability-Auswahl, fehlende Produktupdates und der
-Pflegebedarf mehrerer Toolchains. Tooling-, Desktopprofil- und Windows-CI sind
-aktuell rot; Release Validation, Compose-Start und Branch Protection fehlen.
+Pflegebedarf mehrerer Toolchains. Für die Governance kommen technisch
+unterdrückbare \texttt{CQ001}-Befunde, unvollständig validierte Exceptions,
+heuristische Architekturregeln, fehlende negative Rust-Fixtures und die
+dateibasierte statt manifestbasierte Profilableitung hinzu. Backendhaltige
+generierte Profile, der lokale Rust-/Tauri-Pfad und Windows sind nicht grün;
+Release Validation, Compose-Start, Dokumentationssynchronität und Branch
+Protection fehlen oder sind offen.
 Signing, Notarisierung, Updater, Produktiv-Deployment und Sicherheitsmodell
 bleiben Produktaufgaben.

@@ -1,23 +1,45 @@
 \begin{figure}[H]
   \centering
-  \begin{tikzpicture}[node distance=3.5mm]
-    \node[casePrimary,minimum width=70mm,minimum height=7mm] (requirement) {Anforderung};
-    \node[caseBox,minimum width=70mm,minimum height=7mm,below=of requirement] (decision) {Architekturentscheidung};
-    \node[caseBox,minimum width=70mm,minimum height=7mm,below=of decision] (implementation) {Implementierung};
-    \node[caseBox,minimum width=70mm,minimum height=7mm,below=of implementation] (test) {automatisierter Test / technische Prüfung};
-    \node[caseBox,minimum width=70mm,minimum height=7mm,below=of test] (acceptance) {commitgebundene Abnahme};
-    \node[caseOptional,minimum width=70mm,minimum height=7mm,below=of acceptance] (evidence) {Evidenz und Status};
-    \node[caseOptional,minimum width=70mm,minimum height=7mm,below=of evidence] (evaluation) {Bewertung in Kapitel~\ref{sec:bewertung}};
+  \resizebox{0.98\textwidth}{!}{%
+  \begin{tikzpicture}
+    \node[casePrimary,minimum width=45mm] (local) at (-4.2,0)
+      {lokal: Entwicklung\\oder Coding Agent};
+    \node[casePrimary,minimum width=45mm] (ci) at (4.2,0)
+      {GitHub Actions};
 
-    \draw[caseFlow] (requirement) -- (decision);
-    \draw[caseFlow] (decision) -- (implementation);
-    \draw[caseFlow] (implementation) -- (test);
-    \draw[caseFlow] (test) -- (acceptance);
-    \draw[caseFlow] (acceptance) -- (evidence);
-    \draw[caseFlow] (evidence) -- (evaluation);
-  \end{tikzpicture}
-  \caption{Nachweiskette der technischen Verifikation}
+    \node[casePrimary,minimum width=52mm] (control) at (0,-1.7)
+      {\texttt{tools/control.py}\\öffentlicher Dispatcher};
+    \node[casePrimary,minimum width=58mm] (orchestration) at (0,-3.3)
+      {\texttt{tools/quality/control.py}\\Quality-Orchestrierung};
+
+    \node[caseBox,minimum width=45mm,minimum height=19mm] (policy) at (-5,-5.3)
+      {\textbf{Policy / Repository}\\Konfiguration, Scan,\\Excludes, Exceptions};
+    \node[caseBox,minimum width=45mm,minimum height=19mm] (tools) at (0,-5.3)
+      {\textbf{Sprachwerkzeuge}\\Ruff, ESLint, TypeScript,\\Prettier, Clippy, Cargo};
+    \node[caseBox,minimum width=45mm,minimum height=19mm] (architecture) at (5,-5.3)
+      {\textbf{Architekturregeln}\\Backend- und\\Frontend-Importe};
+
+    \node[casePrimary,minimum width=52mm] (report) at (0,-7.3)
+      {Text- oder JSON-Bericht};
+    \node[caseOptional,minimum width=52mm] (exit) at (0,-8.7)
+      {Severity-Auswertung und Exitcode};
+
+    \draw[caseFlow] (local.south) -- (control.north);
+    \draw[caseFlow] (ci.south) -- (control.north);
+    \draw[caseFlow] (control) -- (orchestration);
+    \coordinate (branch) at (0,-4.25);
+    \draw[caseFlow] (orchestration.south) -- (branch) -| (policy.north);
+    \draw[caseFlow] (branch) -- (tools.north);
+    \draw[caseFlow] (branch) -| (architecture.north);
+    \draw[caseFlow] (policy.south) |- (report.west);
+    \draw[caseFlow] (tools.south) -- (report.north);
+    \draw[caseFlow] (architecture.south) |- (report.east);
+    \draw[caseFlow] (report) -- (exit);
+  \end{tikzpicture}}
+  \caption{Quality-Governance als Entwicklungs- und CI-Schicht außerhalb der Produktlaufzeit}
   \label{fig:verification-model}
   \smallskip
-  {\footnotesize Quelle: Eigene Darstellung.\par}
+  {\footnotesize Quelle: Eigene Darstellung auf Grundlage von
+  \textcite{kleiveist2026quality-implementation} und
+  \textcite{kleiveist2026quality-ci}.\par}
 \end{figure}

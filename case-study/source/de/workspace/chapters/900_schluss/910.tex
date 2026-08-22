@@ -11,8 +11,22 @@ FastAPI-Backend und optionale Tauri-Schicht; PostgreSQL ist nur mit Backend
 wählbar. \texttt{control.py} vereinheitlicht den Entwicklungsweg. Generierte
 Projekte bleiben eigenständig und erhalten keine automatischen Master-Updates.
 
+Mit Commit \texttt{461fc751} wurde die zuvor überwiegend dokumentierte
+Codequalitäts- und Architektur-Governance um zentrale Policy, 13 Rule IDs,
+Severity- und Exception-Modell, Scanner, Sprachadapter, Architekturprüfungen,
+strukturierte Reports, fokussierte Quality-Befehle und CI-Durchsetzung
+erweitert. Belegt sind die reguläre Klassifikation der getesteten Grenzfälle
+einschließlich 900/901 Code-LOC und die Erkennung konstruierter
+Architekturverstöße. Das Gate liegt außerhalb der Produktlaufzeit und der
+Dispatcher delegiert die Prüfung an ein eigenes Paket.
+
 Die lokale Abnahme eines früheren Commits stützt Profil-, PostgreSQL-, Test-,
-Web-Build- und Linux-Paketierungspfade. Die aktuelle externe CI ist nur
-teilweise erfolgreich; weitere Nachweise fehlen oder sind produktspezifisch.
-Belegt ist damit eine kontrolliert variable Baseline, nicht Produktionsreife
-oder empirische Kundeneignung.
+Web-Build- und Linux-Paketierungspfade. Mit dem Governance-Commit als
+technischem Basisstand bestand der direkte Pytest-Lauf mit 333 Tests, davon 135
+fokussierte Quality- und Workflowtests. Die Fallstudientests prüften dabei die
+vorliegende, noch nicht versionierte Nachdokumentation. Auch Web-Build und
+Master-Quality-Gate bestanden. Generierte Backendprofil-Gates, der lokale
+Rust-/Tauri-Pfad und Windows blieben rot oder unvollständig; weitere Nachweise
+fehlen oder sind produktspezifisch. Belegt ist damit eine kontrolliert variable
+Baseline mit technisch erweiterter Regeldurchsetzung, nicht jedoch Clean Code,
+Produktionsreife, langfristige Wartbarkeit oder empirische Kundeneignung.

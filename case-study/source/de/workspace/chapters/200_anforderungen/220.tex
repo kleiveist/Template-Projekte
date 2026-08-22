@@ -23,11 +23,16 @@ fasst die überprüfbaren Anforderungen zusammen.
     A-05 & Wartbarkeit & Gemeinsame Bestandteile werden zentral gepflegt. & Repository-Strategie \\
     A-06 & Nachvollziehbarkeit & Änderungen und Konfiguration sind versioniert und dokumentiert. & Versionsstand, Dokumentation \\
     A-07 & Erweiterbarkeit & Optionale Fähigkeiten besitzen dokumentierte Abhängigkeiten. & Capability-Modell \\
+    A-08 & Quality Policy & Messbare Regeln sind zentral konfiguriert und lokal wie in CI auswertbar. & Konfiguration, CLI, Workflow \\
+    A-09 & Architektur-Governance & Ausgewählte Schicht- und Featuregrenzen werden automatisiert geprüft. & Importanalyse, Architekturtests \\
+    A-10 & Verhältnismäßigkeit & Hinweise bleiben sichtbar; nur Fehler und erforderliche fehlgeschlagene Werkzeuge blockieren. & Severity-, Exception- und Exitcode-Tests \\
     \bottomrule
   \end{tabularx}
   \smallskip
   {\footnotesize Quelle: Eigene Darstellung.\par}
 \end{table}
 
-Die genannte Prüfbasis dient später der Bewertung dieser Soll-Kriterien.
+Die genannte Prüfbasis dient später der Bewertung dieser Soll-Kriterien. A-08
+bis A-10 entstanden erst mit der Governance-Erweiterung und werden daher nicht
+rückwirkend der ursprünglichen Baseline zugeschrieben.
 \beginnerinput{workspace/statement/200_anforderungen/220}

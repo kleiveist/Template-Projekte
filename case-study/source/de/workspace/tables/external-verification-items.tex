@@ -2,13 +2,16 @@
   \centering
   \scriptsize
   \renewcommand{\arraystretch}{1.1}
-  \caption{Offene und externe Verifikationspunkte auf \texttt{a4487ac}}
+  \caption{Offene und externe Verifikationspunkte auf \texttt{461fc751}}
   \label{tab:external-verification-items}
   \begin{tabularx}{\textwidth}{@{}p{0.21\textwidth}p{0.16\textwidth}p{0.27\textwidth}>{\raggedright\arraybackslash}X@{}}
     \toprule
     \textbf{Prüfpunkt} & \textbf{Status} & \textbf{Grund} & \textbf{erforderlicher Nachweis} \\
     \midrule
-    Tooling- und Desktop-Profil-CI & FAIL & aktuelle Jobs enden in ausgeführten Testschritten mit Exitcode 1 & erfolgreiche Wiederholung auf dem korrigierten Commit \\
+    Backendprofil-Quality & FAIL & drei Profile und drei PostgreSQL-Varianten scheitern im Quality-Schritt; Ruff-Auflösung lokal reproduziert & korrigierte Installation und grüner Matrixlauf auf festem Commit \\
+    lokaler Rust-/Tauri-Pfad & FAIL & \texttt{javascriptcoregtk-4.1} und \texttt{webkit2gtk-4.1} fehlen & vollständiger Quality- und Tauri-Lauf mit nativen Paketen \\
+    PostgreSQL und E2E lokal & SKIP & Test-URL beziehungsweise Playwright-Konfiguration fehlen & ausgeführte Integrations- und E2E-Tests \\
+    Dokumentationssynchronität & offen & Dry-Run meldet 38 Index-, Link- und Backlink-Änderungen & synchronisierte Dokumentation und erneuter Dry-Run \\
     Windows-Paket & FAIL & Frontend-Installation im nativen Windows-Job fehlgeschlagen & erfolgreicher nativer Build und Artefakt-Upload \\
     Release Validation & nicht verifiziert & kein manueller oder Tag-Run vorhanden & erfolgreicher, nicht publizierender Run auf festem Commit \\
     Compose-Start & nicht verifiziert & nur Modell und Master-Images in CI geprüft & \texttt{docker compose up}, Health-/Ready-Nachweis und kontrollierter Abbau \\
@@ -19,6 +22,7 @@
   \end{tabularx}
   \smallskip
   {\scriptsize Quelle: Eigene Zusammenstellung aus
-  \textcite{kleiveist2026acceptance,kleiveist2026release} und den aktuellen
-  GitHub-Actions-Läufen.\par}
+  \textcite{kleiveist2026acceptance,kleiveist2026release},
+  \textcite{kleiveist2026quality-implementation} und den ausgewerteten
+  GitHub-Actions-Läufen der Governance-Version.\par}
 \end{table}

@@ -16,10 +16,41 @@ paketiert. Die beiden inkompatiblen PostgreSQL-Kombinationen wurden vor der
 Zielerzeugung erwartungsgemäß abgewiesen
 \parencite{kleiveist2026acceptance}.
 
+Gegen den technischen Basisstand \texttt{461fc751} und die vorliegende
+Nachdokumentation wurden die Governance-Prüfungen erneut lokal ausgeführt.
+\texttt{quality size}, \texttt{quality complexity} und
+\texttt{quality architecture} endeten mit Exitcode~0. Der vollständige Report
+wählte 123 Quelldateien aus und enthielt 42 Warnungen, acht starke Warnungen,
+keinen aktiven regelbasierten Fehler und keine Unterdrückung. Der Gesamtbefehl
+endete dennoch mit Exitcode~1, weil Clippy und \texttt{cargo check} die lokalen
+Systembibliotheken \texttt{javascriptcoregtk-4.1} und
+\texttt{webkit2gtk-4.1} nicht fanden. Das Ergebnis ist deshalb kein
+vollständiger PASS. Es belegt für die ausgeführten Repository-Regeln lediglich
+das Ausbleiben eines aktiven ERROR-Findings; Warnungen blockieren
+definitionsgemäß nicht.
+
+Der öffentliche \texttt{doctor} endete ebenfalls mit~1. Blockierend fehlten
+eine erforderliche \texttt{DATABASE\_URL} und die Backend-Umgebung; Docker
+erschien zusätzlich als Warnung. \texttt{test --suite all} reparierte die Backend-Umgebung und
+bestand Tooling, Schema, API, Datenbank und Frontend; PostgreSQL und E2E wurden
+übersprungen, Tauri scheiterte an
+\texttt{javascriptcoregtk-4.1}. Der Gesamtstatus blieb~1. Dies ist getrennt
+vom direkten Pytest-Nachweis mit 333 bestandenen Tests zu lesen.
+
+\texttt{build web} endete mit~0 und erzeugte Vite-Ausgabe sowie ZIP.
+\texttt{docs index --dry-run} endete ebenfalls mit~0, meldete aber zehn
+Index-, 26 Dokumentationslink-, eine README- und eine
+AGENTS-Backlink-Änderung. Der Trockenlauf belegt somit die funktionsfähige
+Vorschau, nicht einen bereits synchronen Dokumentationsstand. Alle lokalen
+Angaben beziehen sich auf den 22.~August~2026; technische Quelldateien wurden
+dabei nicht geändert.
+
 Abbildung~\ref{fig:profile-verification-matrix} und
-Tabelle~\ref{tab:verification-matrix} trennen lokale Abnahme und aktuelle CI.
-Die neueren Fehler entwerten die commitgebundene Abnahme nicht, verhindern aber
-ihre Übertragung auf \texttt{a4487ac} als vollständig grünen Remote-Nachweis.
+Tabelle~\ref{tab:verification-matrix} trennen die frühere lokale Abnahme, die
+historische CI auf \texttt{a4487ac} und den Governance-Nachtrag auf
+\texttt{461fc751}. Spätere Fehler entwerten frühere commitgebundene Nachweise
+nicht rückwirkend, verhindern aber ihre Übertragung als vollständig grünes
+Urteil auf einen anderen Stand.
 
 \input{workspace/figures/verification/profile-verification-matrix}
 \input{workspace/tables/verification-matrix}

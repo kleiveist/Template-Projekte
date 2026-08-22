@@ -1,9 +1,11 @@
 \subsection{Teststrategie}
 \label{subsec:teststrategie}
 
-Die Verifikation ordnet jede Beobachtung einem Artefakt, einer ausgeführten
-Prüfung und einem commitgebundenen Ergebnis zu. Testcode allein belegt keine
-Ausführung, eine Workflow-Datei keinen erfolgreichen CI-Lauf.
+Die Verifikation gleicht zentrale Beobachtungen mit Repository-Artefakten,
+ausgeführten Prüfungen und commitgebundenen Ergebnissen ab. Testcode allein
+belegt keine Ausführung, eine Workflow-Datei keinen erfolgreichen CI-Lauf.
+Die Fallstudie hält die lokalen Befehle mit Datum, Exitcode und Ergebnis fest;
+die vollständigen Konsolenausgaben sind kein versioniertes Repository-Artefakt.
 Ausführungsergebnisse und Abnahmeprotokoll wiegen daher stärker als Code,
 Konfiguration und Dokumentation
 \parencite{runeson2009case-study,iso25010-2023}.
@@ -14,13 +16,69 @@ Backend, Frontend und Tauri/Rust. Integrationstests verbinden PostgreSQL~16,
 Konfiguration und Alembic. Buildprüfungen erzeugen Web-, Container- oder native
 Artefakte \parencite{kleiveist2026ci}.
 
+Governance~v1 ergänzt eine eigene Nachweiskette aus Policy,
+Regelklassifikation, synthetischen Grenz- und Architektur-Fixtures,
+Exitcode-Tests und CI-Aufruf. Am 22.~August~2026 endete der gemeinsame direkte
+Pytest-Lauf über \path{tools/tests} und \path{case-study/tests} mit 333
+bestandenen Tests. Davon entfielen 135 auf fokussierte Quality- und
+Workflowtests. Dieses Ergebnis ist von der später beschriebenen öffentlichen
+Gesamtsuite zu trennen. Tabelle~\ref{tab:quality-boundary-tests} fasst die
+geprüften Übergänge zusammen.
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Ausgeführte Grenzwerttests der Governance~v1}
+  \label{tab:quality-boundary-tests}
+  \begin{tabularx}{\textwidth}{@{}p{0.2\textwidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.34\textwidth}@{}}
+    \toprule
+    \textbf{Prüfgegenstand} & \textbf{getestete Werte} &
+      \textbf{erwartete Übergänge} \\
+    \midrule
+    Datei, Code-LOC & 599, 600, 601, 750, 751, 899, 900, 901 &
+      PASS bis 600; WARNING bis 750; STRONG\_WARNING bis 900; danach ERROR \\
+    physische Datei-LOC & 1200, 1201 & PASS; WARNING \\
+    Funktion, Code-LOC & 50/51, 80/81, 120/121 & alle vier Stufen \\
+    Klasse, Code-LOC & 300/301, 500/501, 700/701 & alle vier Stufen \\
+    Komplexität & 10/11, 15/16, 20/21 & alle vier Stufen \\
+    Verschachtelung & 3, 4, 5, 6 & alle vier Stufen \\
+    Parameter & 5/6, 8/9, 10/11 & alle vier Stufen \\
+    Router, Code-LOC & 50, 51 & PASS; \texttt{AR004 ERROR} \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Quelle: Eigene Ausführung gegen den technischen Basisstand
+  \texttt{461fc751} mit der vorliegenden, noch nicht versionierten
+  Nachdokumentation; Testquellen:
+  \textcite{kleiveist2026quality-tests}.\par}
+\end{table}
+
+Die LOC-Fixtures behandeln Leerzeilen, Kommentarzeilen und nachgestellte
+Kommentare. Hinzu kommen Blockkommentare, Python-Docstrings,
+JavaScript-/TypeScript-Kommentare, verschachtelte Rust-Kommentare und Raw
+Strings. Leere Dateien und Dateien ohne abschließenden Zeilenumbruch sind nicht
+gesondert getestet. Exception-Tests
+decken gültige, unbekannte, unvollständige, abgelaufene und doppelte Einträge
+sowie nicht vorhandene Dateien ab; eine Exception für ausgeschlossenen Code
+und absolute Pfade fehlen. Positive und negative Backend- und
+Frontend-Architektur-Fixtures prüfen konstruierte Importbeziehungen. Diese
+Fixtures belegen die Erkennung ihrer Fälle, nicht aller semantischen Verstöße.
+
+Ruff- und ESLint-Adaptertests verwenden teilweise nachgebildete
+Werkzeugausgaben; bei Rust wird die erzeugte Clippy-Konfiguration, aber kein
+eigener negativer Grenzwert-Fixture ausgeführt. Diese Lücken begrenzen die
+Integrationsevidenz trotz bestandener Tests.
+
 Der Umfang folgt dem aktiven Profil. \emph{PASS} bezeichnet eine erfolgreiche,
 \emph{FAIL} eine ausgeführte und gescheiterte Prüfung. \emph{Nicht verifiziert}
 bedeutet fehlende Evidenz, \emph{außerhalb des Scopes} eine bewusste Grenze;
 deaktivierte Gegenstände sind nicht anwendbar. Generierung und Strukturprüfung
 adressieren A-01 und A-03, die öffentliche Tooling-Schnittstelle A-04 und
-gültige sowie abgewiesene Capability-Kombinationen A-07. Abbildung~\ref{fig:verification-model}
-ordnet diese Nachweise ein.
+gültige sowie abgewiesene Capability-Kombinationen A-07. Quality- und
+Architekturtests adressieren A-08 bis A-10.
+Abbildung~\ref{fig:verification-model} ordnet die Governance-Komponenten und
+ihren lokalen sowie CI-basierten Kontrollfluss ein.
 
 \input{workspace/figures/verification/verification-model}
 \beginnerinput{workspace/statement/600_qualitaet_verifikation/610}
