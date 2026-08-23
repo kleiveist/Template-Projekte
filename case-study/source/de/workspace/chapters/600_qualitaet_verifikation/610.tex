@@ -70,6 +70,19 @@ Werkzeugausgaben; bei Rust wird die erzeugte Clippy-Konfiguration, aber kein
 eigener negativer Grenzwert-Fixture ausgeführt. Diese Lücken begrenzen die
 Integrationsevidenz trotz bestandener Tests.
 
+Die Freigabeverifikation am 23.~August~2026 ergänzt davon getrennt den finalen
+Analyzerstand. 146 fokussierte Python-Regressionstests für Rust-Syntax,
+Metriken, Payloadvalidierung, WASI-Host und Paketierung bestanden; die
+Analyzer-Crate bestand ihre 13 Rust-Integrationstests sowie Formatierung,
+Clippy und Compilercheck. Drei verlegte Builds auf dem gepinnten
+Rust-1.97.1-Linux-Builder --- normale Registry, alternative Homes und Targets
+mit Leerzeichen sowie ein In-Tree-Vendor --- erzeugten dasselbe 535\,787~Byte
+große \texttt{wasm32-wasip1}-Artefakt mit SHA-256
+\path{7a27cb02a9392b62c487b4ce73a03524d7260b804c0c49eb4520ceb1a1cacfd8}.
+Diese lokale Release-Evidenz korrigiert die konkret benannte Analyzerlücke,
+schreibt aber weder die Testzahlen noch die Remote-Ergebnisse der historischen
+Baseline um.
+
 Der Umfang folgt dem aktiven Profil. \emph{PASS} bezeichnet eine erfolgreiche,
 \emph{FAIL} eine ausgeführte und gescheiterte Prüfung. \emph{Nicht verifiziert}
 bedeutet fehlende Evidenz, \emph{außerhalb des Scopes} eine bewusste Grenze;

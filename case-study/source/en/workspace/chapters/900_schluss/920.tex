@@ -5,15 +5,18 @@
 The template addresses the functional and technical, quality, and operational
 requirements through a baseline that can be generated, clearly defined
 components, profiles, shared workflows, centralized maintenance, and versioned
-configuration. Separate runtime and verification paths support this;
+configuration. Since Governance~v1, selected size, complexity, and dependency
+rules are also operationalized through central policy, the local CLI, and CI.
+Separate runtime and verification paths support this;
 domain logic, authentication, authorization, and production operation remain
-product-specific.
+product-specific; complete semantic architecture verification remains a review
+responsibility.
 
 \paragraph{Research Question 2: Variants for Web, Cloud, and Desktop.}
 Five presets combine the shared frontend with backend, cloud, and Tauri
 components; PostgreSQL is added only when backend capability is present.
 Generated projects predominantly contain the paths they require.
-\texttt{desktop-cloud} and \texttt{full-platform} are scaffolded identically
+\texttt{desktop-cloud} and \texttt{full-platform} are generated identically
 at the technical level and differentiated semantically.
 
 \paragraph{Research Question 3: Reuse and Standardization.}
@@ -25,9 +28,11 @@ generations; existing product projects receive no automatic updates.
 \paragraph{Research Question 4: Reduction of Recurring Effort.}
 Automated or standardized profile selection, generation, diagnostics,
 installation, startup, testing, and builds provide plausible potential for
-reducing recurring effort. Time, effort, and comparative data are lacking,
-however; a productivity improvement has not been demonstrated when central
-maintenance and multiple toolchains are taken into account.
+reducing recurring effort. Quality checks, rule IDs, and remediation advice
+standardize feedback for people and coding agents. Time, effort, and
+comparative data are lacking, however; neither a productivity improvement nor
+a lower defect rate has been demonstrated when central maintenance and
+multiple toolchains are taken into account.
 
 \paragraph{Research Question 5: Suitability for Project Types and Customer Requirements.}
 The template is suitable as a foundation for related web, desktop, and
@@ -43,7 +48,12 @@ Limitations include the growing breadth of regression testing, manual contract
 synchronization, insufficiently strict separation between optional and
 selectable capabilities, the absence of product updates, and the effort of
 maintaining multiple toolchains.
-The tooling, desktop-profile, and Windows CI paths are currently failing;
-Release Validation, Compose startup, and Branch Protection are still missing.
+Governance-specific limitations include technically suppressible
+\texttt{CQ001} findings, incompletely validated exceptions, heuristic
+architecture rules, missing negative Rust fixtures, and file-based rather than
+manifest-based profile derivation. Generated backend profiles, the local
+Rust/Tauri path, and Windows are not green; Release Validation, Compose
+startup, documentation synchronization, and Branch Protection are missing or
+open.
 Signing, notarization, the updater, production deployment, and the security
 model remain product tasks.

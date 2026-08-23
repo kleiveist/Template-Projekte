@@ -22,4 +22,11 @@ Probleme unsichtbar werden können. Statische Analyse führt den Code nicht wie
 einen Testfall aus; sie untersucht seine Struktur und kann deshalb nicht jede
 fachliche oder dynamische Verletzung erkennen.
 
+Für Rust liest ein mit Syn~2.0.119 gebauter Parser die Sprachstruktur. Sein
+eingechecktes WASI-Programm läuft unter Wasmtime~47.0.1, sodass für diese
+Metrikanalyse kein lokal installierter Rust-Compiler nötig ist. Prüfsummen und
+begrenzte Ressourcen schützen die Ausführung; ungültige Syntax oder ein
+verändertes Artefakt führen zu einem Fehler. Typprüfung, Makroexpansion und
+Clippy bleiben davon getrennte Prüfungen.
+
 \end{beginnerstatement}

@@ -27,6 +27,8 @@ def test_repository_policy_loads_with_exact_required_limits(
     assert quality_config.nesting.warning_inclusive is True
     assert quality_config.nesting.strong_warning_inclusive is True
     assert quality_config.parameters.warning_inclusive is True
+    assert quality_config.backend_architecture.support_directories == frozenset({"config"})
+    assert quality_config.backend_architecture.composition_files == frozenset({"__init__.py", "main.py"})
 
 
 @pytest.mark.parametrize(
@@ -136,6 +138,34 @@ def test_backend_layer_directories_must_not_overlap(
     )
 
     with pytest.raises(QualityConfigError, match="assigned to both"):
+        _load_text_config(tmp_path, invalid)
+
+
+def test_backend_support_directories_must_not_overlap_layers(
+    tmp_path: Path,
+    quality_config_text: str,
+) -> None:
+    invalid = quality_config_text.replace(
+        'support_directories = ["config"]',
+        'support_directories = ["config", "api"]',
+        1,
+    )
+
+    with pytest.raises(QualityConfigError, match="assigned to both"):
+        _load_text_config(tmp_path, invalid)
+
+
+def test_backend_composition_files_must_be_direct_python_files(
+    tmp_path: Path,
+    quality_config_text: str,
+) -> None:
+    invalid = quality_config_text.replace(
+        'composition_files = ["__init__.py", "main.py"]',
+        'composition_files = ["__init__.py", "bootstrap/main.py"]',
+        1,
+    )
+
+    with pytest.raises(QualityConfigError, match="direct Python file names"):
         _load_text_config(tmp_path, invalid)
 
 

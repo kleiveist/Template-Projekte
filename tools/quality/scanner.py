@@ -9,7 +9,8 @@ import tokenize
 from dataclasses import dataclass
 from pathlib import Path
 
-from tools.quality.model import CheckResult, Finding, QualityConfig, RULES, Severity
+from tools.quality.model import RULES, CheckResult, Finding, QualityConfig, Severity
+from tools.quality.rust import RustAnalysisError, RustFunctionMetric, analyze_rust
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,6 +29,7 @@ class SourceMetrics:
     physical_lines: int
     code_line_numbers: frozenset[int]
     scopes: tuple[ScopeMetric, ...]
+    rust_functions: tuple[RustFunctionMetric, ...] = ()
 
     @property
     def code_lines(self) -> int:
@@ -109,6 +111,16 @@ def _consume_block_comment(line: str, index: int, depth: int, *, nested: bool) -
     return index, depth
 
 
+def _rust_lifetime_end(line: str, index: int) -> int | None:
+    start = index + 1
+    end = start + 1
+    if end > len(line) or not line[start:end].isidentifier():
+        return None
+    while end < len(line) and line[start : end + 1].isidentifier():
+        end += 1
+    return end
+
+
 @dataclass(slots=True)
 class _LexerState:
     mode: str = "normal"
@@ -151,6 +163,9 @@ def _consume_normal(line: str, index: int, state: _LexerState, *, rust: bool) ->
         state.mode = "raw"
         return raw_match.end(), True, False
     character = line[index]
+    lifetime_end = _rust_lifetime_end(line, index) if rust and character == "'" else None
+    if lifetime_end is not None and (lifetime_end == len(line) or line[lifetime_end] != "'"):
+        return lifetime_end, True, False
     if character in {"'", '"', "`"}:
         state.mode = {"'": "single", '"': "double", "`": "template"}[character]
     return index + 1, True, False
@@ -173,7 +188,9 @@ def _c_style_code_lines(text: str, *, rust: bool = False) -> frozenset[int]:
                 break
         if has_code:
             code_lines.add(line_number)
-        if state.mode in {"single", "double"} and (not line or not line.endswith("\\")):
+        reset_single = state.mode == "single" and (not line or not line.endswith("\\"))
+        reset_non_rust_double = not rust and state.mode == "double" and (not line or not line.endswith("\\"))
+        if reset_single or reset_non_rust_double:
             state.mode = "normal"
     return frozenset(code_lines)
 
@@ -206,21 +223,21 @@ class _PythonScopeCollector(ast.NodeVisitor):
         self.generic_visit(node)
         self.parents.pop()
 
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:  # noqa: N802
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self._visit_named(node, "function", node.name)
 
-    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:  # noqa: N802
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self._visit_named(node, "function", node.name)
 
-    def visit_ClassDef(self, node: ast.ClassDef) -> None:  # noqa: N802
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self._visit_named(node, "class", node.name)
 
 
 def _python_scopes(text: str, code_lines: frozenset[int]) -> tuple[ScopeMetric, ...]:
     try:
         tree = ast.parse(text)
-    except SyntaxError:
-        return ()
+    except SyntaxError as exc:
+        raise SourceScanError(f"invalid Python syntax at line {exc.lineno}: {exc.msg}") from exc
     collector = _PythonScopeCollector(code_lines)
     collector.visit(tree)
     return tuple(collector.metrics)
@@ -232,13 +249,31 @@ def scan_file(path: Path, root: Path) -> SourceMetrics:
     except (OSError, UnicodeError) as exc:
         raise SourceScanError(f"could not read {path}: {exc}") from exc
     lines = code_line_numbers(path, text)
-    scopes = _python_scopes(text, lines) if path.suffix.lower() == ".py" else ()
+    suffix = path.suffix.lower()
+    scopes = _python_scopes(text, lines) if suffix == ".py" else ()
+    rust_functions: tuple[RustFunctionMetric, ...] = ()
+    if suffix == ".rs":
+        try:
+            rust_scopes, rust_functions = analyze_rust(text)
+        except RustAnalysisError as exc:
+            raise SourceScanError(f"could not analyze {path}: {exc}") from exc
+        scopes = tuple(
+            ScopeMetric(
+                scope.kind,
+                scope.symbol,
+                scope.start_line,
+                scope.end_line,
+                sum(scope.start_line <= line <= scope.end_line for line in lines),
+            )
+            for scope in rust_scopes
+        )
     return SourceMetrics(
         path=path,
         relative_path=path.relative_to(root).as_posix(),
         physical_lines=len(text.splitlines()),
         code_line_numbers=lines,
         scopes=scopes,
+        rust_functions=rust_functions,
     )
 
 

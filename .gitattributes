@@ -1,0 +1,8 @@
+# Keep the byte-verified Rust analyzer reproducible across checkout platforms.
+/tools/quality/rust_analyzer/*.py text eol=lf
+/tools/quality/rust_analyzer/*.toml text eol=lf
+/tools/quality/rust_analyzer/*.json text eol=lf
+/tools/quality/rust_analyzer/Cargo.lock text eol=lf
+/tools/quality/rust_analyzer/src/** text eol=lf
+/tools/quality/rust_analyzer/tests/** text eol=lf
+/tools/quality/rust_analyzer/dist/*.wasm binary

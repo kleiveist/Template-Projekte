@@ -9,7 +9,10 @@ das Frontend-Tooling aus; npm verwaltet dessen Pakete, und \texttt{npm ci}
 installiert die im Lockfile festgelegten Stände. Python führt Backend und
 Tooling aus; eine virtuelle Umgebung (\emph{venv}) trennt deren Pakete vom
 übrigen System, während \texttt{uv} oder ersatzweise \texttt{pip} sie
-installiert. Git verwaltet Quellcodeänderungen und wird zum Klonen des
+installiert. Im v1.0.0-Freigabestand richtet \texttt{install} für jedes Profil
+eine eigene \path{tools/.venv} mit Qualitätswerkzeugen wie Ruff ein; eine
+zusätzliche \path{backend/.venv} enthält nur die Abhängigkeiten der Anwendung.
+Git verwaltet Quellcodeänderungen und wird zum Klonen des
 Repositories benötigt. Rust ist für die native Tauri-Schicht der
 Desktopprofile erforderlich. Chromium ist der Browser für konfigurierte
 Playwright-Tests und wird nur bei Bedarf eingerichtet; auch andere optionale

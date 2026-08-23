@@ -12,4 +12,11 @@ error, a traceback shows the sequence of code locations involved;
 expected usage and profile errors are displayed without such a detailed
 technical report.
 
+The new \texttt{quality} command coordinates such verification tools. A linter
+looks for defined errors and rule violations, while a formatter checks the
+written form of code. A rule ID is a short, unique identifier such as
+\texttt{CQ001}; it keeps a finding recognizable even if its explanation
+changes. The dispatcher accepts the command, while dedicated modules contain
+the actual quality logic.
+
 \end{beginnerstatement}

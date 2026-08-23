@@ -52,17 +52,17 @@ jobs:
             backend/requirements.txt
             backend/requirements-database.txt
             backend/requirements-postgres.txt
-      - name: Set up Node.js 20
+      - name: Set up Node.js 24
         uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Set up Rust stable
+      - name: Set up Rust 1.97.1
         if: matrix.desktop
         run: |
-          rustup toolchain install stable --profile minimal --component rustfmt,clippy
-          rustup default stable
+          rustup toolchain install 1.97.1 --profile minimal --component rustfmt,clippy
+          rustup default 1.97.1
       - name: Cache Cargo dependencies
         if: matrix.desktop
         uses: actions/cache@v6
@@ -83,6 +83,9 @@ jobs:
       - name: Inspect generated project structure
         working-directory: .generated/ci-${{ matrix.profile }}
         run: python tools/control.py doctor
+      - name: Validate generated runtime configuration
+        working-directory: .generated/ci-${{ matrix.profile }}
+        run: python tools/control.py config doctor
       - name: Install generated project dependencies
         working-directory: .generated/ci-${{ matrix.profile }}
         run: python tools/control.py install --skip-playwright
@@ -100,6 +103,10 @@ jobs:
         if: matrix.desktop
         working-directory: .generated/ci-${{ matrix.profile }}
         run: python tools/control.py tauri doctor
+      - name: Validate generated desktop build command
+        if: matrix.desktop
+        working-directory: .generated/ci-${{ matrix.profile }}
+        run: python tools/control.py build desktop --dry-run --no-clean
       - name: Test generated project
         working-directory: .generated/ci-${{ matrix.profile }}
         run: python tools/control.py test --suite all

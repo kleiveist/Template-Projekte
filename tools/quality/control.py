@@ -3,12 +3,12 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from tools import logger
 from tools.quality.architecture import architecture_result
 from tools.quality.config import DEFAULT_CONFIG_PATH, QualityConfigError, load_quality_config
 from tools.quality.exceptions import apply_exceptions, validate_exceptions
 from tools.quality.model import CheckResult
 from tools.quality.reporter import print_report
+from tools.quality.rust import rust_metrics_result
 from tools.quality.scanner import SourceScanError, scan_repository, size_result
 from tools.quality.tooling import (
     run_frontend_format,
@@ -53,7 +53,7 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
 
 
 def _needs_typescript_analysis(action: str) -> bool:
-    return action in {"check", "size", "architecture"}
+    return action in {"check", "size", "complexity", "architecture"}
 
 
 def _internal_results(
@@ -73,7 +73,8 @@ def _internal_results(
         results.extend(
             [
                 run_python_metrics(root, metrics, config),
-                run_typescript_metrics(root, metrics, config),
+                run_typescript_metrics(root, metrics, config, typescript),
+                rust_metrics_result(metrics, config),
             ]
         )
     if action in {"check", "architecture"}:
@@ -81,14 +82,14 @@ def _internal_results(
     return results
 
 
-def _lint_results(action: str, root: Path, metrics, config) -> list[CheckResult]:
+def _lint_results(action: str, root: Path, metrics, config, exceptions) -> list[CheckResult]:
     if action not in {"check", "lint"}:
         return []
     return [
         run_python_lint(root, metrics),
         run_frontend_lint(root),
         run_typescript_check(root),
-        run_rust_lint(root, config),
+        run_rust_lint(root, config, metrics, exceptions),
         run_rust_check(root),
     ]
 
@@ -106,7 +107,12 @@ def _format_results(action: str, root: Path, metrics) -> list[CheckResult]:
 def _run(args: argparse.Namespace, root: Path) -> list[CheckResult]:
     config = load_quality_config(args.config, project_root=root)
     metrics = scan_repository(root, config)
-    exception_result, valid_exceptions = validate_exceptions(root, config.exceptions)
+    scanned_paths = frozenset(metric.relative_path for metric in metrics)
+    exception_result, valid_exceptions = validate_exceptions(
+        root,
+        config.exceptions,
+        scanned_paths=scanned_paths,
+    )
     results = [exception_result]
 
     typescript: TypeScriptAnalysis | None = None
@@ -115,7 +121,7 @@ def _run(args: argparse.Namespace, root: Path) -> list[CheckResult]:
         results.append(analysis_result)
 
     results.extend(_internal_results(args.quality_command, root, config, metrics, typescript))
-    results.extend(_lint_results(args.quality_command, root, metrics, config))
+    results.extend(_lint_results(args.quality_command, root, metrics, config, valid_exceptions))
     results.extend(_format_results(args.quality_command, root, metrics))
     apply_exceptions(results, valid_exceptions)
     return results
@@ -125,7 +131,14 @@ def main(args: argparse.Namespace) -> int:
     try:
         results = _run(args, ROOT)
     except (QualityConfigError, SourceScanError) as exc:
-        logger.fail(f"Quality gate configuration error: {exc}")
+        results = [
+            CheckResult(
+                "Quality configuration",
+                passed=False,
+                detail=f"Quality gate configuration error: {exc}",
+            )
+        ]
+        print_report(results, args.output_format)
         return 2
     print_report(results, args.output_format)
     return 0 if all(result.status == "PASS" for result in results) else 1

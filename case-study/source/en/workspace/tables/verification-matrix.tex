@@ -29,5 +29,14 @@
     \texttt{desktop-local + postgres} were correctly rejected before target generation in the
     local acceptance (P). Source: \textcite{kleiveist2026acceptance} and
     \textcite{kleiveist2026ci-profiles-run,kleiveist2026ci-postgres-run}.
+
+    \textbf{Governance addendum \texttt{461fc751}:} The master quality job,
+    \texttt{web-only}, and initially \texttt{desktop-local} passed the gate;
+    \texttt{desktop-local} then failed during the project test.
+    \texttt{web-cloud}, \texttt{desktop-cloud}, \texttt{full-platform}, and
+    the three generated PostgreSQL profiles failed during quality. These
+    results supplement the historical final column; they do not replace it
+    because they belong to a different commit. Sources: the governance CI runs
+    in Section~\ref{subsec:continuous-integration}.
   \end{minipage}
 \end{table}

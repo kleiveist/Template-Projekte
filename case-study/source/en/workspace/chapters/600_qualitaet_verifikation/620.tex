@@ -3,9 +3,31 @@
 
 Core CI, Profile Matrix, PostgreSQL Integration, and Desktop CI separately
 check the baseline, five profiles, PostgreSQL combinations, and native
-packages. Release Validation runs only manually or for version tags. All
-workflows have read permissions and use \path{tools/control.py}
-\parencite{kleiveist2026ci}.
+packages. Release Validation runs only manually or for version tags. Since
+Governance~v1, Core CI has a preceding Ubuntu quality job for pull requests,
+pushes to \texttt{main}, and manual runs, with Python~3.11, Node~24,
+Rust~1.97.1, rustfmt, Clippy, caches, and Tauri system packages. It invokes
+\texttt{quality} through \path{tools/control.py}.
+\texttt{continue-on-error} is not set; tooling, backend, frontend, and
+container declare \texttt{needs: quality}
+\parencite{kleiveist2026quality-ci}.
+
+After generation and installation, the profile matrix runs the gate for all
+five scaffolds before tests and builds; the generated PostgreSQL path does so
+for three backend profiles. The release workflow runs quality before tests and
+artifacts. Desktop CI and the direct PostgreSQL job do not have their own gate.
+The sequence \enquote{quality before tests before build} therefore does not
+apply uniformly to every workflow.
+
+The current v1.0.0 workflow state pins Node~24 and Rust~1.97.1 and uses
+PostgreSQL~16.15 in image \texttt{16.15-alpine3.24} for integration jobs. Core
+CI and Release Validation additionally build or verify the
+\texttt{wasm32-wasip1} analyzer produced with Syn~2.0.119 and execute it with
+the pinned Wasmtime~47.0.1 runtime. Core and Release build and compare the
+artifact on Ubuntu; Desktop CI only executes the checked-in artifact on Linux,
+macOS, and Windows and does not rebuild it there. This workflow configuration
+describes the current gate; a remote PASS must still be demonstrated for the
+final commit.
 
 The runs dated 7~August and queried on 9~August~2026 correspond to HEAD
 \texttt{a4487ac} and are not entirely green. Core CI succeeded for the
@@ -17,8 +39,29 @@ two desktop combinations. Desktop CI packaged on Linux and macOS; Windows
 failed during frontend installation
 \parencite{kleiveist2026ci-core-run,kleiveist2026ci-profiles-run,kleiveist2026ci-postgres-run,kleiveist2026ci-desktop-run}.
 
+The runs evaluated on 22~August~2026 for \texttt{461fc751} show another mixed
+result. In the Core run, the new quality job, including the unchanged-working-
+tree check, succeeded; backend, frontend, and container passed, while tooling,
+profile, and configuration tests caused the overall workflow to fail. In the
+profile matrix, \texttt{web-only} passed; \texttt{desktop-local} initially
+passed quality and later failed the project test. \texttt{web-cloud},
+\texttt{desktop-cloud}, and \texttt{full-platform} failed during quality. The
+direct PostgreSQL integration job passed, while the three generated PostgreSQL
+profiles failed during quality. Desktop CI built on Linux and macOS, while
+Windows again failed during frontend installation
+\parencite{kleiveist2026governance-core-run,kleiveist2026governance-profiles-run,kleiveist2026governance-postgres-run,kleiveist2026governance-desktop-run}.
+
+Public metadata establishes job and step status; log archives were unavailable
+without authorization. The fresh local reproduction described in
+Section~\ref{subsec:systempruefung-installation} for \texttt{461fc751}
+plausibly explains the profile failures at the time through Ruff resolution.
+This is an inference from implementation, workflow, and reproduction, not a
+direct quotation from CI logs. The green Core quality job therefore establishes
+the blocking gate in the master workflow at the time, not profile compatibility
+of the later corrected release state.
+
 Locally, on 9~August~2026, all 194 tooling tests as well as the schema, API, and
-SQLAlchemy tests passed on the same HEAD under Python~3.13.14. These local
+SQLAlchemy tests passed on \texttt{a4487ac} under Python~3.13.14. These local
 results neither supersede the failed external jobs nor provide evidence for
 the paths that were not executed because Node.js, Rust, and Docker were
 unavailable. Release Validation was not run for this commit.

@@ -9,30 +9,39 @@ Tauri-Voraussetzungen besitzen strengere eigene Diagnosewege
 
 \texttt{install} richtet nur aktive Komponenten ein: Frontend-Abhängigkeiten
 werden bevorzugt aus dem Lockfile installiert, Backend-Abhängigkeiten in einer
-virtuellen Umgebung. Datenbankpakete, Tooling-Umgebung und Chromium kommen nur
-bei Bedarf hinzu; für Python besteht neben \texttt{uv} ein pip/venv-Fallback.
-Eine lokale \texttt{.env} bleibt unverändert. Native Betriebssystem- und
-Rust-Voraussetzungen behandelt \texttt{tauri install} separat.
+virtuellen Umgebung. Die dedizierte \path{tools/.venv} wird profilunabhängig
+für Repository-Werkzeuge einschließlich Ruff eingerichtet; die
+\path{backend/.venv} bleibt davon getrennt. Datenbankpakete und Chromium kommen
+nur bei Bedarf hinzu; für Python besteht neben \texttt{uv} ein
+pip/venv-Fallback. Eine lokale \texttt{.env} bleibt unverändert. Native
+Betriebssystem- und Rust-Voraussetzungen behandelt \texttt{tauri install}
+separat.
 Konkret verwendet das Frontend bei vorhandenem Lockfile \texttt{npm ci}. Ein
 aktives Backend erhält eine eigene Umgebung und nur die profilabhängigen
 Anforderungssätze. Chromium wird ausschließlich bei konfiguriertem Playwright
 installiert; deaktivierte Schichten werden übersprungen.
 
-Für backendhaltige generierte Profile besteht am untersuchten Stand eine
-Governance-relevante Installationsabweichung. \texttt{install} kann Ruff über
-\path{backend/.venv} bereitstellen und danach auf eine eigene
-\path{tools/.venv} verzichten; der Quality-Adapter sucht Ruff jedoch nur in
-\path{tools/.venv} oder im globalen Suchpfad. In einem frisch erzeugten
-\texttt{web-cloud}-Profil endete die Installation deshalb erfolgreich, der
-anschließende Quality-Befehl meldete jedoch, Ruff sei nicht verfügbar. Der Core-CI-
-Job vermeidet diese Konstellation durch \texttt{install --skip-backend}; die
-generierten Backend-Profiljobs tun dies nicht. Der dokumentierte lokale Pfad
-\texttt{install} $\rightarrow$ \texttt{quality} ist damit noch nicht in allen
-Profilen zuverlässig. Diese technische Abweichung wurde für die
-Nachdokumentation nicht korrigiert
+Am historischen Beobachtungsstand \texttt{461fc751} bestand für generierte
+Backendprofile eine für Governance relevante Abweichung der Installation:
+\texttt{install} konnte Ruff über \path{backend/.venv} bereitstellen und auf
+\path{tools/.venv} verzichten, während der Quality-Adapter Ruff dort oder im
+globalen Suchpfad erwartete. In einem frisch erzeugten
+\texttt{web-cloud}-Profil endete die Installation erfolgreich, der
+anschließende Quality-Befehl meldete Ruff jedoch als nicht verfügbar. Der
+Core-CI-Job vermied diese Konstellation durch
+\texttt{install --skip-backend}; die generierten Backend-Profiljobs taten dies
+nicht. Diese commitgebundene Beobachtung erklärt die damaligen Profilfehler
+und bleibt Teil der historischen Evidenz
 \parencite{kleiveist2026quality-implementation,kleiveist2026quality-ci}.
 
-Die README fordert Git, Python ab 3.11, Node.js ab 20 und für Desktopprofile
+Im v1.0.0-Freigabestand ist die Abweichung behoben: \texttt{install} stellt
+\path{tools/.venv} unabhängig vom Profil bereit, und der Quality-Adapter nutzt
+diese dedizierte Tooling-Runtime. Der lokale Pfad \texttt{install}
+$\rightarrow$ \texttt{quality} besitzt damit hinsichtlich der Ruff-Auflösung
+einen einheitlichen Vertrag. Diese spätere Korrektur schreibt die
+commitgebundenen CI-Ergebnisse der Baseline nicht um.
+
+Die README fordert Git, Python ab 3.11, Node.js ab 24 und für Desktopprofile
 Rust Stable. Der allgemeine Doctor prüft Git und diese Versionsbereiche nicht;
 der Tauri-Doctor akzeptiert jede aktive Rust-Toolchain. CI richtet die
 festgelegten Python- und Node-Hauptversionen dagegen explizit ein. Damit weicht

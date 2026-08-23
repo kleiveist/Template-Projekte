@@ -5,11 +5,41 @@ The template is a centrally maintained, profile-based baseline for the defined
 web, cloud, and desktop variants. The shared core, capabilities, and tooling
 standardize recurring project workflows.
 
-Controlled variability provides plausible potential for productivity gains.
-Without empirical data, its magnitude and suitability for customer projects
-can be substantiated analytically only for the delimited target domain.
+The governance extension closes a previous enforcement gap for selected code
+and architecture rules. It makes policy centrally configurable and findings
+traceable; unsuppressed \texttt{ERROR} findings normally block locally and in
+CI. Controlled variability and an early feedback channel provide plausible
+potential for productivity gains. Without empirical data, the magnitude of
+that potential and suitability for customer projects can be substantiated
+analytically only for the delimited target domain.
 
-The evidence extends only to the examined technical baseline. The local
-acceptance, current CI failures, outstanding external verification activities,
-and product-specific release and security tasks do not permit it to be equated
-with a finished, cross-platform-verified product.
+The evidence applies only to the examined technical baseline. Important local
+checks passed, but governance and CI results remain mixed. Findings from parts
+of the policy can be suppressed through exceptions. External checks and
+product-specific release and security tasks remain open. The result therefore
+guarantees neither clean code nor a finished, cross-platform-verified product.
+
+\subsubsection*{Release validation addendum for v1.0.0}
+\begingroup
+\ifbeginnerstatements\fontsize{9pt}{10.8pt}\selectfont\fi
+This addendum, dated 23~August~2026, preserves \texttt{461fc751} as the
+historical observation baseline; the commit-bound matrices and open items
+remain historical snapshots and do not anticipate later release results. For version
+1.0.0, the disclosed governance gaps are release criteria: a
+\texttt{CQ001 ERROR} above 900 LOC can no longer be suppressed,
+absolute exception paths and paths outside the scan are rejected, the
+dedicated tooling environment provides Ruff, and structural parity plus
+source/PDF provenance are checked automatically. All public quality, test, and
+build entry points must pass on the release state.
+
+For scope and control-flow metrics in Rust, the release state uses an analyzer
+artifact for \texttt{wasm32-wasip1}. It was built with rustc~1.97.1 and
+Syn~2.0.119. Wasmtime~47.0.1 executes it with resource limits. The source
+state, Cargo lockfile, artifact, and ABI provenance are validated before
+analysis. This later evidence does not alter the historical findings.
+
+The final commit hash is absent to avoid self-reference. The annotated \texttt{v1.0.0} tag and its
+GitHub Release bind publication to the release state. Post-commit GitHub
+Actions results remain external evidence and are not declared passed in
+advance.
+\endgroup

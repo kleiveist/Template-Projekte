@@ -24,13 +24,14 @@
 
 ## 📁 DEV
 - 🗂️ [Overview](dev/dev.md)
-- 📝 [Template final acceptance](dev/template-final-acceptance.md)
+- 📝 [Template v1.0.0 final acceptance](dev/template-final-acceptance.md)
 
 ## 📁 Tools
 - 🗂️ [Overview](tools/tools.md)
 - 📝 [Continuous Integration](tools/ci.md)
 - 📝 [Container builds and local production simulation](tools/container-builds.md)
 - 📝 [Release and desktop packaging model](tools/release-model.md)
+- 📝 [Template-Projekte v1.0.0 release notes](tools/release-notes-v1.0.0.md)
 - 📝 [Tooling Guide](tools/tooling.md)
 
 ## 📁 USR

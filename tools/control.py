@@ -125,6 +125,8 @@ def _handle_docs(args: argparse.Namespace) -> int:
     if getattr(args, "docs_command", None) is None:
         args.docs_parser.print_help()
         return 0
+    if args.docs_command == "check":
+        return docs_index.check(args)
     if args.docs_command == "index":
         return docs_index.main(args)
     logger.fail(f"Unknown documentation action: {args.docs_command}")

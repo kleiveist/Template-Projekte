@@ -12,4 +12,13 @@ prüfen lässt. Die Toolchain umfasst die eingesetzten Laufzeiten, Compiler und
 Buildwerkzeuge. Unterschiede bei Betriebssystem, Toolchain, Netzwerk oder
 Plattform-SDKs können die Wiederholung trotzdem beeinflussen.
 
+Beim Rust-Analyzer bindet die Provenienz den genauen Compiler, Ziel und
+Dependency-Stände sowie Prüfsummen für Buildskript, Cargo-Dateien,
+Toolchain-Datei und Rust-Quellen an das eingecheckte WASI-Artefakt. Der Build
+ersetzt private Quell-, Home-, Cargo-, Toolchain- und Dependency-Pfade durch
+feste virtuelle Pfade. Drei verlegte Linux-Builds --- auch mit Leerzeichen und
+einem lokalen Vendor-Verzeichnis --- waren bytegleich. Das ist ein enger
+Nachweis für den gepinnten Linux-Builder, aber keine Garantie für Bytegleichheit
+unter macOS, Windows oder zukünftigen Compilern.
+
 \end{beginnerstatement}

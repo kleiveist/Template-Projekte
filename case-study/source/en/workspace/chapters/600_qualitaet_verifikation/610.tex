@@ -1,9 +1,11 @@
 \subsection{Test Strategy}
 \label{subsec:teststrategie}
 
-Verification associates every observation with an artifact, an executed
-check, and a commit-bound result. Test code alone does not demonstrate
+Verification cross-checks central observations against repository artifacts,
+executed checks, and commit-bound results. Test code alone does not demonstrate
 execution, just as a workflow file does not demonstrate a successful CI run.
+The case study records local commands with the date, exit code, and result; the
+complete console output is not a versioned repository artifact.
 Execution results and the acceptance report therefore carry more weight than
 code, configuration, and documentation
 \parencite{runeson2009case-study,iso25010-2023}.
@@ -14,13 +16,80 @@ schema, backend, frontend, and Tauri/Rust. Integration tests exercise
 PostgreSQL~16 together with the configuration and Alembic. Build checks
 produce web, container, or native artifacts \parencite{kleiveist2026ci}.
 
+Governance~v1 adds an evidence chain comprising the policy, rule
+classification, synthetic boundary and architecture fixtures, exit-code
+tests, and the CI invocation. On 22~August~2026, the combined direct Pytest run
+over \path{tools/tests} and \path{case-study/tests} ended with 333 passed
+tests. Of these, 135 were focused quality and workflow tests. This result is
+separate from the public aggregate suite described later.
+Table~\ref{tab:quality-boundary-tests} summarizes the tested transitions.
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Executed boundary tests for Governance~v1}
+  \label{tab:quality-boundary-tests}
+  \begin{tabularx}{\textwidth}{@{}p{0.2\textwidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.34\textwidth}@{}}
+    \toprule
+    \textbf{Subject} & \textbf{Tested values} &
+      \textbf{Expected transitions} \\
+    \midrule
+    File, code LOC & 599, 600, 601, 750, 751, 899, 900, 901 &
+      PASS through 600; WARNING through 750; STRONG\_WARNING through 900; then ERROR \\
+    Physical file lines & 1200, 1201 & PASS; WARNING \\
+    Function, code LOC & 50/51, 80/81, 120/121 & all four levels \\
+    Class, code LOC & 300/301, 500/501, 700/701 & all four levels \\
+    Complexity & 10/11, 15/16, 20/21 & all four levels \\
+    Nesting & 3, 4, 5, 6 & all four levels \\
+    Parameters & 5/6, 8/9, 10/11 & all four levels \\
+    Router, code LOC & 50, 51 & PASS; \texttt{AR004 ERROR} \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Source: Author's own execution against technical baseline
+  \texttt{461fc751} with the present, not-yet-versioned retrospective
+  documentation; test sources:
+  \textcite{kleiveist2026quality-tests}.\par}
+\end{table}
+
+The LOC fixtures cover blank lines, comment-only lines, and trailing comments,
+together with block comments, Python docstrings, JavaScript/TypeScript
+comments, nested Rust comments, and raw strings. Empty files and files without
+a final newline were not tested separately. Exception tests cover valid,
+unknown, incomplete, expired, and duplicate entries and missing files;
+exceptions for excluded code and absolute paths are absent. Positive and
+negative backend and frontend architecture fixtures test constructed import
+relationships. These fixtures establish detection of their cases, not every
+possible semantic violation.
+
+Ruff and ESLint adapter tests partially use simulated tool output; for Rust,
+the generated Clippy configuration is checked, but no dedicated negative
+boundary fixture is run. These gaps limit the integration evidence despite the
+passing tests.
+
+The release verification on 23~August~2026 separately adds evidence for the
+final analyzer state. A total of 146 focused Python regression tests for Rust
+syntax, metrics, payload validation, the WASI host, and packaging passed; the
+analyzer crate passed its 13 Rust integration tests as well as formatting,
+Clippy, and the compiler check. Three relocated builds on the pinned Rust
+1.97.1 Linux builder --- the normal registry, alternate homes and targets with
+spaces, and an in-tree vendor --- produced the same 535,787-byte
+\texttt{wasm32-wasip1} artifact with SHA-256
+\path{7a27cb02a9392b62c487b4ce73a03524d7260b804c0c49eb4520ceb1a1cacfd8}.
+This local release evidence closes the specifically identified analyzer gap,
+but rewrites neither the test counts nor the remote results of the historical
+baseline.
+
 The scope follows the active profile. \emph{PASS} denotes a successful check,
 and \emph{FAIL} an executed check that failed. \emph{Not verified} means that
 evidence is absent, while \emph{out of scope} denotes a deliberate boundary;
 disabled items are not applicable. Generation and structure checks address
 A-01 and A-03, the public tooling interface addresses A-04, and valid and
 rejected capability combinations address A-07.
-Figure~\ref{fig:verification-model} classifies this evidence.
+Quality and architecture tests address A-08 through A-10.
+Figure~\ref{fig:verification-model} classifies the governance components and
+their local and CI-based control flow.
 
 \input{workspace/figures/verification/verification-model}
 \beginnerinput{workspace/statement/600_qualitaet_verifikation/610}

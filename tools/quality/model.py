@@ -181,6 +181,8 @@ class BackendArchitectureConfig:
     application_layers: frozenset[str]
     domain_layers: frozenset[str]
     infrastructure_layers: frozenset[str]
+    support_directories: frozenset[str]
+    composition_files: frozenset[str]
     forbidden_dependencies: frozenset[tuple[str, str]]
     domain_forbidden_imports: tuple[str, ...]
     router_business_imports: tuple[str, ...]

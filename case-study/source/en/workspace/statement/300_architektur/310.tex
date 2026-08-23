@@ -12,4 +12,10 @@ environment. Separating
 responsibilities ensures that each component has a clear task and can be tested
 or modified as independently as possible.
 
+Quality governance runs during development or in CI. It reads project files
+and reports violations, but it is not part of the application that runs later.
+The frontend therefore sends no data to the quality gate, and the backend does
+not invoke it during product operation. It is a verification layer outside the
+normal runtime data flow.
+
 \end{beginnerstatement}

@@ -6,12 +6,14 @@ import re
 import tomllib
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tools.config.masking import is_secret_name
 from tools.config.model import ConfigContract, ResolvedConfiguration, RuntimeConfig, VariableDefinition
 from tools.config.validation import to_runtime_config
-from tools.profiles.model import ProjectProfile
+
+if TYPE_CHECKING:
+    from tools.profiles.model import ProjectProfile
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONTRACT_PATH = ROOT / "config" / "environment.toml"

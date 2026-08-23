@@ -5,6 +5,7 @@ paths = [
   "AGENTS.md",
   "README.md",
   "VERSION",
+  ".gitattributes",
   ".gitignore",
   "config",
   "docs",

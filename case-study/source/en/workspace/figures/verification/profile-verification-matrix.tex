@@ -10,17 +10,24 @@
       PASS: web profiles, \texttt{web-cloud + postgres}, Core builds, Linux/macOS desktop\\
       FAIL: tooling job, five desktop profile tests, Windows installation
     };
-    \node[caseOptional,minimum width=125mm,text width=116mm,below=of headci] (rule) {
+    \node[caseBox,minimum width=125mm,text width=116mm,below=of headci] (governance) {
+      Governance addendum, technical baseline \texttt{461fc751}\\
+      PASS: 333 Pytest tests with retrospective documentation, 135 focused; master quality job\\
+      FAIL: backend-profile quality; aggregate local run limited by Rust system libraries
+    };
+    \node[caseOptional,minimum width=125mm,text width=116mm,below=of governance] (rule) {
       Interpretation\\
-      Local PASS evidence remains commit-specific; the current remote state is only partially verified.
+      PASS evidence remains commit-specific; no newer state examined here is green throughout.
     };
 
     \draw[caseFlow] (acceptance) -- (headci);
-    \draw[caseFlow] (headci) -- (rule);
+    \draw[caseFlow] (headci) -- (governance);
+    \draw[caseFlow] (governance) -- (rule);
   \end{tikzpicture}
   \caption{Profile verification by evidence state and commit}
   \label{fig:profile-verification-matrix}
   \smallskip
   {\footnotesize Source: Author's own illustration based on
-  \textcite{kleiveist2026acceptance} and the current GitHub Actions runs.\par}
+  \textcite{kleiveist2026acceptance},
+  \textcite{kleiveist2026governance-snapshot}, and the evaluated GitHub Actions runs.\par}
 \end{figure}

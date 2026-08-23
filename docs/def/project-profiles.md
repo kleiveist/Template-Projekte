@@ -7,7 +7,7 @@
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
-| Last review | 2026-08-13 |
+| Last review | 2026-08-23 |
 | Audience | Developers and architects |
 | Related ATP | N/A — template-level profile model |
 
@@ -150,6 +150,8 @@ The generated project receives:
 - the copied `profiles/` definitions for future reference; and
 - a generated `project-profile.toml` manifest.
 
+The shared core deliberately includes the governance and release surface: `AGENTS.md`, `VERSION`, `config/`, `docs/`, `shared/`, and `tools/`. Consequently every derived project carries the same code-quality policy, architecture checks, command entry point, and version contract. Feature selection removes disabled runtime implementations; it does not remove the controls used to verify the resulting project.
+
 When `--name` is supplied, the generator also derives or validates the project slug and updates package, backend, Compose, Tauri, and Cargo identity metadata. A customized Tauri project requires an explicit reverse-domain `--identifier`. This avoids shipping known template identities accidentally.
 
 For profiles without `tauri`, the generator also removes the Tauri npm script and CLI dependency from the copied frontend package metadata and lockfile. This keeps disabled desktop tooling out of web dependency installation without maintaining a second frontend template.
@@ -162,13 +164,21 @@ Master repository tests validate that every catalog path exists. Each generator 
 
 The shared tooling reads `project-profile.toml` and adjusts behavior:
 
-- `install` skips disabled runtime layers and prepares `tools/.venv` when no backend virtualenv provides Pytest;
+- `install` skips disabled runtime layers and prepares the dedicated `tools/.venv` with Pytest, JSON Schema validation, Ruff,
+  and Wasmtime independently of any backend virtualenv. Every profile receives the checksum-verified Syn/WASI Rust analyzer
+  and the root `.gitattributes` contract that preserves its LF build inputs on Windows, so shared Rust source scanning remains
+  available without imposing a native Rust toolchain on Rust-free profiles;
 - `doctor` reports disabled layers as intentionally inactive;
 - `run` starts only enabled services;
 - `stop` inspects only ports owned by enabled services;
 - `build desktop` and `tauri ...` reject disabled desktop workflows cleanly;
-- `db ...` rejects projects without `database` and delegates explicit migrations to Alembic when enabled; and
+- `db ...` rejects projects without `database` and delegates explicit migrations to Alembic when enabled;
+- `quality` always enforces shared file, architecture and tooling rules, while language-specific adapters run only for enabled technologies;
+- `test --suite all` selects the applicable tool, frontend, backend, database and Tauri suites without treating disabled layers as missing;
+- `version check` and `version sync` inspect or update only version mirrors owned by enabled components; and
 - frontend starter code uses a generated profile module to hide the backend status check when the backend feature is disabled.
+
+Profile awareness must never weaken repository governance. In particular, the hard `CQ001` error for a handwritten source file above 900 code lines remains unsuppressible in every generated project.
 
 ## Extension path
 
@@ -184,11 +194,37 @@ This keeps profile growth additive rather than architectural. Do not add empty c
 
 ## Verification
 
+The profile workflow generates all five presets into fresh target directories. It then installs their selected dependencies and applies this matrix:
+
+| Profile | Quality and all applicable tests | Web build | Container validation | Tauri doctor and desktop dry-run |
+| --- | ---: | ---: | ---: | ---: |
+| `web-only` | Required | Required | Not applicable | Not applicable |
+| `web-cloud` | Required | Required | Required | Not applicable |
+| `desktop-local` | Required | Required | Not applicable | Required |
+| `desktop-cloud` | Required | Required | Required | Required |
+| `full-platform` | Required | Required | Required | Required |
+
+PostgreSQL verification is a separate three-entry matrix because the capability requires an existing backend:
+
+| Profile with `--with postgres` | Database upgrade and tests | Container validation | Desktop dry-run |
+| --- | ---: | ---: | ---: |
+| `web-cloud` | Required | Required | Not applicable |
+| `desktop-cloud` | Required | Required | Required |
+| `full-platform` | Required | Required | Required |
+
+`web-only --with postgres` and `desktop-local --with postgres` must fail dependency validation; they are negative compatibility cases, not skipped positive cases. Desktop-native packaging is additionally verified on Linux, macOS, and Windows, with unsigned artifacts retained as build evidence. The exact CI job and artifact matrix is documented in [Continuous integration](../tools/ci.md).
+
+Representative local checks are:
+
 ```sh
 python tools/control.py init --profile web-only --dry-run
 python tools/control.py init --profile desktop-cloud --dry-run
+python tools/control.py init --profile web-cloud --with postgres --dry-run
+python tools/control.py quality
 python tools/control.py test --suite tools
 ```
+
+Run generated-project checks from the generated project root. Generation and validation must leave the master repository unchanged; CI closes each matrix entry with `git diff --exit-code`.
 
 ## Related documents
 

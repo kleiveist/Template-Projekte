@@ -4,7 +4,13 @@
 The case study examines the architecture, shared and profile-specific
 components, and the development and quality-assurance workflows of the
 \enquote{Template-Projekte} project
-\parencite{kleiveist2026architecture,kleiveist2026tooling}.
+\parencite{kleiveist2026architecture,kleiveist2026tooling}. Following the
+original technical acceptance, it includes \emph{Code Quality \& Architecture
+Governance v1}, introduced on 17~August~2026, as a subsequent extension. The
+study examines central configuration, scanners, the rule and severity model,
+time-limited exceptions, reporters, language adapters, architecture checks,
+the CLI, and CI
+\parencite{kleiveist2026quality-policy,kleiveist2026governance-commit}.
 
 Based on existing project artifacts and evidence, it assesses reusability,
 standardization, productivity potential, and suitability for different project
@@ -12,5 +18,8 @@ types. From this assessment, it derives criteria for use and selection,
 technical limitations, and external prerequisites
 \parencite{kleiveist2026acceptance}. The study does not investigate universal
 suitability for every class of software or a product-specific domain
-architecture.
+architecture. Nor is the gate intended to prove clean code, lower maintenance
+costs, or a reduced defect rate. The narrower objective is to establish which
+defined violations the examined state detects reproducibly and how it handles
+them.
 \beginnerinput{workspace/statement/100_einleitung/130}

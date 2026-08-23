@@ -6,6 +6,12 @@ diagnostics and installation to quality assurance and delivery.
 
 \input{workspace/figures/tooling/developer-workflow}
 
+After a change, \texttt{quality} precedes tests and the build. Warnings remain
+visible in the report and feed back into the editing cycle without blocking by
+themselves; an active error terminates the command with exit code~1. This local
+entry point corresponds to the quality invocation in Core, profile, and
+release workflows, but does not assert identical execution environments.
+
 \texttt{run} starts Vite and, only when the backend is active, Uvicorn as
 well. In the foreground, cancellation terminates the tracked process groups;
 in detached mode, PID and log data are stored. \texttt{stop} terminates

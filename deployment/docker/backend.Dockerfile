@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM python:3.11.9-slim-bookworm AS dependencies
+FROM python:3.11.16-slim-bookworm AS dependencies
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir --require-hashes --requirement backend/requiremen
     && if [ -f backend/requirements-database-production.lock ]; then pip install --no-cache-dir --require-hashes --requirement backend/requirements-database-production.lock; fi \
     && if [ -f backend/requirements-postgres-production.lock ]; then pip install --no-cache-dir --require-hashes --requirement backend/requirements-postgres-production.lock; fi
 
-FROM python:3.11.9-slim-bookworm AS runtime
+FROM python:3.11.16-slim-bookworm AS runtime
 
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \

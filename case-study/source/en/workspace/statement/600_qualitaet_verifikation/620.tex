@@ -8,8 +8,15 @@ a \emph{runner}, meaning the computer provided for that purpose. A
 \emph{pipeline} is the complete chain of these automated checks. A commit
 denotes a fixed code state; \emph{HEAD} points to the commit currently relevant
 to the working copy or branch under consideration. A green CI run has passed
-all required jobs, while a red run contains at least one failure. The runs for
-commit \texttt{a4487ac} evaluated in the main text are not entirely green, even
-though certain local checks passed.
+all required jobs, while a red run contains at least one failure. The runs
+evaluated in the main text for \texttt{a4487ac} and \texttt{461fc751} are
+commit-specific snapshots. For the later state, the master quality job was
+green, while several profile and Windows paths were not. One green job
+therefore does not automatically make the entire CI green.
+
+The current v1.0.0 workflow state pins Node~24, Rust~1.97.1,
+PostgreSQL~16.15, and Wasmtime~47.0.1. Such configuration shows which versions
+are intended to be checked; only a successful run on the final commit provides
+the remote evidence.
 
 \end{beginnerstatement}

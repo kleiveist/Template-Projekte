@@ -68,9 +68,10 @@ def _run_cargo_checks() -> int:
 
     failures = 0
     manifest = str(paths.TAURI_DIR / "Cargo.toml")
+    common_arguments = ["--locked", "--manifest-path", manifest, "--all-targets", "--all-features"]
     commands = [
-        ([cargo, "check", "--locked", "--manifest-path", manifest], "Cargo check"),
-        ([cargo, "test", "--locked", "--manifest-path", manifest], "Rust tests"),
+        ([cargo, "check", *common_arguments], "Cargo check"),
+        ([cargo, "test", *common_arguments], "Rust tests"),
     ]
     for command, label in commands:
         result = common.run_command(command, cwd=paths.ROOT)

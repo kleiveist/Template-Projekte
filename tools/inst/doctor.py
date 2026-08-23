@@ -15,6 +15,7 @@ from pathlib import Path
 from tools import logger
 from tools.config import ConfigLoadError, resolve_configuration, validate_configuration
 from tools.inst import configuration, container
+from tools.inst.tooling_runtime import TOOLING_RUNTIME_PROBE
 from tools.process import prepare_command
 from tools.profiles import runtime as profile_runtime
 
@@ -80,6 +81,17 @@ def _backend_python() -> Path:
     candidates = [
         ROOT / "backend" / ".venv" / "Scripts" / "python.exe",
         ROOT / "backend" / ".venv" / "bin" / "python",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0] if sys.platform == "win32" else candidates[1]
+
+
+def _tooling_python() -> Path:
+    candidates = [
+        ROOT / "tools" / ".venv" / "Scripts" / "python.exe",
+        ROOT / "tools" / ".venv" / "bin" / "python",
     ]
     for candidate in candidates:
         if candidate.exists():
@@ -208,28 +220,32 @@ def _check_backend_runtime() -> CheckResult:
 
 
 def _check_tooling_runtime() -> CheckResult:
-    candidates = [
-        ROOT / "tools" / ".venv" / "Scripts" / "python.exe",
-        ROOT / "tools" / ".venv" / "bin" / "python",
-        _backend_python(),
-        Path(sys.executable),
-    ]
-    python = next((candidate for candidate in candidates if candidate.exists()), None)
-    if python is None:
-        return CheckResult("tooling-runtime", "WARN", "Python runtime for tooling tests not found")
+    python = _tooling_python()
+    if not python.exists():
+        return CheckResult(
+            "tooling-runtime",
+            "WARN",
+            "dedicated tools/.venv Python is missing. Action: run 'python tools/control.py install'.",
+        )
 
     check = subprocess.run(
-        [str(python), "-c", "import pytest"],
+        [str(python), "-c", TOOLING_RUNTIME_PROBE],
+        cwd=ROOT,
         capture_output=True,
         text=True,
         check=False,
     )
     if check.returncode == 0:
-        return CheckResult("tooling-runtime", "OK", f"pytest importable via {python}")
+        return CheckResult(
+            "tooling-runtime",
+            "OK",
+            f"tooling dependencies and the verified Rust WASI analyzer run via {python}",
+        )
+    details = (check.stdout or check.stderr).strip() or f"exit code {check.returncode}"
     return CheckResult(
         "tooling-runtime",
-        "WARN",
-        "pytest unavailable. Action: run 'python tools/control.py install'.",
+        "FAIL",
+        f"dedicated tooling runtime is incomplete. Action: run 'python tools/control.py install'. Details: {details}",
     )
 
 

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Mapping
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
+
+import tomllib
 
 from tools.quality.model import (
     EXCEPTION_RULE_IDS,
@@ -55,9 +56,16 @@ def _strings(payload: Mapping[str, Any], key: str, *, context: str) -> tuple[str
 
 
 def _relative_path(value: str, *, context: str, allow_glob: bool = False) -> str:
-    normalized = value.replace("\\", "/").strip("/")
+    normalized = value.replace("\\", "/").strip()
     path = PurePosixPath(normalized)
-    if not normalized or path.is_absolute() or ".." in path.parts:
+    windows_path = PureWindowsPath(normalized)
+    if (
+        not normalized
+        or path.is_absolute()
+        or windows_path.is_absolute()
+        or bool(windows_path.drive)
+        or ".." in path.parts
+    ):
         raise QualityConfigError(f"{context} must be a repository-relative path without '..'")
     if not allow_glob and any(character in normalized for character in "*?[]"):
         raise QualityConfigError(f"{context} must identify one exact path, not a glob")
@@ -130,6 +138,13 @@ def _layer_names(values: Mapping[str, Any], key: str) -> frozenset[str]:
     return frozenset(items)
 
 
+def _composition_files(values: Mapping[str, Any]) -> frozenset[str]:
+    items = _strings(values, "composition_files", context="architecture.backend")
+    if any("/" in item or "\\" in item or not item.endswith(".py") for item in items):
+        raise QualityConfigError("architecture.backend.composition_files entries must be direct Python file names")
+    return frozenset(items)
+
+
 def _ensure_disjoint(groups: Mapping[str, frozenset[str]], *, context: str) -> None:
     owners: dict[str, str] = {}
     for group, names in groups.items():
@@ -158,6 +173,8 @@ def _load_backend_architecture(payload: Mapping[str, Any]) -> BackendArchitectur
         application_layers=_layer_names(values, "application_layers"),
         domain_layers=_layer_names(values, "domain_layers"),
         infrastructure_layers=_layer_names(values, "infrastructure_layers"),
+        support_directories=_layer_names(values, "support_directories"),
+        composition_files=_composition_files(values),
         forbidden_dependencies=frozenset(dependencies),
         domain_forbidden_imports=_strings(values, "domain_forbidden_imports", context="architecture.backend"),
         router_business_imports=_strings(values, "router_business_imports", context="architecture.backend"),
@@ -169,6 +186,7 @@ def _load_backend_architecture(payload: Mapping[str, Any]) -> BackendArchitectur
             "application": config.application_layers,
             "domain": config.domain_layers,
             "infrastructure": config.infrastructure_layers,
+            "support": config.support_directories,
         },
         context="architecture.backend",
     )

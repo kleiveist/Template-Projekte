@@ -6,9 +6,26 @@ development. Without a shared baseline, structure, tools, configuration, and
 build processes differ; separate starting points increase maintenance effort
 and may diverge technically.
 
+The first baseline examined already had separate runtime components, tests,
+builds, CI, and documented architectural boundaries. However, rules for size,
+complexity, and selected dependencies were not operationalized through a
+shared repository-wide gate. For example, the parent state
+\texttt{0cbe1ba} of the later governance commit contained direct imports of
+SQLAlchemy and \path{app.db} in a FastAPI router; \texttt{461fc751} moved the
+readiness logic into a service and infrastructure wiring into the composition
+root \parencite{kleiveist2026governance-commit}. The gap is therefore
+observable not only in a target description but also in a corrected layer
+violation.
+
+In short change cycles, including AI-assisted development, a rule that exists
+only in documentation can become visible late. This observation does not
+support a general claim about the quality of AI-generated code; it establishes
+a need for early, reproducible feedback in the development workflow examined.
+
 The template must therefore combine standardization with flexibility: a common
 basis should enable reuse without burdening projects with unnecessary
 components. This case study examines how project profiles and optional
 extensions address this trade-off and where adaptation is still required
-\parencite{kleiveist2026architecture,kleiveist2026profiles}.
+\parencite{kleiveist2026architecture,kleiveist2026profiles}, and how the
+governance added later respects this variability.
 \beginnerinput{workspace/statement/100_einleitung/120}

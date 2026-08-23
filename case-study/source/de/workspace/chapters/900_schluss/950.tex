@@ -21,3 +21,28 @@ unterdrücken. Externe Prüfungen sowie
 produktbezogene Release- und Sicherheitsaufgaben bleiben offen. Damit ist weder
 Clean Code garantiert noch ein fertiges, plattformübergreifend verifiziertes
 Produkt nachgewiesen.
+
+\subsubsection*{Freigabenachtrag v1.0.0}
+\begingroup
+\ifbeginnerstatements\fontsize{9pt}{10.8pt}\selectfont\fi
+Der Nachtrag vom 23.~August~2026 bewahrt \texttt{461fc751} als historischen
+Beobachtungsstand; commitgebundene Matrizen und offene Punkte bleiben
+historische Momentaufnahmen und nehmen spätere Release-Ergebnisse nicht vorweg. Für
+Version~1.0.0 sind die offengelegten Governance-Lücken Freigabekriterien: Ein
+\texttt{CQ001 ERROR} oberhalb von 900 LOC ist nicht mehr unterdrückbar,
+absolute und scanexterne Exception-Pfade werden abgewiesen, die eigene
+Tooling-Umgebung stellt Ruff bereit, und Strukturparität sowie die Provenienz
+von Quellen und PDFs werden automatisiert geprüft. Alle öffentlichen Quality-,
+Test- und Build-Einstiege müssen auf dem Freigabestand bestehen.
+
+Für Scope- und Kontrollflussmetriken in Rust nutzt der Freigabestand ein
+Artefakt des Analyzers für \texttt{wasm32-wasip1}. Es wurde mit rustc~1.97.1
+und Syn~2.0.119 gebaut. Wasmtime~47.0.1 führt es mit Ressourcenlimits aus. Vor
+der Analyse werden Quellstand, Cargo-Lockfile, Artefakt und ABI-Provenienz
+validiert. Dieser spätere Nachweis ändert die historischen Befunde nicht.
+
+Der endgültige Commit-Hash fehlt zur Vermeidung von Selbstreferenz. Der
+annotierte Tag \texttt{v1.0.0} und das GitHub Release binden die Publikation an
+den Freigabestand.
+GitHub-Actions-Ergebnisse bleiben nicht vorweggenommene externe Release-Evidenz.
+\endgroup

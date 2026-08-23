@@ -43,17 +43,17 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: "3.11"
-      - name: Set up Node.js 20
+      - name: Set up Node.js 24
         uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Set up Rust stable
+      - name: Set up Rust 1.97.1
         shell: bash
         run: |
-          rustup toolchain install stable --profile minimal
-          rustup default stable
+          rustup toolchain install 1.97.1 --profile minimal --component rustfmt,clippy
+          rustup default 1.97.1
       - name: Cache Cargo dependencies
         uses: actions/cache@v6
         with:
@@ -65,10 +65,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-desktop-
             ${{ runner.os }}-cargo-
+      - name: Install portable tooling runtime
+        run: python tools/control.py install --skip-backend --skip-frontend --skip-playwright
+      - name: Verify Windows batch launcher execution
+        if: matrix.target == 'windows'
+        run: tools\.venv\Scripts\python.exe -m pytest -q tools/tests/test_process.py
       - name: Install frontend dependencies
         run: python tools/control.py install --skip-backend --skip-tooling --skip-playwright
       - name: Install native Tauri prerequisites
         run: python tools/control.py tauri install --skip-rust --skip-node --skip-frontend
+      - name: Verify the portable Rust analyzer runtime
+        run: python tools/control.py doctor
+      - name: Verify UTF-8 Rust analyzer transport
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            TOOLING_PYTHON="tools/.venv/Scripts/python.exe"
+          else
+            TOOLING_PYTHON="tools/.venv/bin/python"
+          fi
+          "$TOOLING_PYTHON" -m pytest -q \
+            tools/tests/quality/test_rust_syntax.py::test_subprocess_transport_is_utf8_when_child_text_stdio_is_cp1252
       - name: Run Tauri doctor
         run: python tools/control.py tauri doctor
       - name: Run Tauri and Rust tests
@@ -80,7 +97,7 @@ jobs:
         if: matrix.target == 'linux'
         run: python tools/control.py build desktop --target linux --bundles ${{ matrix.bundles }}
       - name: Upload unsigned verification artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: desktop-${{ matrix.target }}-unsigned
           if-no-files-found: error

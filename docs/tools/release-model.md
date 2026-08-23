@@ -7,7 +7,7 @@
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
-| Last review | 2026-08-07 |
+| Last review | 2026-08-23 |
 | Audience | Release operators and desktop developers |
 | Related ATP | N/A — template-level release baseline |
 
@@ -45,6 +45,8 @@ flowchart LR
 
 The baseline automates CI verification, unsigned artifacts, and the release gate. Signing, publishing, and deployment remain explicit product integrations. Normal CI never deploys, uses signing secrets, or creates a public release.
 
+For the template's `1.0.0` release, `461fc7519e0db638330904a7496c488e8a0d18bc` is the baseline and comparison commit, not an automatic tag target. Any release-preparation change creates a later candidate. The annotated tag `v1.0.0` may point only to the final candidate for which every required local and remote check succeeded.
+
 ## Desktop verification matrix
 
 `.github/workflows/desktop.yml` runs natively on `windows-latest`, `macos-latest`, and `ubuntu-latest`. Each job installs the platform prerequisites, runs locked Cargo checks, invokes the existing `control.py build desktop` path, and uploads short-lived unsigned artifacts.
@@ -53,7 +55,7 @@ These files prove technical buildability. They are not signed production release
 
 ## Release triggers
 
-`.github/workflows/release.yml` runs only through `workflow_dispatch` or a tag matching `v*.*.*`. It runs tests, builds the web candidate, executes `release check`, and then calls the unsigned desktop workflow. It has read-only repository permission and contains no publication job.
+`.github/workflows/release.yml` runs only through `workflow_dispatch` or a tag matching `v*.*.*`. It runs the quality gate, the read-only semantic documentation check and its focused tests, the complete project tests, web and container builds, and `release check`; it then calls the unsigned desktop workflow. It has read-only repository permission and contains no publication job.
 
 A product repository may add protected signing and publication jobs only after the validation job. Recommended activation conditions are:
 
@@ -82,6 +84,8 @@ python tools/control.py version check
 
 `version sync` changes metadata but never creates a tag or publishes an artifact.
 
+For a release version, verify the enabled canonical values in `VERSION`, the frontend package and root lockfile package, the Tauri configuration, and the Rust package and its root `Cargo.lock` entry. Dependency, schema, API, and document-format versions are not application-version mirrors and must not be changed by a broad text replacement.
+
 ## Project identity and release gate
 
 Initialize a product identity when generating a project:
@@ -102,6 +106,63 @@ python tools/control.py release check
 ```
 
 In the template source repository, the gate recognizes the profile-matrix workflow as the master marker and accepts the intentional canonical scaffold identity. Generated projects do not contain that workflow marker: their gate fails for known template identities such as `com.example.templateproject` until product identity is configured. In both repository types, the gate fails for inconsistent versions, a version tag that differs from `v<VERSION>`, a dirty Git tree, or unreadable metadata. It checks the Tauri CSP and capabilities and warns when signing configuration is absent. A warning preserves unsigned CI verification; it does not certify a production release.
+
+The gate is necessary but not sufficient. A successful manual `release check` outside tag context reports that tag validation is not applicable; it does not prove that a tag exists, is annotated, targets the candidate, was pushed, or has successful tag-triggered workflows.
+
+## Candidate and same-SHA verification
+
+Create the candidate only after the complete local gate is green. Record its full SHA outside the versioned commit content, then push it without rewriting history. The required GitHub evidence consists of all six successful Core CI jobs, including `Core / Documentation Check`, plus successful Profile Matrix, PostgreSQL Integration, Desktop CI, and Release Validation runs whose `headSha` is exactly that candidate.
+
+```sh
+FINAL_CANDIDATE_SHA=$(git rev-parse HEAD)
+git status --short
+
+gh run list \
+  --commit "$FINAL_CANDIDATE_SHA" \
+  --limit 100 \
+  --json databaseId,workflowName,status,conclusion,headSha,event,url \
+  -R kleiveist/Template-Projekte
+```
+
+Use `workflow_dispatch` on the candidate ref when a required workflow was not triggered automatically, and watch each resulting run with `gh run watch <RUN_ID> --exit-status`. A fix creates a new candidate SHA and invalidates the earlier candidate as the common release proof; rerun every required gate affected by the new commit.
+
+Do not write `FINAL_CANDIDATE_SHA` into a file that is part of that same candidate commit. Record the exact final SHA in the annotated tag, optional GitHub release notes, `.report/release-v1.0.0/release-manifest.json`, and the final operator report.
+
+## Workflow-run classification and retention
+
+Before deleting any historical Actions run, classify it and retain the evidence needed to explain the decision:
+
+| Category | Classification | Release action |
+| --- | --- | --- |
+| A | Current reproducible project defect | Fix first; retain the failed run and link its successful replacement |
+| B | Current credible temporary infrastructure failure | Rerun failed jobs once; investigate repeated failure |
+| C | Superseded-commit failure with a newer successful replacement | Delete only after final same-SHA CI is green and the decision is recorded |
+| D | Obsolete/replaced workflow run | Confirm the replacement, then handle like category C |
+| E | Release, tag, artifact, or acceptance evidence | Retain |
+
+Cleanup is always by one explicit run ID. Never delete runs for the final release SHA, tag runs, successful release evidence, unexplained current failures, or runs with needed artifacts. Record the run ID, workflow, commit, date, conclusion, cause, replacement run, and deletion reason. Do not rewrite Git history, delete commits or branches, or move tags to hide a status.
+
+## Annotated tag procedure
+
+Tag only after the working tree is clean, all versions equal the intended release version, and all required local and same-SHA remote evidence is green:
+
+```sh
+FINAL_RELEASE_SHA=$(git rev-parse HEAD)
+git status --short
+git tag --list v1.0.0
+
+git tag -a v1.0.0 \
+  "$FINAL_RELEASE_SHA" \
+  -m "Template-Projekte v1.0.0"
+
+git rev-parse v1.0.0^{commit}
+git rev-parse HEAD
+git push origin v1.0.0
+```
+
+The two resolved commit SHAs must match. Never use `--force`, replace an existing tag, or silently move it after a tag-workflow failure. If `v1.0.0` already exists, stop and compare its local target, remote target, and any associated release before taking further action. After pushing, verify both the annotated tag object and its peeled commit with `git ls-remote --tags origin v1.0.0 'v1.0.0^{}'`, then verify all tag-triggered runs. A failed tag workflow leaves the release incomplete; it does not authorize moving the tag.
+
+The baseline workflow deliberately contains no GitHub Release publication job. If maintainers explicitly choose to publish a GitHub Release, create it only after the annotated tag is pushed and verified, use reviewed English release notes, and keep the final SHA and known limitations explicit. That publication decision does not imply production readiness for every generated product.
 
 ## Signing and notarization preparation
 
@@ -134,12 +195,21 @@ The auto-updater is intentionally absent and therefore disabled. A future integr
 
 ```sh
 python tools/control.py doctor
+python tools/control.py config doctor
+python tools/control.py quality
 python tools/control.py version check
-python tools/control.py test --suite all
+python tools/control.py test --suite all --report
 python tools/control.py build web
-python tools/control.py build desktop --dry-run
+python tools/control.py docs index
+python tools/control.py docs check
+python tools/control.py tauri doctor
+python tools/control.py build desktop --dry-run --no-clean
 python tools/control.py release check
 ```
+
+`docs index` is the intentional PyGitIndex regeneration step; `docs check` is the reproducible read-only release gate. Inspect the navigation diff between them. If regeneration changes tracked files, review and commit those changes, then restart the clean-candidate checks. `docs index --dry-run` is an optional preview and is not a substitute for either step.
+
+Also complete the five-profile matrix, the three valid PostgreSQL combinations with real database connections, the two invalid-combination checks, and the native Linux/macOS/Windows workflow matrix. Investigate every warning. A skipped or unexecuted path must remain recorded as such and cannot be promoted to `PASS`.
 
 Before signing, also verify the product icon, bundle identifier ownership, privacy declarations, license files, changelog, API origin/CSP match, platform entitlements, certificate validity, and recovery access to signing credentials.
 

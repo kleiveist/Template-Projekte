@@ -16,11 +16,40 @@ were packaged again. As expected, the two incompatible PostgreSQL combinations
 were rejected before the target was generated
 \parencite{kleiveist2026acceptance}.
 
+The governance checks were executed locally again against technical baseline
+\texttt{461fc751} and the present retrospective documentation.
+\texttt{quality size}, \texttt{quality complexity}, and
+\texttt{quality architecture} ended with exit code~0. The complete report
+selected 123 source files and contained 42 warnings, eight strong warnings, no
+active rule-based error, and no suppression. The aggregate command nonetheless
+ended with exit code~1 because Clippy and \texttt{cargo check} could not find
+the local system libraries \texttt{javascriptcoregtk-4.1} and
+\texttt{webkit2gtk-4.1}. This is not a complete PASS. For the executed
+repository rules, it establishes only the absence of an active ERROR finding;
+warnings do not block by definition.
+
+The public \texttt{doctor} also ended with~1. A required
+\texttt{DATABASE\_URL} and the backend environment were missing, while Docker
+was additionally reported as a warning. \texttt{test --suite all} repaired the
+backend environment and passed tooling, schema, API, database, and frontend;
+PostgreSQL and E2E were skipped, and Tauri failed because
+\texttt{javascriptcoregtk-4.1} was absent. The aggregate status remained~1.
+This result must be read separately from the direct Pytest evidence of 333
+passing tests.
+
+\texttt{build web} ended with~0 and produced Vite output and a ZIP.
+\texttt{docs index --dry-run} also ended with~0 but reported ten index, 26
+documentation-link, one README, and one AGENTS backlink changes. The dry run
+therefore establishes a functioning preview, not documentation that was
+already synchronized. All local results are dated 22~August~2026; technical
+source files were not changed during their execution.
+
 Figure~\ref{fig:profile-verification-matrix} and
-Table~\ref{tab:verification-matrix} distinguish local acceptance from current
-CI. The more recent failures do not invalidate the commit-bound acceptance,
-but they prevent its application to \texttt{a4487ac} as fully green remote
-evidence.
+Table~\ref{tab:verification-matrix} distinguish the earlier local acceptance,
+historical CI on \texttt{a4487ac}, and the governance addendum for
+\texttt{461fc751}. Later failures do not retroactively invalidate earlier
+commit-bound evidence, but they prevent its use as a fully green finding for a
+different state.
 
 \input{workspace/figures/verification/profile-verification-matrix}
 \input{workspace/tables/verification-matrix}

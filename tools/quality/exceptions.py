@@ -7,18 +7,30 @@ from pathlib import Path
 from tools.quality.model import CheckResult, ExceptionEntry, Finding, RULES, Severity
 
 
+def _parse_expiration(value: str) -> date:
+    if len(value) != 10 or value[4] != "-" or value[7] != "-":
+        raise ValueError
+    if not (value[:4] + value[5:7] + value[8:]).isdigit():
+        raise ValueError
+    expiration = date.fromisoformat(value)
+    if expiration.isoformat() != value:
+        raise ValueError
+    return expiration
+
+
 def validate_exceptions(
     root: Path,
     entries: tuple[ExceptionEntry, ...],
     *,
     today: date | None = None,
+    scanned_paths: frozenset[str] | None = None,
 ) -> tuple[CheckResult, tuple[ExceptionEntry, ...]]:
     result = CheckResult("Exceptions")
     current_date = today or date.today()
     valid: list[ExceptionEntry] = []
     for entry in entries:
         try:
-            expiration = date.fromisoformat(entry.expires)
+            expiration = _parse_expiration(entry.expires)
         except ValueError:
             result.findings.append(
                 Finding(
@@ -40,6 +52,19 @@ def validate_exceptions(
                     "config/code-quality.toml",
                     f"Exception for {entry.rule_id} references a file that does not exist: {entry.path}.",
                     actual=entry.path,
+                    symbol=entry.symbol,
+                )
+            )
+            continue
+        if scanned_paths is not None and entry.path not in scanned_paths:
+            result.findings.append(
+                Finding(
+                    RULES["EX001"],
+                    Severity.ERROR,
+                    "config/code-quality.toml",
+                    f"Exception for {entry.rule_id} references a file outside the active source scan: {entry.path}.",
+                    actual=entry.path,
+                    threshold="included handwritten source file",
                     symbol=entry.symbol,
                 )
             )
@@ -75,6 +100,9 @@ def apply_exceptions(results: list[CheckResult], entries: tuple[ExceptionEntry, 
     for result in results:
         updated: list[Finding] = []
         for finding in result.findings:
+            if finding.rule.rule_id == "CQ001" and finding.severity is Severity.ERROR:
+                updated.append(finding)
+                continue
             exception = _matching_exception(finding, entries)
             if exception is None:
                 updated.append(finding)

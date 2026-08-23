@@ -6,7 +6,8 @@
     \node[caseBox,minimum width=50mm,below=of doctor] (install) {\texttt{install}};
     \node[caseBox,minimum width=50mm,below=of install] (run) {\texttt{run}};
     \node[caseBox,minimum width=50mm,below=of run] (develop) {Edit product code};
-    \node[caseBox,minimum width=50mm,below=of develop] (test) {\texttt{test --suite all}};
+    \node[caseBox,minimum width=50mm,below=of develop] (quality) {\texttt{quality}};
+    \node[caseBox,minimum width=50mm,below=of quality] (test) {\texttt{test --suite all}};
     \node[caseBox,minimum width=50mm,below=of test] (build) {appropriate \texttt{build} target};
     \node[caseOptional,minimum width=50mm,below=of build] (release) {\texttt{release check}};
 
@@ -18,10 +19,11 @@
     \draw[caseFlow] (doctor) -- (install);
     \draw[caseFlow] (install) -- (run);
     \draw[caseFlow] (run) -- (develop);
-    \draw[caseFlow] (develop) -- (test);
+    \draw[caseFlow] (develop) -- (quality);
+    \draw[caseFlow] (quality) -- (test);
     \draw[caseFlow] (test) -- (build);
     \draw[caseFlow] (build) -- (release);
-    \draw[caseSecondaryFlow] (test.west) to[out=180,in=180,looseness=1.6] (develop.west);
+    \draw[caseSecondaryFlow] (quality.west) to[out=180,in=180,looseness=1.5] (develop.west);
     \draw[caseSecondaryFlow] (run) -- (desktop);
     \draw[caseSecondaryFlow] (build) -- (targets);
   \end{tikzpicture}}
@@ -29,5 +31,6 @@
   \label{fig:developer-workflow}
   \smallskip
   {\footnotesize Source: Author's own illustration based on
-  \textcite{kleiveist2026tooling} and \textcite{kleiveist2026release}.\par}
+  \textcite{kleiveist2026tooling}, \textcite{kleiveist2026release}, and
+  \textcite{kleiveist2026quality-policy}.\par}
 \end{figure}

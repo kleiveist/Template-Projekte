@@ -30,14 +30,18 @@ def test_container_baseline_is_non_root_and_profiled() -> None:
     frontend = (ROOT / "deployment" / "docker" / "frontend.Dockerfile").read_text(encoding="utf-8")
     compose = (ROOT / "deployment" / "compose.yaml").read_text(encoding="utf-8")
 
+    assert backend.count("FROM python:3.11.16-slim-bookworm") == 2
     assert "USER 10001:10001" in backend
     assert "requirements-production.lock" in backend
     assert "--require-hashes" in backend
     assert "/api/health" in backend
     assert "USER 101:101" in frontend
+    assert "FROM node:24.19.0-alpine3.24 AS build" in frontend
+    assert "FROM nginxinc/nginx-unprivileged:1.30.4-alpine3.24 AS runtime" in frontend
     assert "ARG VITE_API_BASE_URL" in frontend
     assert 'profiles: ["postgres"]' in compose
     assert "DATABASE_URL: ${DATABASE_URL:-}" in compose
+    assert "image: postgres:16.15-alpine3.24" in compose
     assert "python tools/control.py db upgrade" not in compose
     assert "secrets:" not in compose
 
@@ -134,6 +138,13 @@ def test_version_check_detects_inconsistent_metadata(monkeypatch, tmp_path: Path
     checks = release.collect_version_checks()
 
     assert any(check.status == "FAIL" and "package.json=1.2.4" in check.message for check in checks)
+
+
+def test_master_version_metadata_is_consistent() -> None:
+    checks = release.collect_version_checks()
+
+    assert checks
+    assert not [check for check in checks if check.status == "FAIL"]
 
 
 def test_version_sync_updates_frontend_metadata(monkeypatch, tmp_path: Path) -> None:
@@ -237,6 +248,19 @@ def test_release_check_accepts_custom_generated_identity(monkeypatch, tmp_path: 
     ]
 
     assert not any(check.status == "FAIL" for check in checks)
+
+
+def test_template_tauri_capability_is_least_privilege() -> None:
+    capability_path = ROOT / "src-tauri" / "capabilities" / "default.json"
+    if not capability_path.is_file():
+        pytest.skip("Tauri capability is absent from this derived project")
+
+    capability = json.loads(capability_path.read_text(encoding="utf-8"))
+
+    assert capability["identifier"] == "default"
+    assert capability["windows"] == ["main"]
+    assert capability["permissions"] == ["core:default"]
+    assert "remote" not in capability
 
 
 def test_git_release_check_rejects_dirty_tree(monkeypatch, tmp_path: Path) -> None:

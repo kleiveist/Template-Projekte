@@ -7,7 +7,7 @@
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
-| Last review | 2026-08-13 |
+| Last review | 2026-08-23 |
 | Audience | Developers and architects |
 | Related ATP | N/A — template-level architecture |
 
@@ -86,6 +86,7 @@ profiles/
 project-profile.toml     Active profile manifest for the current project root
 
 config/
+├── code-quality.toml    Quality thresholds, boundaries and exceptions
 └── environment.toml     Shared environment variable contract
 
 deployment/
@@ -214,28 +215,45 @@ For profiles with both `frontend` and `backend`, `python tools/control.py run` s
 flowchart LR
     Developer[Developer]
     Console[Interactive console]
-    CLI[tools/control.py]
+    CLI[tools/control.py composition root]
+    Parser[tools/control_parser.py]
     Environment[Doctor and installation]
     Services[Vite and FastAPI services]
-    Quality[Tests and reports]
+    Governance[Quality and architecture governance]
+    Tests[Tests and reports]
     Database[Database diagnostics and migrations]
-    Releases[Web and Tauri builds]
-    Docs[PyGitIndex wrapper]
+    Builds[Web, container and Tauri builds]
+    Delivery[Version and release validation]
+    DocsCheck[Semantic documentation check]
+    DocsIndex[PyGitIndex wrapper]
     SystemIndex[System PyGitIndex.py]
 
     Developer --> CLI
     Developer --> Console
     Console -->|delegates reproducible commands| CLI
+    CLI --> Parser
     CLI --> Environment
     CLI --> Services
-    CLI --> Quality
+    CLI --> Governance
+    CLI --> Tests
     CLI --> Database
-    CLI --> Releases
-    CLI --> Docs
-    Docs --> SystemIndex
+    CLI --> Builds
+    CLI --> Delivery
+    CLI --> DocsCheck
+    CLI --> DocsIndex
+    DocsIndex --> SystemIndex
 ```
 
-`tools/control.py` is the only public command dispatcher. The interactive console does not duplicate build or test logic; it invokes the same CLI commands in subprocesses and adds descriptions, safe defaults, and confirmations. This keeps interactive actions reproducible in local shells and CI.
+`tools/control.py` is the public composition root and command dispatcher. `tools/control_parser.py` owns the argument tree, while focused adapters under `tools/inst/` and `tools/tauri/` translate commands into subsystem calls. The interactive console does not duplicate build or test logic; it invokes the same CLI commands in subprocesses and adds descriptions, safe defaults, and confirmations. This keeps interactive actions reproducible in local shells and CI.
+
+Quality governance is a first-class subsystem under `tools/quality/`. Its configuration loader reads `config/code-quality.toml`; scanners and language/tool adapters collect facts; architecture checks evaluate dependency and size rules; the exception resolver applies only valid, scoped and unexpired exceptions; and the reporter determines the human-readable or JSON result and process exit status. These modules do not import the CLI composition root. A `CQ001` finding above 900 code lines is always an `ERROR` and cannot be suppressed by an exception; warning bands below that hard limit remain subject to the documented exception policy.
+
+Rust scope metrics cross one explicit tooling boundary. A small analyzer under `tools/quality/rust_analyzer/` parses source with
+Syn 2.0.119 and returns a versioned JSON payload from a bundled WASI module. The Python host in `tools/quality/` verifies the
+tracked provenance and artifact digest, applies execution limits without filesystem preopens or inherited environment, and
+validates every symbol, span, and metric against the input before creating quality-domain models. This keeps the parser
+compiler-near and portable while leaving policy classification, exceptions, reporting, and process exit decisions in the
+existing Python quality subsystem.
 
 GitHub Actions follows the same boundary:
 
@@ -243,21 +261,27 @@ GitHub Actions follows the same boundary:
 flowchart LR
     Actions[GitHub Actions]
     CLI[Public tools/control.py interface]
+    Quality[Quality gate]
     Tests[Project tests]
     Builds[Project builds]
     Generated[Generated profile projects]
+    GeneratedQuality[Generated-project quality]
+    GeneratedVerification[Generated-project tests and builds]
 
     Actions --> CLI
-    CLI --> Tests
-    CLI --> Builds
+    CLI --> Quality
+    Quality --> Tests
+    Quality --> Builds
     CLI --> Generated
+    Generated --> GeneratedQuality
+    GeneratedQuality --> GeneratedVerification
 ```
 
-CI orchestrates the same project tooling used by developers locally. Workflow files set up runtimes, caches, temporary services, and job boundaries; they do not reimplement profile, test, migration, or build behavior.
+CI orchestrates the same project tooling used by developers locally. Workflow files set up runtimes, caches, temporary services, and job boundaries; they do not reimplement profile, test, migration, or build behavior. The core workflow has six required jobs: the quality gate plus tooling, documentation, backend, frontend and container jobs that depend on it. Profile and PostgreSQL matrices also run quality inside each generated project before treating its tests and build plans as evidence.
 
 The same CLI also exposes `python tools/control.py init`, which scaffolds a derived project from the declarative profile catalog. Optional capabilities are selected with `--with`, for example `init --profile web-cloud --with postgres`. The active generated project stores its selected optional capabilities and fully resolved features in `project-profile.toml`, and the shared tooling reads that manifest to skip disabled components instead of treating them as missing by default.
 
-The documentation command locates the system `PyGitIndex.py` script and delegates index, README navigation, and backlink generation to it. A narrow post-processing step translates only known non-English empty-state labels inside generated markers. Authored documentation is not automatically rewritten.
+`docs check` is a read-only semantic validator for generated marker structure, expected backlinks, valid link targets, and complete index coverage; it runs without the external generator. `docs index` locates the system `PyGitIndex.py` script and delegates index, README navigation, and backlink regeneration to it. A narrow post-processing step translates only known non-English empty-state labels inside generated markers. Authored documentation is not automatically rewritten.
 
 ## Build and deployment interaction
 
@@ -298,6 +322,10 @@ That decision changes packaging, updates, observability and the security model, 
 12. A platform profile never implies a storage provider, data format or source of truth.
 13. Asset storage and structured data storage remain separate design decisions.
 14. A shared persistence abstraction is introduced only after real use cases establish a common contract.
+15. `tools/control.py` and `tools/control_parser.py` remain thin composition and transport layers; reusable behavior belongs in focused tooling subsystems.
+16. Modules under `tools/quality/` may depend on quality-owned models and adapters but never on the public CLI entry point.
+17. Quality policy is changed in `config/code-quality.toml` and its documentation, not bypassed in workflow YAML or with inline ignore comments.
+18. A `CQ001` error above 900 code lines is an invariant: neither an exception entry nor an orchestration layer may downgrade or suppress it.
 
 ## Security boundaries
 
@@ -328,11 +356,14 @@ Run all baseline checks from the repository root:
 
 ```sh
 python tools/control.py doctor
+python tools/control.py config doctor
+python tools/control.py quality
 python tools/control.py test --suite all
 python tools/control.py build web
-python tools/control.py version check
 python tools/control.py container validate
-python tools/control.py docs index --dry-run
+python tools/control.py version check
+python tools/control.py release check
+python tools/control.py docs check
 ```
 
 A desktop-capable environment additionally runs:
@@ -340,6 +371,7 @@ A desktop-capable environment additionally runs:
 ```sh
 python tools/control.py tauri doctor
 python tools/control.py tauri test --all
+python tools/control.py build desktop --dry-run --no-clean
 python tools/control.py build desktop
 ```
 
@@ -350,6 +382,7 @@ python tools/control.py build desktop
 - [Provider-neutral persistence architecture](persistence-architecture.md)
 - [Optional database feature](database-feature.md)
 - [Runtime configuration](configuration.md)
+- [Code-quality policy](code-quality.md)
 - [Deployment architecture](deployment-architecture.md)
 - [Documentation standard](../README.md)
 - [ATP workflow](../atp/README.md)

@@ -1,3 +1,6 @@
+<!-- AUTO-GENERATED:backlink START -->
+[← Back](README.md)
+<!-- AUTO-GENERATED:backlink END -->
 # Coding Agent Governance
 
 These instructions apply to every coding agent working in this repository or in a project generated from it. Follow the existing repository architecture and the policy in `config/code-quality.toml`.

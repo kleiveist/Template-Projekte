@@ -27,9 +27,18 @@ class TypeScriptImport:
 
 
 @dataclass(frozen=True, slots=True)
+class TypeScriptFunction:
+    path: str
+    symbol: str
+    start_line: int
+    end_line: int
+
+
+@dataclass(frozen=True, slots=True)
 class TypeScriptAnalysis:
     classes: tuple[TypeScriptClass, ...]
     imports: tuple[TypeScriptImport, ...]
+    functions: tuple[TypeScriptFunction, ...] = ()
 
 
 def _source_paths(root: Path, metrics: list[SourceMetrics]) -> list[Path]:
@@ -94,13 +103,22 @@ def analyze_typescript(
             )
             for item in payload["imports"]
         )
+        functions = tuple(
+            TypeScriptFunction(
+                Path(item["file"]).resolve().relative_to(root.resolve()).as_posix(),
+                str(item["symbol"]),
+                int(item["line"]),
+                int(item["endLine"]),
+            )
+            for item in payload["functions"]
+        )
     except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
         result.passed = False
         result.detail = f"TypeScript AST output was invalid: {exc}"
         result.output = completed.stdout
         return None, result
     result.detail = f"parsed {len(paths)} source files"
-    return TypeScriptAnalysis(classes, imports), result
+    return TypeScriptAnalysis(classes, imports, functions), result
 
 
 def add_class_findings(

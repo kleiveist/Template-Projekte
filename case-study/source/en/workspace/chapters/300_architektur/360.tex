@@ -8,6 +8,14 @@ features, the priority order is CLI override, process environment, local
 \texttt{.env}, and contract default. Derived values also remain traceable
 \parencite{kleiveist2026configuration}.
 
+The third central configuration type, \path{config/code-quality.toml}, is not
+part of runtime resolution. It defines the schema version, supported
+extensions, exclusions, thresholds, layer mappings, and exceptions for the
+development and CI gate \parencite{kleiveist2026quality-config}. The product
+profile, runtime values, and quality policy thus remain separate contracts.
+The quality engine does not, however, read the profile manifest itself; its
+component selection follows the generated directory structure that is present.
+
 Figure~\ref{fig:configuration-boundaries} shows the security boundaries. Vite
 receives only the approved \texttt{VITE\_API\_BASE\_URL}; FastAPI processes
 server values with explicit types and masks \texttt{DATABASE\_URL}. The tooling

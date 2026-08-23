@@ -8,15 +8,39 @@ Literature and official documentation are no substitute for independent
 replication. Commit-specific findings remain valid, but their transfer to
 other repository states or projects is limited.
 
-The evidence is heterogeneous: an earlier acceptance performed predominantly
-on Linux contrasts with mixed current CI results. Without test-coverage
-measurement, Compose startup, and successful platform runs, there is no
-comprehensive evidence of quality or production readiness; unsigned packages
-are no substitute for product releases.
+\paragraph{Construct validity.}
+Code LOC, function and class size, and complexity represent selected structural
+properties. They measure neither domain comprehension, cohesion, nor correct
+distribution of responsibilities. Import rules do not capture every dynamic,
+transitive, or semantic architecture violation. In particular, 900 code LOC
+is a generous project-specific maximum, not a universal maintainability
+criterion.
 
-Three principles in particular are transferable: a centralized baseline,
-declarative variability, and shared tooling entry points. Productivity and
-suitability were assessed only qualitatively; time measurements, comparison
-groups, customer cases, and economic data are lacking.
-These gaps particularly limit statements about the actual effects in everyday
-project work.
+\paragraph{Internal validity.}
+The evaluation originates within the project. Boundary and architecture
+fixtures may be tailored to the implemented rules. Simulated Ruff and ESLint
+outputs and the missing negative Rust fixture limit the integration evidence.
+Integrated tests for the 901-LOC exception through gate status and for absolute
+and excluded exception paths are also absent. Passing tests do not rule out
+errors outside the tested cases.
+
+\paragraph{External validity.}
+The subject is one profile-based template. Thresholds and architecture mapping
+cannot readily be transferred to small starters, large enterprise systems, or
+generated codebases. The principles of central policy, declarative variability,
+and shared verification entry points are more transferable than the concrete
+numeric values.
+
+\paragraph{Reliability.}
+Results depend on the commit, tool versions, operating system, package
+registries, and native libraries. Divergent master and profile results and the
+locally failed Rust/Tauri path demonstrate this dependency. Without coverage
+measurement, Compose startup, and successful platform runs, there is no
+comprehensive evidence of quality or production readiness.
+
+\paragraph{Long-term effect.}
+The study establishes technical detection of defined violations at the time of
+observation. Maintenance effort, defect rate, refactoring frequency,
+development time, and model compliance were not measured longitudinally. The
+quality gate therefore guarantees neither clean code nor a causal improvement
+in long-term maintainability.

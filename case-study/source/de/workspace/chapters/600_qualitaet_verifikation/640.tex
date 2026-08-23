@@ -17,10 +17,30 @@ native Ergebnisse bleiben plattformspezifisch.
 Für die Governance erhöhen die versionierte TOML-Policy, feste Rule IDs,
 Grenzwerttests und derselbe öffentliche Quality-Einstieg lokal und in CI die
 Nachvollziehbarkeit. Dies bedeutet nicht, dass jede Umgebung dasselbe
-Gesamtergebnis liefert. Der lokale vollständige Lauf scheiterte an nativen
-Tauri-Bibliotheken, während der Core-Quality-Job bestand; generierte
-Backendprofile scheiterten wiederum an der abweichenden Ruff-Auflösung.
-Reproduzierbar sind damit insbesondere Policy, Klassifikation und geprüfte
-Grenzfälle. Die vollständige Werkzeugausführung bleibt von Installation,
-Toolversionen und Systembibliotheken abhängig.
+Gesamtergebnis liefert. Im historischen Nachweislauf scheiterte der lokale
+Gesamtlauf an nativen Tauri-Bibliotheken, während der Core-Quality-Job bestand;
+generierte Backendprofile auf \texttt{461fc751} scheiterten an der damals
+abweichenden Ruff-Auflösung. Reproduzierbar sind damit insbesondere Policy,
+Klassifikation und geprüfte Grenzfälle. Die vollständige Werkzeugausführung
+bleibt von Installation, Toolversionen und Systembibliotheken abhängig; der
+v1.0.0-Freigabestand besitzt inzwischen den einheitlichen
+Tooling-Runtime-Vertrag aus
+Abschnitt~\ref{subsec:systempruefung-installation}.
+
+Für den finalen Rust-Analyzer sind Build und Laufzeit enger gebunden: Die
+Provenienz bindet den exakten rustc-1.97.1-Compilercommit, Ziel und
+Dependency-Stände. Ihr \texttt{source\_sha256} hasht ausschließlich
+\path{build.py}, \path{Cargo.toml}, \path{Cargo.lock},
+\path{rust-toolchain.toml} und \path{src/**/*.rs}; Wasmtime~47.0.1 ist für die
+Ausführung exakt gepint. Ein versionierter Vertrag kanonisiert Quell-, Home-,
+Cargo-Target-, Cargo-Home-, Rust-Sysroot- und Dependency-Pfade, nachdem der
+Build geerbte Overrides entfernt hat. Breite Abbildungen stehen dabei vor
+spezifischen.
+
+Drei verlegte Builds --- normale Registry, alternative Homes und Targets mit
+Leerzeichen sowie In-Tree-Vendor --- waren auf dem gepinnten
+Rust-1.97.1-Linux-Builder bytegleich. Core und Release prüfen diese Nachbildung
+auf Ubuntu; macOS und Windows führen nur das eingecheckte Artefakt aus. Der
+Nachweis behauptet ausdrücklich keine Bytegleichheit zwischen Betriebssystemen
+oder mit zukünftigen Compilern.
 \beginnerinput{workspace/statement/600_qualitaet_verifikation/640}

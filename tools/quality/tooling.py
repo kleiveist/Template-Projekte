@@ -9,8 +9,17 @@ import tempfile
 from pathlib import Path
 
 from tools.process import prepare_command
-from tools.quality.model import CheckResult, Finding, QualityConfig, RULES, ScopeLimits, Severity
+from tools.quality.model import (
+    CheckResult,
+    ExceptionEntry,
+    Finding,
+    QualityConfig,
+    RULES,
+    ScopeLimits,
+    Severity,
+)
 from tools.quality.scanner import SourceMetrics
+from tools.quality.typescript import TypeScriptAnalysis
 
 PYTHON_LINE_LENGTH = 120
 
@@ -45,7 +54,10 @@ def _ruff(root: Path) -> str | None:
 
 def _frontend_binary(root: Path, name: str) -> str | None:
     return _executable(
-        [root / f"frontend/node_modules/.bin/{name}", root / f"frontend/node_modules/.bin/{name}.cmd"],
+        [
+            root / f"frontend/node_modules/.bin/{name}",
+            root / f"frontend/node_modules/.bin/{name}.cmd",
+        ],
         name,
     )
 
@@ -85,7 +97,15 @@ def run_python_lint(root: Path, metrics: list[SourceMetrics]) -> CheckResult:
             detail="Ruff is unavailable. Action: run 'python tools/control.py install'.",
         )
     completed = _run(
-        [executable, "check", "--isolated", "--select", "E4,E7,E9,F,B", *paths],
+        [
+            executable,
+            "check",
+            "--isolated",
+            "--ignore-noqa",
+            "--select",
+            "E4,E7,E9,F,B",
+            *paths,
+        ],
         cwd=root,
     )
     return _tool_result(
@@ -125,18 +145,37 @@ def run_python_format(root: Path, metrics: list[SourceMetrics]) -> CheckResult:
     )
 
 
-def _run_frontend_script(root: Path, script: str, name: str) -> CheckResult:
+def _run_frontend_script(
+    root: Path,
+    script: str,
+    name: str,
+    arguments: tuple[str, ...] = (),
+) -> CheckResult:
     if not _frontend_exists(root):
         return CheckResult(name, detail="frontend is not enabled in this project")
     npm = shutil.which("npm")
     if npm is None:
-        return CheckResult(name, passed=False, detail="npm is unavailable. Action: install Node.js and npm.")
-    completed = _run([npm, "run", script], cwd=root / "frontend")
-    return _tool_result(name, completed, missing_action="install Node.js and run 'python tools/control.py install'")
+        return CheckResult(
+            name,
+            passed=False,
+            detail="npm is unavailable. Action: install Node.js and npm.",
+        )
+    separator = ["--"] if arguments else []
+    completed = _run([npm, "run", script, *separator, *arguments], cwd=root / "frontend")
+    return _tool_result(
+        name,
+        completed,
+        missing_action="install Node.js and run 'python tools/control.py install'",
+    )
 
 
 def run_frontend_lint(root: Path) -> CheckResult:
-    return _run_frontend_script(root, "lint", "TypeScript lint")
+    return _run_frontend_script(
+        root,
+        "lint",
+        "TypeScript lint",
+        ("--no-inline-config", "--report-unused-disable-directives-severity", "error"),
+    )
 
 
 def run_frontend_format(root: Path) -> CheckResult:
@@ -158,7 +197,11 @@ def _cargo_command(
         return CheckResult(name, detail="Tauri is not enabled in this project")
     cargo = shutil.which("cargo")
     if cargo is None:
-        return CheckResult(name, passed=False, detail="Cargo is unavailable. Action: install the Rust toolchain.")
+        return CheckResult(
+            name,
+            passed=False,
+            detail="Cargo is unavailable. Action: install the Rust toolchain.",
+        )
     completed = _run([cargo, *arguments], cwd=root, env=env)
     return _tool_result(name, completed, missing_action="install Rust with rustfmt and Clippy")
 
@@ -171,17 +214,52 @@ def run_rust_format(root: Path) -> CheckResult:
     )
 
 
-def run_rust_lint(root: Path, config: QualityConfig) -> CheckResult:
+def _matches_exception(
+    entry: ExceptionEntry,
+    rule_id: str,
+    relative_path: str,
+    symbol: str,
+) -> bool:
+    return entry.rule_id == rule_id and entry.path == relative_path and (entry.symbol is None or entry.symbol == symbol)
+
+
+def _clippy_metric_thresholds(
+    config: QualityConfig,
+    metrics: list[SourceMetrics],
+    exceptions: tuple[ExceptionEntry, ...],
+) -> tuple[int, int]:
+    function_limit = config.function.maximum
+    parameter_limit = config.parameters.maximum
+    for source in metrics:
+        if Path(source.relative_path).suffix.lower() != ".rs":
+            continue
+        for scope in source.scopes:
+            if scope.kind == "function" and any(
+                _matches_exception(entry, "CQ101", source.relative_path, scope.symbol) for entry in exceptions
+            ):
+                function_limit = max(function_limit, scope.code_lines)
+        for function in source.rust_functions:
+            if any(_matches_exception(entry, "CQ104", source.relative_path, function.symbol) for entry in exceptions):
+                parameter_limit = max(parameter_limit, function.parameters)
+    return function_limit, parameter_limit
+
+
+def run_rust_lint(
+    root: Path,
+    config: QualityConfig,
+    metrics: list[SourceMetrics] | None = None,
+    exceptions: tuple[ExceptionEntry, ...] = (),
+) -> CheckResult:
     if not _rust_exists(root):
         return CheckResult("Rust Clippy", detail="Tauri is not enabled in this project")
+    function_limit, parameter_limit = _clippy_metric_thresholds(config, metrics or [], exceptions)
     with tempfile.TemporaryDirectory(prefix="template-clippy-") as temporary:
         config_directory = Path(temporary)
         (config_directory / "clippy.toml").write_text(
             "\n".join(
                 [
-                    f"too-many-arguments-threshold = {config.parameters.maximum}",
-                    f"too-many-lines-threshold = {config.function.maximum}",
-                    f"cognitive-complexity-threshold = {config.complexity.maximum}",
+                    f"too-many-arguments-threshold = {parameter_limit}",
+                    f"too-many-lines-threshold = {function_limit}",
                     "",
                 ]
             ),
@@ -197,13 +275,14 @@ def run_rust_lint(root: Path, config: QualityConfig) -> CheckResult:
                 "--manifest-path",
                 "src-tauri/Cargo.toml",
                 "--all-targets",
+                "--all-features",
                 "--",
-                "-D",
+                "-F",
                 "warnings",
-                "-W",
+                "-F",
                 "clippy::too_many_lines",
-                "-W",
-                "clippy::cognitive_complexity",
+                "-F",
+                "clippy::too_many_arguments",
             ],
             "Rust Clippy",
             env=environment,
@@ -213,7 +292,14 @@ def run_rust_lint(root: Path, config: QualityConfig) -> CheckResult:
 def run_rust_check(root: Path) -> CheckResult:
     return _cargo_command(
         root,
-        ["check", "--locked", "--manifest-path", "src-tauri/Cargo.toml"],
+        [
+            "check",
+            "--locked",
+            "--manifest-path",
+            "src-tauri/Cargo.toml",
+            "--all-targets",
+            "--all-features",
+        ],
         "Rust compiler",
     )
 
@@ -268,7 +354,11 @@ def _ruff_metric_finding(
     message = str(item.get("message", ""))
     actual = _actual_from_ruff(message)
     if actual is None:
-        return None, None, f"could not read the measured value from Ruff {code}: {message}"
+        return (
+            None,
+            None,
+            f"could not read the measured value from Ruff {code}: {message}",
+        )
     rule_id, limits = mapping[code]
     severity = limits.classify(actual)
     if severity is None:
@@ -276,7 +366,8 @@ def _ruff_metric_finding(
     location = item.get("location") or {}
     relative = _relative_filename(str(item.get("filename", "")), root)
     line = location.get("row")
-    symbol = _symbol_from_message(message) or _python_function_at(metrics, relative, line)
+    ast_symbol = _python_function_at(metrics, relative, line)
+    symbol = ast_symbol or _symbol_from_message(message)
     threshold = (
         limits.maximum
         if severity is Severity.ERROR
@@ -317,6 +408,7 @@ def run_python_metrics(
         "--preview",
         "--output-format",
         "json",
+        "--ignore-noqa",
         "--select",
         "C901,PLR0913,PLR1702",
         "--config",
@@ -367,6 +459,7 @@ _ESLINT_ACTUAL_PATTERNS = {
     "max-params": re.compile(r"too many parameters \((\d+)\)", re.IGNORECASE),
     "max-lines-per-function": re.compile(r"too many lines \((\d+)\)", re.IGNORECASE),
 }
+_ESLINT_SYMBOL_PATTERN = re.compile(r"(?:Function|Method) '([^']+)'", re.IGNORECASE)
 
 
 def _eslint_sources(metrics: list[SourceMetrics], root: Path) -> list[str]:
@@ -379,10 +472,71 @@ def _eslint_sources(metrics: list[SourceMetrics], root: Path) -> list[str]:
     ]
 
 
+def _typescript_function_at(
+    analysis: TypeScriptAnalysis | None,
+    relative_path: str,
+    line: int | None,
+) -> str | None:
+    if analysis is None or line is None:
+        return None
+    candidates = [
+        function
+        for function in analysis.functions
+        if function.path == relative_path and function.start_line <= line <= function.end_line
+    ]
+    if not candidates:
+        return None
+    return min(candidates, key=lambda function: function.end_line - function.start_line).symbol
+
+
+def _eslint_metric_finding(
+    message,
+    relative: str,
+    mapping: dict[str, tuple[str, ScopeLimits]],
+    analysis: TypeScriptAnalysis | None,
+) -> tuple[Finding | None, str]:
+    if message.get("fatal"):
+        return None, f"ESLint could not parse {relative}: {message.get('message', 'unknown parser error')}"
+    eslint_rule = message.get("ruleId")
+    if eslint_rule not in mapping:
+        return None, ""
+    match = _ESLINT_ACTUAL_PATTERNS[eslint_rule].search(str(message.get("message", "")))
+    if match is None:
+        return None, f"could not read the measured value from ESLint {eslint_rule}"
+    actual = int(match.group(1))
+    rule_id, limits = mapping[eslint_rule]
+    severity = limits.classify(actual)
+    if severity is None:
+        return None, ""
+    message_text = str(message.get("message", ""))
+    symbol_match = _ESLINT_SYMBOL_PATTERN.search(message_text)
+    ast_symbol = _typescript_function_at(analysis, relative, message.get("line"))
+    symbol = ast_symbol or (symbol_match.group(1) if symbol_match is not None else None)
+    threshold = (
+        limits.maximum
+        if severity is Severity.ERROR
+        else (limits.strong_warning if severity is Severity.STRONG_WARNING else limits.warning)
+    )
+    return (
+        Finding(
+            RULES[rule_id],
+            severity,
+            relative,
+            message_text,
+            actual,
+            threshold,
+            symbol=symbol,
+            line=message.get("line"),
+        ),
+        "",
+    )
+
+
 def run_typescript_metrics(
     root: Path,
     metrics: list[SourceMetrics],
     config: QualityConfig,
+    analysis: TypeScriptAnalysis | None = None,
 ) -> CheckResult:
     result = CheckResult("TypeScript complexity")
     paths = _eslint_sources(metrics, root)
@@ -400,11 +554,25 @@ def run_typescript_metrics(
         "max-params": ["warn", config.parameters.warning - 1],
         "max-lines-per-function": [
             "warn",
-            {"max": config.function.warning, "skipBlankLines": True, "skipComments": True},
+            {
+                "max": config.function.warning,
+                "skipBlankLines": True,
+                "skipComments": True,
+            },
         ],
     }
     completed = _run(
-        [eslint, "--format", "json", "--rule", json.dumps(rules, separators=(",", ":")), *paths],
+        [
+            eslint,
+            "--no-inline-config",
+            "--report-unused-disable-directives-severity",
+            "error",
+            "--format",
+            "json",
+            "--rule",
+            json.dumps(rules, separators=(",", ":")),
+            *paths,
+        ],
         cwd=root / "frontend",
     )
     if completed.returncode not in {0, 1}:
@@ -428,30 +596,10 @@ def run_typescript_metrics(
     for file_result in payload:
         relative = _relative_filename(str(file_result.get("filePath", "")), root)
         for message in file_result.get("messages", []):
-            eslint_rule = message.get("ruleId")
-            if eslint_rule not in mapping:
-                continue
-            match = _ESLINT_ACTUAL_PATTERNS[eslint_rule].search(str(message.get("message", "")))
-            if match is None:
+            finding, error = _eslint_metric_finding(message, relative, mapping, analysis)
+            if error:
                 result.passed = False
-                result.detail = f"could not read the measured value from ESLint {eslint_rule}"
-                continue
-            actual = int(match.group(1))
-            rule_id, limits = mapping[eslint_rule]
-            severity = limits.classify(actual)
-            if severity is None:
-                continue
-            result.findings.append(
-                Finding(
-                    RULES[rule_id],
-                    severity,
-                    relative,
-                    str(message.get("message", "")),
-                    actual,
-                    limits.maximum
-                    if severity is Severity.ERROR
-                    else (limits.strong_warning if severity is Severity.STRONG_WARNING else limits.warning),
-                    line=message.get("line"),
-                )
-            )
+                result.detail = error
+            elif finding is not None:
+                result.findings.append(finding)
     return result

@@ -17,7 +17,7 @@ jobs:
   validate:
     name: Release / Candidate Validation
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 60
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -33,22 +33,28 @@ jobs:
             backend/requirements.txt
             backend/requirements-database.txt
             backend/requirements-postgres.txt
-      - name: Set up Node.js 20
+      - name: Set up Node.js 24
         uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Set up Rust stable
+      - name: Set up Rust 1.97.1 with WASI target
         run: |
-          rustup toolchain install stable --profile minimal --component rustfmt,clippy
-          rustup default stable
+          rustup toolchain install 1.97.1 --profile minimal --component rustfmt,clippy --target wasm32-wasip1
+          rustup default 1.97.1
       - name: Install verification dependencies
         run: python tools/control.py install --skip-playwright
       - name: Install Tauri system dependencies
         run: python tools/control.py tauri install --skip-rust --skip-node --skip-frontend
+      - name: Verify the pinned Rust WASI analyzer build
+        run: python tools/quality/rust_analyzer/build.py --check
       - name: Run code quality and architecture gate
         run: python tools/control.py quality
+      - name: Run documentation maintenance tests
+        run: |
+          python tools/control.py docs check
+          tools/.venv/bin/python -m pytest -q tools/tests/test_docs_index.py
       - name: Run release-independent tests
         run: python tools/control.py test --suite all
       - name: Build web release artifact
@@ -60,7 +66,7 @@ jobs:
       - name: Run release gate
         run: python tools/control.py release check
       - name: Upload web candidate
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: web-release-candidate
           if-no-files-found: error

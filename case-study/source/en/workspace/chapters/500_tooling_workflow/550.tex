@@ -1,6 +1,118 @@
 \subsection{Tests and Builds}
 \label{subsec:tests-builds}
 
+The governance separates repository-specific rules from established language
+tools. Scanning, severity, rule IDs, exclusions, exceptions, architecture
+rules, and the aggregate report remain in the shared quality package; linting,
+type checking, and formatting are delegated to the respective toolchains.
+Table~\ref{tab:quality-language-tools} summarizes the coverage.
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Language-specific tools and boundaries in the quality gate}
+  \label{tab:quality-language-tools}
+  \begin{tabularx}{\textwidth}{@{}p{0.13\textwidth}p{0.28\textwidth}>{\raggedright\arraybackslash}X p{0.25\textwidth}@{}}
+    \toprule
+    \textbf{Area} & \textbf{Tools} & \textbf{Automated} &
+      \textbf{Principal limitation} \\
+    \midrule
+    Python & Tokenizer, Python AST, Ruff & LOC, function and class size,
+      McCabe complexity, nesting, parameters, lint, and format & Syntax errors
+      can omit scope metrics in a focused size run. \\
+    JS/TS & Dedicated LOC lexer, TypeScript AST, ESLint, TypeScript compiler,
+      Prettier & LOC, classes and imports, function metrics, lint, types, and
+      format & Architecture resolution covers only known relative and configured
+      alias paths. \\
+    Rust/Tauri & LOC lexer, Syn AST analyzer (WASI), Wasmtime, rustfmt,
+      Clippy, Cargo & File and function size, complexity, nesting, parameters,
+      format, lint, compiler check & Syn analyzes syntax without type resolution
+      or macro expansion; adapter semantics remain subject to review. \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Source: Author's own compilation based on
+  \textcite{kleiveist2026quality-implementation}.\par}
+\end{table}
+
+Ruff is declared as \texttt{>=0.14,<1.0}; version~0.16.4 was run locally. The
+frontend lockfile pins ESLint~9.39.5, Prettier~3.9.6, TypeScript~5.9.3, and
+typescript-eslint~8.67.0; the release workflows use Node~24. The Tauri
+application manifest names Rust~1.77 and edition~2021 as its minimum. Separately,
+the analyzer build environment pins rustc~1.97.1 and edition~2024. Its lockfile
+pins Syn~2.0.119 and proc-macro2~1.0.107, while the tooling environment pins
+Wasmtime~47.0.1. These versions improve snapshot traceability but remain time-
+and environment-dependent.
+
+The scanner recognizes \path{.py}, \path{.ts}, \path{.tsx}, \path{.js},
+\path{.jsx}, \path{.mjs}, \path{.cjs}, and \path{.rs}. Physical lines are
+distinguished from code LOC: blank lines and comment-only lines do not count,
+while code followed by a comment counts once. Python docstrings and other
+multiline strings count as code. For JavaScript/C-like syntax, a dedicated
+lexer handles block comments; the Rust LOC pass also handles nested block
+comments and raw strings. This lexer stage classifies code lines only. Rust
+scope and control-flow metrics are parsed separately from a complete syntax
+tree by the analyzer built with Syn~2.0.119. \path{.mjs} and \path{.cjs}
+receive file LOC and the usual applicable frontend checks, but no
+repository-specific scope metrics or architecture checks.
+
+The checked-in analyzer targets \texttt{wasm32-wasip1} and is executed by
+Wasmtime~47.0.1 from the tooling environment. The 535,787-byte artifact has
+SHA-256
+\path{7a27cb02a9392b62c487b4ce73a03524d7260b804c0c49eb4520ceb1a1cacfd8}.
+Its provenance binds the exact rustc 1.97.1 compiler commit, target and
+dependency versions, and a source digest over \path{build.py},
+\path{Cargo.toml}, \path{Cargo.lock}, \path{rust-toolchain.toml}, and
+\path{src/**/*.rs}.
+
+The build removes inherited compiler, flag, target, and release-profile
+overrides. A versioned remapping contract canonicalizes the source root, user
+home, Cargo home and target, Rust sysroot, and every dependency root; broad
+mappings precede specific ones because the last matching rustc entry wins.
+Residual private physical build paths in the artifact cause failure. Before
+each run, the host checks the provenance and artifact. The WASI instance has
+bounded memory and fuel; malformed or unsupported syntax, invalid provenance,
+a corrupt artifact, resource exhaustion, and inconsistent JSON metrics abort
+the analysis. Generated profiles without a Rust toolchain can therefore run
+the same Rust analysis. The analyzer replaces neither rustc nor Clippy: it
+does not resolve types, expand macros, or check runtime semantics.
+
+Excluded directories are \path{.cache}, \path{.dist}, \path{.generated},
+\path{.git}, \path{.pytest_cache}, \path{.venv}, \path{__pycache__},
+\path{coverage}, \path{dist}, \path{generated}, \path{node_modules},
+\path{target}, and \path{vendor}; \path{Cargo.lock},
+\path{package-lock.json}, and the configured paths \path{build/**},
+\path{backend/build/**}, \path{frontend/dist/**}, \path{src-tauri/gen/**}, and
+\path{src-tauri/target/**} are also excluded. The general directory name
+\path{build} is intentionally not excluded globally, so handwritten tooling
+paths with that name remain visible. Exclusions define the scope, for example
+for generated or external artifacts; patterns that are too broad could hide
+relevant code.
+
+Exceptions are separate, temporary deviations for handwritten files. Required
+fields are a known CQ or AR identifier, an exact relative path, a rationale of
+at least ten characters, and an ISO expiry date; an optional symbol is matched
+exactly. The file must exist, and duplicates and unknown IDs are rejected. The
+expiry date is inclusive; only the following day produces \texttt{EX002}, and
+a suppression remains visible in the report. The implementation does not,
+however, check whether the scanner covers the file or whether an optional
+symbol actually exists in the source. Further discrepancies are discussed in
+Section~\ref{subsec:schwaechen-grenzen}.
+
+In the backend, a Python AST analysis maps imports to four layers: API,
+Application/Services, Domain, and Infrastructure. It detects configured
+forbidden directions, direct Domain dependencies on seven framework roots,
+and direct database imports in routers. Handlers above 50 code LOC also
+produce \texttt{AR004}. In the frontend, boundaries between Application,
+Features, API, UI, and Shared are checked, together with cross-feature imports
+of internals; the target feature's public root \path{index.*} remains allowed.
+Statically resolvable \texttt{import()} and \texttt{require()} calls are
+included; dynamic and transitive dependencies that cannot be resolved
+statically and unknown aliases remain outside the analysis. A router heuristic
+cannot fully identify semantic business logic; thin Tauri commands are a
+review-only rule.
+
 The eight test suites cover tooling, schema, API, database, PostgreSQL,
 frontend, E2E, and Tauri/Rust. \texttt{test --suite all} provides the complete
 project-wide entry point; reports are optional

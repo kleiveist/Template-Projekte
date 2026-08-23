@@ -143,6 +143,90 @@ def test_relative_and_lazy_backend_imports_are_checked(
     assert result.findings[0].line == 2
 
 
+@pytest.mark.parametrize(
+    "source",
+    [
+        "import backend.app.db.repository\n",
+        "from backend.app import db\n",
+    ],
+)
+def test_package_qualified_backend_imports_follow_the_same_layer_rules(
+    tmp_path: Path,
+    quality_config: QualityConfig,
+    source: str,
+) -> None:
+    _write(tmp_path, "backend/app/domain/orders.py", source)
+
+    result = _backend_result(tmp_path, quality_config)
+    finding = next(item for item in result.findings if item.rule.rule_id == "AR001")
+
+    assert finding.actual == "domain->infrastructure"
+    assert finding.line == 1
+
+
+def test_allowed_package_qualified_backend_import_stays_valid(
+    tmp_path: Path,
+    quality_config: QualityConfig,
+) -> None:
+    _write(tmp_path, "backend/app/services/orders.py", "import backend.app.domain.orders\n")
+
+    assert _backend_result(tmp_path, quality_config).findings == []
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        'import importlib\nrepository = importlib.import_module("app.db.repository")\n',
+        'import importlib.util\nrepository = importlib.import_module("app.db.repository")\n',
+        'import importlib as loader\nrepository = loader.import_module("app.db.repository")\n',
+        'from importlib import import_module as load\nrepository = load("app.db.repository")\n',
+        'import importlib\nload = importlib.import_module\nrepository = load("app.db.repository")\n',
+        'import importlib\nrepository = importlib.import_module("..db.repository", package=__package__)\n',
+        'repository = __import__("app.db.repository", fromlist=["repository"])\n',
+    ],
+)
+def test_literal_dynamic_backend_imports_are_checked(
+    tmp_path: Path,
+    quality_config: QualityConfig,
+    source: str,
+) -> None:
+    _write(tmp_path, "backend/app/domain/orders.py", source)
+
+    result = _backend_result(tmp_path, quality_config)
+
+    assert "AR001" in _rule_ids(result)
+
+
+def test_shadowing_importlib_with_a_function_parameter_avoids_false_positive(
+    tmp_path: Path,
+    quality_config: QualityConfig,
+) -> None:
+    _write(
+        tmp_path,
+        "backend/app/domain/orders.py",
+        'import importlib\n\ndef load(importlib):\n    return importlib.import_module("app.db.repository")\n',
+    )
+
+    assert _backend_result(tmp_path, quality_config).findings == []
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        'import importlib\nmodel = importlib.import_module("app.domain.orders")\n',
+        'model = __import__("app.domain.orders", fromlist=["orders"])\n',
+    ],
+)
+def test_allowed_literal_dynamic_backend_import_stays_valid(
+    tmp_path: Path,
+    quality_config: QualityConfig,
+    source: str,
+) -> None:
+    _write(tmp_path, "backend/app/services/orders.py", source)
+
+    assert _backend_result(tmp_path, quality_config).findings == []
+
+
 @pytest.mark.parametrize("module", ["fastapi", "sqlalchemy.orm", "pydantic", "psycopg"])
 def test_domain_framework_dependencies_are_ar002_errors(
     tmp_path: Path,
@@ -225,6 +309,66 @@ def test_large_non_route_helper_is_not_misclassified_as_router_logic(
     assert "AR004" not in _rule_ids(result)
 
 
+@pytest.mark.parametrize(
+    "relative",
+    ["backend/app/services/orders.py", "backend/app/main.py"],
+)
+def test_backend_cannot_import_frontend_implementation(
+    tmp_path: Path,
+    quality_config: QualityConfig,
+    relative: str,
+) -> None:
+    _write(tmp_path, relative, "from frontend.src import main\n")
+
+    result = _backend_result(tmp_path, quality_config)
+
+    assert _rule_ids(result) == ["AR001"]
+    assert result.findings[0].actual == "backend->frontend"
+
+
+def test_unclassified_backend_directory_cannot_bypass_api_and_database_boundaries(
+    tmp_path: Path,
+    quality_config: QualityConfig,
+) -> None:
+    _write(
+        tmp_path,
+        "backend/app/legacy/orders.py",
+        "from fastapi import APIRouter\nfrom app.db import repository\n",
+    )
+
+    result = _backend_result(tmp_path, quality_config)
+
+    assert _rule_ids(result) == ["AR001"]
+    assert result.findings[0].actual == "unclassified:legacy"
+    assert result.findings[0].line == 1
+
+
+def test_configured_backend_support_directory_remains_valid(
+    tmp_path: Path,
+    quality_config: QualityConfig,
+) -> None:
+    _write(tmp_path, "backend/app/config/settings.py", "from pydantic_settings import BaseSettings\n")
+
+    assert _backend_result(tmp_path, quality_config).findings == []
+
+
+def test_unconfigured_backend_root_module_cannot_bypass_api_and_database_boundaries(
+    tmp_path: Path,
+    quality_config: QualityConfig,
+) -> None:
+    _write(
+        tmp_path,
+        "backend/app/orders.py",
+        "from fastapi import APIRouter\nfrom app.db import repository\n",
+    )
+
+    result = _backend_result(tmp_path, quality_config)
+
+    assert _rule_ids(result) == ["AR001"]
+    assert result.findings[0].actual == "unclassified-root:orders.py"
+    assert result.findings[0].line == 1
+
+
 def _frontend_fixture(root: Path) -> None:
     for relative in (
         "frontend/src/main.ts",
@@ -287,10 +431,29 @@ def test_frontend_invalid_layer_dependencies_are_ar001_errors(
     assert result.findings[0].line == 7
 
 
+@pytest.mark.parametrize("entry_module", ["main.ts", "main.tsx"])
+def test_feature_cannot_import_application_entry_module(
+    tmp_path: Path,
+    quality_config: QualityConfig,
+    entry_module: str,
+) -> None:
+    _write(tmp_path, f"frontend/src/{entry_module}")
+    _write(tmp_path, "frontend/src/features/orders/view.ts")
+    edge = TypeScriptImport("frontend/src/features/orders/view.ts", 4, f"../../{entry_module}")
+
+    result = _frontend_result(tmp_path, quality_config, [edge])
+
+    assert _rule_ids(result) == ["AR001"]
+    assert result.findings[0].actual == "feature->app"
+    assert result.findings[0].line == 4
+
+
 @pytest.mark.parametrize(
     "specifier",
     [
         "../catalog/internal/state",
+        "../catalog/internal/state.js",
+        "../catalog/internal/state.jsx",
         "../catalog/internal",
         "@/features/catalog/internal/state",
         "~/features/catalog/internal/state",
@@ -319,6 +482,8 @@ def test_cross_feature_public_root_index_is_allowed(
     edges = [
         TypeScriptImport("frontend/src/features/orders/view.ts", 1, "../catalog"),
         TypeScriptImport("frontend/src/features/orders/view.ts", 2, "../catalog/index.ts"),
+        TypeScriptImport("frontend/src/features/orders/view.ts", 3, "../catalog/index.js"),
+        TypeScriptImport("frontend/src/features/orders/view.ts", 4, "../catalog/index.jsx"),
     ]
 
     assert _frontend_result(tmp_path, quality_config, edges).findings == []
@@ -335,3 +500,62 @@ def test_external_and_unresolved_frontend_imports_are_ignored(
     ]
 
     assert _frontend_result(tmp_path, quality_config, edges).findings == []
+
+
+def test_tooling_documented_dependency_direction_passes(
+    tmp_path: Path,
+    quality_config: QualityConfig,
+) -> None:
+    _write(tmp_path, "tools/control.py", "from tools.inst import doctor\n")
+    _write(tmp_path, "tools/inst/doctor.py", "from tools.quality import model\n")
+    _write(tmp_path, "tools/quality/model.py", "from dataclasses import dataclass\n")
+
+    result = _backend_result(tmp_path, quality_config)
+
+    assert result.findings == []
+
+
+@pytest.mark.parametrize(
+    ("relative", "source", "actual"),
+    [
+        ("tools/quality/scanner.py", "from tools import control\n", "quality->control"),
+        ("tools/quality/scanner.py", "import tools.control_parser\n", "quality->control"),
+        (
+            "tools/quality/scanner.py",
+            'import importlib\ncontrol = importlib.import_module("tools.control")\n',
+            "quality->control",
+        ),
+        (
+            "tools/quality/scanner.py",
+            'control = __import__("tools.control", fromlist=["control"])\n',
+            "quality->control",
+        ),
+        ("tools/inst/build.py", "from frontend.src import main\n", "tooling->frontend"),
+    ],
+)
+def test_invalid_tooling_dependencies_are_ar001_errors(
+    tmp_path: Path,
+    quality_config: QualityConfig,
+    relative: str,
+    source: str,
+    actual: str,
+) -> None:
+    _write(tmp_path, relative, source)
+
+    result = _backend_result(tmp_path, quality_config)
+
+    assert _rule_ids(result) == ["AR001"]
+    assert result.findings[0].actual == actual
+
+
+def test_excluded_tooling_paths_are_not_architecture_inputs(
+    tmp_path: Path,
+    quality_config: QualityConfig,
+) -> None:
+    _write(tmp_path, "tools/.venv/lib/python/site.py", "from frontend.src import main\n")
+    _write(tmp_path, "tools/generated/client.py", "from frontend.src import main\n")
+    _write(tmp_path, "tools/inst/build.py", "from tools.quality import model\n")
+
+    result = _backend_result(tmp_path, quality_config)
+
+    assert result.findings == []

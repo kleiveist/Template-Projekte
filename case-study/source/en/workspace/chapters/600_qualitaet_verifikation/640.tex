@@ -13,4 +13,31 @@ The hash-verified installation process was tested
 \parencite{kleiveist2026ci,kleiveist2026container}. The operating system,
 toolchain, registries, network, and platform SDKs nevertheless limit
 reproduction; native results remain platform-specific.
+
+For the governance, the versioned TOML policy, fixed rule IDs, boundary tests,
+and the same public quality entry point locally and in CI improve traceability.
+This does not mean that every environment produces the same aggregate result.
+In the historical evidence run, the complete local run failed on native Tauri
+libraries while the Core quality job passed; generated backend profiles on
+\texttt{461fc751} failed because Ruff resolution differed at the time. Policy,
+classification, and the tested boundaries are thus the most reproducible
+elements. Complete tool execution remains dependent on installation, tool
+versions, and system libraries; the v1.0.0 release state now has the uniform
+tooling-runtime contract from
+Section~\ref{subsec:systempruefung-installation}.
+
+The final Rust analyzer binds its build and runtime more tightly: provenance
+binds the exact rustc 1.97.1 compiler commit, target, and dependency versions.
+Its \texttt{source\_sha256} hashes only \path{build.py}, \path{Cargo.toml},
+\path{Cargo.lock}, \path{rust-toolchain.toml}, and \path{src/**/*.rs};
+Wasmtime~47.0.1 is pinned exactly for execution. A versioned contract
+canonicalizes source, home, Cargo-target, Cargo-home, Rust-sysroot, and
+dependency paths after the build removes inherited overrides. Broad mappings
+precede more specific mappings.
+
+Three relocated builds --- normal registry, alternate homes and targets with
+spaces, and an in-tree vendor --- were byte-for-byte identical on the pinned
+Rust 1.97.1 Linux builder. Core and Release check this reproduction on Ubuntu;
+macOS and Windows only execute the checked-in artifact. The evidence explicitly
+does not claim byte identity across operating systems or with future compilers.
 \beginnerinput{workspace/statement/600_qualitaet_verifikation/640}

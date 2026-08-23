@@ -23,6 +23,9 @@ requirements.
     A-05 & Maintainability & Shared components are maintained centrally. & Repository strategy \\
     A-06 & Traceability & Changes and configuration are versioned and documented. & Version state, documentation \\
     A-07 & Extensibility & Optional capabilities have documented dependencies. & Capability model \\
+    A-08 & Quality policy & Measurable rules are centrally configured and can be evaluated locally and in CI. & Configuration, CLI, workflow \\
+    A-09 & Architecture governance & Selected layer and feature boundaries are checked automatically. & Import analysis, architecture tests \\
+    A-10 & Proportionality & Findings remain visible; only errors and required failed tools block. & Severity, exception, and exit-code tests \\
     \bottomrule
   \end{tabularx}
   \smallskip
@@ -30,5 +33,6 @@ requirements.
 \end{table}
 
 The stated verification basis is subsequently used to assess these target
-criteria.
+criteria. A-08 through A-10 originated only with the governance extension and
+are therefore not attributed retrospectively to the original baseline.
 \beginnerinput{workspace/statement/200_anforderungen/220}

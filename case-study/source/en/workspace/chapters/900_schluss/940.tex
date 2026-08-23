@@ -1,17 +1,26 @@
 \subsection{Outlook}
 \label{subsec:ausblick}
 
-In the short term, the failing tooling, desktop-profile, and Windows CI paths
-should be corrected on a fixed commit. Compose startup with health and
-readiness checks, Release Validation, and Branch Protection should supplement
-the technical evidence without claiming production readiness.
+In the v1.0.0 release state, the historical Ruff, exception, and documentation
+discrepancies are corrected: \path{tools/.venv} is profile-independent,
+exception boundaries are enforced, and documentation synchronization is
+checked. As the next release evidence, the master, all five profiles,
+PostgreSQL, Rust/Tauri, and Windows must be checked on the same final commit.
+Compose startup with health and readiness checks, Release
+Validation, and Branch Protection should supplement the technical evidence
+without claiming production readiness.
 
-In the medium term, specific products require signing, notarization, and an
-updater. Credentials, deployment, authentication, and RBAC also remain
-product-specific. Three measures are appropriate for the baseline: automate
-the use of shared contracts, make capability selection stricter, and
-synchronize generated projects in a controlled manner.
+In the medium term, additional real negative Ruff, ESLint, and Rust fixtures
+beyond the regression cases for v1.0.0 would be useful. Existing JSON reports
+could be extended with SARIF, pull-request annotations, and trends. False
+positives and the appropriateness of thresholds should be observed by profile
+or project type. Other possible baseline extensions remain automated shared
+contracts, stricter capability selection, and controlled synchronization of
+generated projects.
 
-In the long term, a comparative study across projects should measure
-onboarding, time to the first build, setup errors, and maintenance effort.
-Real-world customer projects could test the profile and suitability criteria.
+Specific products still require signing, notarization, an updater, credentials,
+deployment, authentication, and RBAC. In the long term, a comparative study
+across projects should measure onboarding, time to the first build, setup
+errors, refactoring frequency, defects, and maintenance effort. A controlled
+comparison of agent-assisted development with and without the gate could test
+whether technical rule detection has effects beyond the observed snapshot.

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import subprocess
 import sys
 
 
@@ -19,4 +18,8 @@ def prepare_command(command: list[str]) -> list[str]:
         return command
 
     command_processor = os.environ.get("COMSPEC", "cmd.exe")
-    return [command_processor, "/d", "/s", "/c", subprocess.list2cmdline(command)]
+    # Keep the batch path and its arguments separate. Pre-serializing them
+    # makes Python quote the serialized value a second time using C-runtime
+    # rules that cmd.exe does not decode. `call` makes a quoted launcher path
+    # unambiguous when it contains spaces.
+    return [command_processor, "/d", "/s", "/c", "call", *command]

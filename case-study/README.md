@@ -4,7 +4,7 @@
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
-| Last review | 2026-08-13 |
+| Last review | 2026-08-23 |
 | Audience | Maintainers, reviewers, and readers of the case study |
 
 ## Purpose
@@ -26,7 +26,7 @@ The imported source is based on the [`Latex-Template` repository at commit `a031
 | English | Beginner explanations enabled | [PDF](pdf/template-projects-case-study-en-beginner.pdf) | [beginner.tex](source/en/beginner.tex) |
 | English | Scientific text only | [PDF](pdf/template-projects-case-study-en-scientific.pdf) | [scientific.tex](source/en/scientific.tex) |
 
-The four PDFs are the only canonical release artifacts. Their reviewed checksums are recorded in [checksums.sha256](pdf/checksums.sha256). The source history includes the German scientific artifact from upstream commit [`76b8efe`](https://github.com/kleiveist/Latex-Template/commit/76b8efe), the German beginner artifact from [`32c6eca`](https://github.com/kleiveist/Latex-Template/commit/32c6eca), and the English artifacts introduced with [`a031406`](https://github.com/kleiveist/Latex-Template/commit/a031406). The current artifacts are rebuilt and reviewed from the integrated entry points whenever published content changes.
+The four PDFs are the only canonical release artifacts. Their reviewed checksums are recorded in [checksums.sha256](pdf/checksums.sha256), while [provenance.json](pdf/provenance.json) binds each PDF checksum to the current language-source digest. The source history includes the German scientific artifact from upstream commit [`76b8efe`](https://github.com/kleiveist/Latex-Template/commit/76b8efe), the German beginner artifact from [`32c6eca`](https://github.com/kleiveist/Latex-Template/commit/32c6eca), and the English artifacts introduced with [`a031406`](https://github.com/kleiveist/Latex-Template/commit/a031406). The current artifacts are rebuilt and reviewed from the integrated entry points whenever published content changes.
 
 ## Source structure
 
@@ -81,15 +81,17 @@ The build is isolated in a temporary directory and updates the selected files in
 3. Build both editions for every changed language.
 4. Review tables, diagrams, references, citations, and page layout in the generated PDFs.
 5. Update [translation-validation.md](translation-validation.md) when translated content changes.
-6. Refresh `pdf/checksums.sha256` only after the new PDFs have passed review.
+6. After all four PDFs pass review, atomically refresh their checksums and source provenance with `python case-study/build.py --record`.
 
 ## Verification
 
-Verify the reviewed PDF artifacts:
+Verify bilingual structural parity, the reviewed PDF checksums, and source/PDF provenance:
 
 ```sh
 python case-study/build.py --verify
 ```
+
+Verification fails if the German and English source inventories, structural LaTeX references, citation keys, or environment structure diverge. It also fails when a source changes after the reviewed PDFs were recorded, even if the PDF files themselves still match the older checksum manifest.
 
 Verify the build interface without changing an artifact:
 

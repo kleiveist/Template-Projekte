@@ -2,13 +2,16 @@
   \centering
   \scriptsize
   \renewcommand{\arraystretch}{1.1}
-  \caption{Outstanding and external verification items on \texttt{a4487ac}}
+  \caption{Outstanding and external verification items on \texttt{461fc751}}
   \label{tab:external-verification-items}
   \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.21\textwidth}>{\raggedright\arraybackslash}p{0.16\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}X@{}}
     \toprule
     \textbf{Verification item} & \textbf{Status} & \textbf{Reason} & \textbf{Required evidence} \\
     \midrule
-    Tooling and desktop-profile CI & FAIL & current jobs terminate in executed test steps with exit code 1 & successful repetition on the corrected commit \\
+    Backend-profile quality & FAIL & three profiles and three PostgreSQL variants fail during quality; Ruff resolution reproduced locally & corrected installation and a green matrix run on a fixed commit \\
+    Local Rust/Tauri path & FAIL & \texttt{javascriptcoregtk-4.1} and \texttt{webkit2gtk-4.1} are missing & complete quality and Tauri run with native packages \\
+    PostgreSQL and E2E locally & SKIP & test URL and Playwright configuration are absent & executed integration and E2E tests \\
+    Documentation synchronization & open & dry run reports 38 index, link, and backlink changes & synchronized documentation and another dry run \\
     Windows package & FAIL & frontend installation failed in the native Windows job & successful native build and artifact upload \\
     Release Validation & not verified & no manual or tag run is available & successful non-publishing run on a fixed commit \\
     Compose startup & not verified & only the model and master images were checked in CI & \texttt{docker compose up}, health/readiness evidence, and controlled teardown \\
@@ -19,6 +22,7 @@
   \end{tabularx}
   \smallskip
   {\scriptsize Source: Author's own compilation based on
-  \textcite{kleiveist2026acceptance,kleiveist2026release} and the current
-  GitHub Actions runs.\par}
+  \textcite{kleiveist2026acceptance,kleiveist2026release},
+  \textcite{kleiveist2026quality-implementation}, and the evaluated GitHub
+  Actions runs for the governance version.\par}
 \end{table}

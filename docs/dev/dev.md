@@ -6,6 +6,6 @@
 <!-- AUTO-GENERATED:docs-index START -->
 
 ## 📄 Pages
-- 📝 [Template final acceptance](template-final-acceptance.md)
+- 📝 [Template v1.0.0 final acceptance](template-final-acceptance.md)
 
 <!-- AUTO-GENERATED:docs-index END -->

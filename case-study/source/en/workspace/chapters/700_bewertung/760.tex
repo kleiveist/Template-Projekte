@@ -8,14 +8,30 @@ numerically.
 
 \input{workspace/tables/template-evaluation}
 
-The baseline is technically viable for the defined profiles. The core,
-presets, dependencies, and tooling support reuse, standardization, and
-flexibility. The acceptance results support generation, installation, tests,
-builds, PostgreSQL combinations, and Linux packaging
-\parencite{kleiveist2026acceptance}. More recent external runs add evidence
-for web, container, Linux, and macOS paths, but include failures in tooling,
-desktop-profile, and Windows jobs.
-The evidence is therefore robust, but varies in scope by commit and platform.
+The governance extension improves the technical enforcement of selected code-
+quality and architecture rules. Central configuration, stable rule
+identifiers, boundary, exception, and architecture tests, and local and CI
+entry points are implemented. The combined run with 333 passing tests, 135 of
+them focused quality and workflow tests, and the successful master quality job
+support this assessment.
+
+The improvement remains limited: the complete local run failed because of
+Rust system libraries, quality steps in generated backend profiles are not
+green, and the normative 900-LOC limit is technically suppressible. The rules
+also measure selected structural indicators, not long-term maintainability or
+clean code. The governance is therefore substantially expanded, but not yet
+conclusively verified across profiles, tools, and platforms.
+
+The earlier acceptance supports the technical viability of the defined
+profiles for the paths examined there. The core, presets, dependencies, and
+tooling support reuse, standardization, and flexibility. Generation,
+installation, tests, builds, PostgreSQL combinations, and Linux packaging are
+substantiated \parencite{kleiveist2026acceptance}. External runs on
+\texttt{461fc751} add a green master quality gate and evidence for web,
+container, Linux, and macOS paths; backend-profile quality, further project
+tests, and Windows remain unsuccessful
+\parencite{kleiveist2026governance-core-run,kleiveist2026governance-profiles-run,kleiveist2026governance-desktop-run}.
+The evidence varies in scope by commit and platform.
 
 Limitations include the complexity of central maintenance, manually
 synchronized contracts, and the absence of updates for generated projects.

@@ -21,6 +21,13 @@ def _args(script: Path, **overrides) -> argparse.Namespace:
     return argparse.Namespace(**values)
 
 
+def _page(title: str, backlink: str, index: str | None = None) -> str:
+    text = f"{docs_index.BACKLINK_START}\n[← Back]({backlink})\n{docs_index.BACKLINK_END}\n# {title}\n"
+    if index is not None:
+        text += f"\n{docs_index.INDEX_START}\n{index}\n{docs_index.INDEX_END}\n"
+    return text
+
+
 def test_generated_empty_labels_are_translated_but_authored_text_is_preserved(tmp_path) -> None:
     root = tmp_path / "project"
     docs = root / "docs"
@@ -87,3 +94,113 @@ def test_index_dry_run_does_not_normalize_files(monkeypatch, tmp_path) -> None:
 
     assert docs_index.main(_args(script, dry_run=True)) == 0
     assert normalized == []
+
+
+def test_navigation_check_accepts_complete_indices_and_backlinks(monkeypatch, tmp_path) -> None:
+    root = tmp_path / "project"
+    docs = root / "docs"
+    section = docs / "guide"
+    section.mkdir(parents=True)
+    (root / "README.md").write_text(
+        f"# Project\n{docs_index.INDEX_START}\n"
+        "[Docs](docs/index.md)\n[Page](docs/page.md)\n[Guide](docs/guide/guide.md)\n"
+        f"{docs_index.INDEX_END}\n",
+        encoding="utf-8",
+    )
+    (docs / "index.md").write_text(
+        _page("Docs", "../README.md", "[Page](page.md)\n[Guide](guide/guide.md)"),
+        encoding="utf-8",
+    )
+    (docs / "page.md").write_text(_page("Page", "index.md"), encoding="utf-8")
+    (section / "guide.md").write_text(
+        _page("Guide", "../index.md", "- (no pages)"),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(docs_index, "ROOT", root)
+
+    assert docs_index.check(argparse.Namespace(docs_dir="docs")) == 0
+
+
+def test_navigation_check_includes_root_markdown_pages(monkeypatch, tmp_path) -> None:
+    root = tmp_path / "project"
+    docs = root / "docs"
+    docs.mkdir(parents=True)
+    (root / "README.md").write_text(
+        f"# Project\n{docs_index.INDEX_START}\n[Agents](AGENTS.md)\n[Docs](docs/index.md)\n{docs_index.INDEX_END}\n",
+        encoding="utf-8",
+    )
+    (root / "AGENTS.md").write_text(_page("Agents", "README.md"), encoding="utf-8")
+    (docs / "index.md").write_text(
+        _page("Docs", "../README.md", "- (no pages)"),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(docs_index, "ROOT", root)
+
+    assert docs_index.check(argparse.Namespace(docs_dir="docs")) == 0
+
+
+def test_navigation_check_reports_missing_and_stale_index_entries(monkeypatch, tmp_path) -> None:
+    root = tmp_path / "project"
+    docs = root / "docs"
+    docs.mkdir(parents=True)
+    (root / "README.md").write_text(
+        f"# Project\n{docs_index.INDEX_START}\n[Docs](docs/index.md)\n{docs_index.INDEX_END}\n",
+        encoding="utf-8",
+    )
+    (docs / "index.md").write_text(
+        _page("Docs", "../README.md", "[Missing](missing.md)"),
+        encoding="utf-8",
+    )
+    (docs / "page.md").write_text(_page("Page", "index.md"), encoding="utf-8")
+    monkeypatch.setattr(docs_index, "ROOT", root)
+    messages: list[str] = []
+    monkeypatch.setattr(docs_index.logger, "fail", messages.append)
+
+    assert docs_index.check(argparse.Namespace(docs_dir="docs")) == 1
+    output = "\n".join(messages)
+    assert "generated link target does not exist" in output
+    assert "index is missing docs/page.md" in output
+    assert "index has stale entries docs/missing.md" in output
+
+
+def test_navigation_check_rejects_wrong_backlink(monkeypatch, tmp_path) -> None:
+    root = tmp_path / "project"
+    docs = root / "docs"
+    docs.mkdir(parents=True)
+    (root / "README.md").write_text(
+        f"# Project\n{docs_index.INDEX_START}\n[Docs](docs/index.md)\n[Page](docs/page.md)\n{docs_index.INDEX_END}\n",
+        encoding="utf-8",
+    )
+    (docs / "index.md").write_text(
+        _page("Docs", "../README.md", "[Page](page.md)"),
+        encoding="utf-8",
+    )
+    (docs / "page.md").write_text(_page("Page", "../README.md"), encoding="utf-8")
+    monkeypatch.setattr(docs_index, "ROOT", root)
+    messages: list[str] = []
+    monkeypatch.setattr(docs_index.logger, "fail", messages.append)
+
+    assert docs_index.check(argparse.Namespace(docs_dir="docs")) == 1
+    assert "backlink must target docs/index.md" in "\n".join(messages)
+
+
+def test_navigation_check_reports_escaping_generated_link_without_traceback(monkeypatch, tmp_path) -> None:
+    root = tmp_path / "project"
+    docs = root / "docs"
+    docs.mkdir(parents=True)
+    (root / "README.md").write_text(
+        f"# Project\n{docs_index.INDEX_START}\n"
+        "[Docs](docs/index.md)\n[Escape](../outside.md)\n"
+        f"{docs_index.INDEX_END}\n",
+        encoding="utf-8",
+    )
+    (docs / "index.md").write_text(
+        _page("Docs", "../README.md", "- (no pages)"),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(docs_index, "ROOT", root)
+    messages: list[str] = []
+    monkeypatch.setattr(docs_index.logger, "fail", messages.append)
+
+    assert docs_index.check(argparse.Namespace(docs_dir="docs")) == 1
+    assert "generated link escapes the project root" in "\n".join(messages)

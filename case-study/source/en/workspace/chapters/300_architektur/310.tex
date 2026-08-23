@@ -21,7 +21,26 @@ persistence remain independent components, some of which are optional
 The separation of components in Figure~\ref{fig:component-architecture} keeps
 the client, server, native integration, and shared artifacts distinct. Profiles
 and configuration describe the structure and runtime values; tooling and
-deployment control the components outside the product runtime.
+deployment control the components outside the product runtime. Since
+\texttt{461fc751}, quality governance has belonged to this development and CI
+area. It examines runtime sources but is neither shipped nor made part of the
+HTTP, Tauri, or persistence data flow
+\parencite{kleiveist2026governance-snapshot}.
+
+Local developers, coding agents, and GitHub Actions invoke
+\path{tools/control.py}. The dispatcher delegates to the separate quality
+orchestration, which combines central policy, repository scanning,
+language-specific tools, backend and frontend architecture checks, exception
+handling, and reporting. Figure~\ref{fig:verification-model} presents this
+control flow in Section~\ref{subsec:teststrategie}. The architecture decision
+adds a verification layer to the existing runtime architecture, not another
+product component.
+
+The governance commit also corrected the health router's previous direct
+coupling to SQLAlchemy and \path{app.db}: the router now delegates to a service,
+while concrete infrastructure is wired in \path{backend/app/main.py}. This is
+an observable before-and-after case for the subsequently automated backend
+boundaries \parencite{kleiveist2026governance-commit}.
 
 \input{workspace/figures/architecture/runtime-architecture}
 

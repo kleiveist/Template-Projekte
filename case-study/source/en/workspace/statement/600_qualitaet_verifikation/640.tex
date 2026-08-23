@@ -11,4 +11,13 @@ reliably. The toolchain comprises the runtimes, compilers, and build tools in
 use. Differences in the operating system, toolchain, network, or platform SDKs
 can nevertheless affect reproduction.
 
+For the Rust analyzer, provenance binds the exact compiler, target and
+dependency versions and checksums for the build script, Cargo files, toolchain
+file, and Rust sources to the checked-in WASI artifact. The build replaces
+private source, home, Cargo, toolchain, and dependency paths with fixed virtual
+paths. Three relocated Linux builds --- including paths with spaces and a local
+vendor directory --- were byte-identical. This is narrow evidence for the
+pinned Linux builder, not a guarantee of byte identity on macOS, Windows, or
+with future compilers.
+
 \end{beginnerstatement}

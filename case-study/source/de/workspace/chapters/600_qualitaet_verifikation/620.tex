@@ -5,7 +5,7 @@ Core CI, Profile Matrix, PostgreSQL Integration und Desktop CI prüfen getrennt
 Baseline, fünf Profile, PostgreSQL-Kombinationen und native Pakete. Release
 Validation läuft nur manuell oder für Versionstags. Seit Governance~v1 besitzt
 Core CI bei Pull Request, Push auf \texttt{main} und manueller Ausführung einen
-vorgelagerten Ubuntu-Quality-Job mit Python~3.11, Node~20, Rust Stable,
+vorgelagerten Ubuntu-Quality-Job mit Python~3.11, Node~24, Rust~1.97.1,
 rustfmt, Clippy, Caches und Tauri-Systempaketen. Er ruft \texttt{quality} über
 \path{tools/control.py} auf. \texttt{continue-on-error} ist nicht gesetzt;
 Tooling, Backend, Frontend und Container deklarieren \texttt{needs: quality}
@@ -17,6 +17,16 @@ für drei Backendprofile. Der Release-Workflow setzt Quality vor Tests und
 Artefakte. Desktop CI und der direkte PostgreSQL-Job haben dagegen kein eigenes
 Gate. Die Reihenfolge
 \enquote{Quality vor Tests vor Build} gilt daher nicht pauschal für jeden Workflow.
+
+Der aktuelle v1.0.0-Workflowstand fixiert Node~24, Rust~1.97.1 und für die
+Integrationsjobs PostgreSQL~16.15 im Image \texttt{16.15-alpine3.24}. Core CI
+und Release Validation bauen beziehungsweise prüfen zusätzlich den mit
+Syn~2.0.119 erzeugten \texttt{wasm32-wasip1}-Analyzer und führen ihn mit der
+gepinnten Wasmtime-Version~47.0.1 aus. Core und Release bauen und vergleichen
+das Artefakt auf Ubuntu; Desktop CI führt das eingecheckte Artefakt unter
+Linux, macOS und Windows nur aus und baut es dort nicht neu. Diese
+Workflowkonfiguration beschreibt das gegenwärtige Gate; ein Remote-PASS muss
+weiterhin auf dem finalen Commit nachgewiesen werden.
 
 Die am 9.~August~2026 abgefragten Läufe vom 7.~August gehören zu HEAD
 \texttt{a4487ac} und sind nicht vollständig grün. Core CI war für Backend,
@@ -45,11 +55,13 @@ Frontend-Installation scheiterte
 
 Öffentliche Metadaten belegen Job und Schrittstatus, die Protokollarchive waren
 ohne Berechtigung nicht abrufbar. Die in
-Abschnitt~\ref{subsec:systempruefung-installation} beschriebene frische lokale
-Reproduktion erklärt die Profilfehler plausibel durch die Ruff-Auflösung; dies
-ist eine aus Implementierung, Workflow und Reproduktion abgeleitete Erklärung,
-kein direktes Zitat aus den CI-Logs. Der grüne Core-Quality-Job belegt damit
-das blockierende Gate im Master-Workflow, nicht die Profilverträglichkeit.
+Abschnitt~\ref{subsec:systempruefung-installation} für \texttt{461fc751}
+beschriebene lokale Reproduktion erklärt die damaligen Profilfehler plausibel
+durch die Ruff-Auflösung; dies ist eine aus Implementierung, Workflow und
+Reproduktion abgeleitete Erklärung, kein direktes Zitat aus den CI-Logs. Der
+grüne Core-Quality-Job belegt damit das blockierende Gate im damaligen
+Master-Workflow, nicht die Profilverträglichkeit des später korrigierten
+Freigabestands.
 
 Lokal bestanden am 9.~August~2026 auf \texttt{a4487ac} unter Python~3.13.14 alle
 194 Tooling-Tests sowie Schema-, API- und SQLAlchemy-Tests. Das ersetzt weder

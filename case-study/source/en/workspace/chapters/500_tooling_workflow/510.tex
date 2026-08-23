@@ -3,27 +3,77 @@
 
 \path{tools/control.py} consolidates the public workflows. Its commands cover
 initialization, diagnostics, installation, development, configuration,
-database operations, tests, builds, containers, Tauri, versioning, releases,
+database operations, quality, tests, builds, containers, Tauri, versioning, releases,
 and documentation. Help and group views structure this interface
-\parencite{kleiveist2026control,kleiveist2026tooling}.
+\parencite{kleiveist2026control,kleiveist2026quality-implementation}.
 The principal entry points include \texttt{init}, \texttt{doctor},
-\texttt{install}, \texttt{run}, \texttt{test}, and \texttt{build}. The
+\texttt{install}, \texttt{run}, \texttt{quality}, \texttt{test}, and \texttt{build}. The
 \texttt{db}, \texttt{tauri}, \texttt{container}, and \texttt{release} groups
 add only the specialized workflows required in each case.
 
 \input{workspace/figures/tooling/control-command-map}
 
-The handlers load the manifest and, when required, the runtime configuration,
-then delegate to the respective specialized tools. These tools remain
-independent. The guided \texttt{console} invokes the same commands and does
-not form a second system.
+The governance commit split the dispatcher, which previously comprised 592
+physical lines. In the examined state, \path{tools/control.py} comprises 197
+lines and acts as a composition root; parser definitions reside in
+\path{tools/control_parser.py}, while the check itself is implemented in the
+modular \path{tools/quality/} package. That package has no reverse dependency
+on the dispatcher. The assessment therefore considers responsibility,
+coupling, and delegation rather than file length alone
+\parencite{kleiveist2026governance-commit}.
 
-Different exit codes distinguish help and success, domain errors, usage
-errors, and cancellation. Expected profile and generation errors are shown
-without a traceback; unexpected exceptions are logged. This convention
-supports interactive diagnostics and CI evaluation
-\parencite{kleiveist2026control,kleiveist2026ci}.
-In particular, successful execution, domain failure, and incorrect usage can
-be distinguished programmatically. Warnings do not automatically block the
-workflow.
+With no action, \texttt{quality} is equivalent to the \texttt{check}
+subcommand. Focused actions are \texttt{size}, \texttt{complexity},
+\texttt{architecture}, \texttt{lint}, and \texttt{format}; options include
+\texttt{--config} and \texttt{--format text|json}. Every action loads the
+policy, scans the repository, and validates exceptions. The complete action
+also combines size and complexity rules, architecture checks, language tools,
+compiler checks, and format checks.
+
+Exit code~0 requires successful tool checks and no active error findings. An
+unsuppressed \emph{ERROR} finding or a failed required tool produces~1.
+Parser, configuration, and scan errors produce~2, and keyboard interruption
+at dispatcher level produces~130. \emph{INFO}, \emph{WARNING}, and strong
+warning do not block by themselves. \emph{INFO} is represented and counted in
+the JSON report, but no v1 rule produces it. External linter, compiler, and
+formatter errors appear as failed checks with tool output, not always as a
+structured finding with a CQ identifier.
+
+Table~\ref{tab:quality-rule-groups} summarizes the 13 implemented rule
+identifiers. CQ severity depends on the applicable threshold; AR and EX
+findings are errors.
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Rule groups in Governance~v1}
+  \label{tab:quality-rule-groups}
+  \begin{tabularx}{\textwidth}{@{}p{0.15\textwidth}p{0.31\textwidth}>{\raggedright\arraybackslash}X p{0.16\textwidth}@{}}
+    \toprule
+    \textbf{Group} & \textbf{Rule IDs} & \textbf{Subject} &
+      \textbf{Severity} \\
+    \midrule
+    Code quality & \texttt{CQ001}, \texttt{CQ002},
+      \texttt{CQ101}--\texttt{CQ104}, \texttt{CQ201} & File, function,
+      and class size, complexity, nesting, and parameters & threshold-dependent \\
+    Architecture & \texttt{AR001}--\texttt{AR004} & Layer and framework
+      dependencies, feature internals, and router heuristic & ERROR \\
+    Exceptions & \texttt{EX001}, \texttt{EX002} & Invalid or expired
+      exception entries & ERROR \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Source: Author's own compilation based on
+  \textcite{kleiveist2026quality-implementation}.\par}
+\end{table}
+
+Repository findings contain a path, optional line and symbol, ID, name,
+severity, actual value, threshold, detail, and remediation advice. Suppressed
+findings remain visible with their rationale; the summary counts severity
+levels and exceptions. The text report does not list INFO separately, whereas
+the JSON report does. In addition, the \texttt{files\_checked} count is in
+practice populated only by the size check, so focused complexity and
+architecture runs can report zero files despite examining source files. This
+reporting limitation does not alter finding status.
 \beginnerinput{workspace/statement/500_tooling_workflow/510}

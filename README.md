@@ -2,6 +2,18 @@
 
 This repository is the master template for applications built with Vite and TypeScript, FastAPI, and Tauri 2. It keeps one shared core and provides project profiles instead of separate template repositories.
 
+<!-- MASTER-ONLY START -->
+## Template release status
+
+| Field | Value |
+| --- | --- |
+| Version / release tag | `1.0.0` / annotated tag `v1.0.0` |
+| Baseline commit | `461fc7519e0db638330904a7496c488e8a0d18bc` |
+| Documentation review | 2026-08-23 |
+
+The version metadata alone is not a release claim. `v1.0.0` is the released version only when the annotated tag points to one final commit for which the local quality, test, profile, PostgreSQL, desktop, and documentation checks and all required GitHub Actions runs succeeded. Core CI exposes six jobs, including the read-only `Core / Documentation Check`; every required run references that same final commit. The exact final commit belongs in the tag, release evidence, and release manifest rather than in a file that would change that commit again.
+<!-- MASTER-ONLY END -->
+
 ## Start here
 
 Most developers should generate a new product project from this repository and then work in the generated project. Do not build product features directly in the cloned master template.
@@ -11,7 +23,7 @@ Product development (normal path)
 Master template -> choose a profile -> generate a project -> change directory -> install -> run
 
 Template maintenance
-Master template -> doctor -> install -> test or develop the template itself
+Master template -> doctor -> install -> quality -> test or develop the template itself
 ```
 
 The complete first-time product workflow is:
@@ -24,6 +36,7 @@ git clone
     -> cd into the generated project
     -> python tools/control.py doctor
     -> python tools/control.py install
+    -> python tools/control.py quality
     -> python tools/control.py run
     -> start product development
 ```
@@ -34,7 +47,7 @@ Always required:
 
 - Git
 - Python 3.11 or newer
-- Node.js 20 or newer with npm
+- Node.js 24 or newer with npm
 
 Required for desktop profiles:
 
@@ -162,6 +175,8 @@ python tools/control.py install
 
 `install` is the public setup command. It installs only the frontend, backend, shared tooling, and optional browser-test components relevant to the active project. You do not need to begin with separate `npm install`, `pip install`, or Cargo commands.
 
+After installation, run `python tools/control.py quality` before changing shared architecture or handing work off. The gate checks repository size and architecture rules together with the enabled Python, frontend, and Rust toolchains. Warnings remain visible and non-blocking; an error or failed required tool returns a non-zero exit code.
+
 #### Step 8: Start development
 
 ```sh
@@ -232,10 +247,15 @@ cd Template-Projekte
 
 python tools/control.py doctor
 python tools/control.py install
+python tools/control.py config doctor
+python tools/control.py quality
 python tools/control.py test --suite all
+python tools/control.py build web
+python tools/control.py version check
+python tools/control.py docs check
 ```
 
-Use `python tools/control.py run` when developing the master template's reference application locally. Template maintainers can also use the focused commands described in the [Tooling Guide](docs/tools/tooling.md).
+Use `python tools/control.py run` when developing the master template's reference application locally. After adding, moving, renaming, or removing documentation pages, optionally preview navigation changes with `python tools/control.py docs index --dry-run`, regenerate them with `python tools/control.py docs index`, inspect the diff, and finish with the read-only `python tools/control.py docs check`. Template maintainers can also use the focused commands described in the [Tooling Guide](docs/tools/tooling.md).
 
 ## Included stack
 
@@ -260,8 +280,9 @@ PostgreSQL support adds SQLAlchemy, Alembic, and Psycopg only when selected with
 ## Project structure
 
 ```text
+AGENTS.md           Coding-agent governance copied into generated projects
 backend/             FastAPI application and API tests (backend profiles only)
-config/              Declarative runtime environment contract
+config/              Runtime environment and code-quality policy
 deployment/          Provider-neutral Docker and Compose baseline (cloud profiles only)
 docs/                Documentation rules, architecture, and acceptance plans
 frontend/            Vite and TypeScript application and frontend tests
@@ -270,6 +291,7 @@ project-profile.toml Active feature preset for the current project root
 shared/              Framework-neutral contracts, examples, and shared assets
 src-tauri/           Tauri configuration and Rust application (desktop profiles only)
 tools/control.py     Shared project CLI entry point
+VERSION              Application version source of truth
 ```
 
 ## Detailed documentation
@@ -282,6 +304,7 @@ The README answers “How do I start?” The linked guides answer “How does it
 - [Provider-neutral persistence architecture](docs/def/persistence-architecture.md): data categories, sources of truth, and provider decisions
 - [Database feature](docs/def/database-feature.md): optional PostgreSQL and migrations
 - [Framework architecture](docs/def/architecture.md): component boundaries
+- [Code quality and architecture governance](docs/def/code-quality.md): enforceable limits, rule IDs, exceptions, and the central quality gate
 - [Deployment architecture](docs/def/deployment-architecture.md): production units and health contracts
 - [Continuous Integration](docs/tools/ci.md): automated profile and platform checks
 - [Release model](docs/tools/release-model.md): validation and desktop packaging
@@ -297,7 +320,7 @@ English is the only documentation language for this repository and projects deri
 <!-- AUTO-GENERATED:docs-index START -->
 
 ## 📄 Files
-- ⏭️ (no Markdown files in the project root)
+- 📝 [Coding Agent Governance](AGENTS.md)
 
 # DOCS
 - 📚 [Docs Home](docs/index.md)
@@ -310,6 +333,7 @@ English is the only documentation language for this repository and projects deri
 ## 📁 DEF
 - 🗂️ [Overview](docs/def/def.md)
 - 📝 [Framework architecture](docs/def/architecture.md)
+- 📝 [Code quality and architecture governance](docs/def/code-quality.md)
 - 📝 [Runtime configuration](docs/def/configuration.md)
 - 📝 [Database feature](docs/def/database-feature.md)
 - 📝 [Deployment architecture](docs/def/deployment-architecture.md)
@@ -318,13 +342,14 @@ English is the only documentation language for this repository and projects deri
 
 ## 📁 DEV
 - 🗂️ [Overview](docs/dev/dev.md)
-- 📝 [Template final acceptance](docs/dev/template-final-acceptance.md)
+- 📝 [Template v1.0.0 final acceptance](docs/dev/template-final-acceptance.md)
 
 ## 📁 Tools
 - 🗂️ [Overview](docs/tools/tools.md)
 - 📝 [Continuous Integration](docs/tools/ci.md)
 - 📝 [Container builds and local production simulation](docs/tools/container-builds.md)
 - 📝 [Release and desktop packaging model](docs/tools/release-model.md)
+- 📝 [Template-Projekte v1.0.0 release notes](docs/tools/release-notes-v1.0.0.md)
 - 📝 [Tooling Guide](docs/tools/tooling.md)
 
 ## 📁 USR

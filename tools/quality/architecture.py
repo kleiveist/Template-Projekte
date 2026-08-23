@@ -1,24 +1,32 @@
 from __future__ import annotations
 
 import ast
-import importlib.util
 from pathlib import Path
 
-from tools.quality.model import CheckResult, Finding, QualityConfig, RULES, Severity
+from tools.quality.model import RULES, CheckResult, Finding, QualityConfig, Severity
+from tools.quality.python_imports import imported_modules
 from tools.quality.scanner import SourceMetrics
 from tools.quality.typescript import TypeScriptAnalysis, TypeScriptImport
 
 HTTP_DECORATORS = frozenset({"delete", "get", "head", "options", "patch", "post", "put", "trace", "websocket"})
+QUALITY_FORBIDDEN_TOOLING_IMPORTS = ("tools.control", "tools.control_parser")
+FRONTEND_ENTRY_MODULES = frozenset({"main.js", "main.jsx", "main.ts", "main.tsx"})
 
 
-def _backend_layer(path: Path, root: Path, config: QualityConfig) -> str | None:
+def _backend_directory(path: Path, root: Path, config: QualityConfig) -> str | None:
     try:
         relative = path.relative_to(root / config.backend_architecture.root)
     except ValueError:
         return None
     if len(relative.parts) < 2:
         return None
-    directory = relative.parts[0]
+    return relative.parts[0]
+
+
+def _backend_layer(path: Path, root: Path, config: QualityConfig) -> str | None:
+    directory = _backend_directory(path, root, config)
+    if directory is None:
+        return None
     architecture = config.backend_architecture
     if directory in architecture.api_layers:
         return "api"
@@ -29,6 +37,46 @@ def _backend_layer(path: Path, root: Path, config: QualityConfig) -> str | None:
     if directory in architecture.infrastructure_layers:
         return "infrastructure"
     return None
+
+
+def _backend_classification_finding(path: Path, root: Path, config: QualityConfig) -> Finding | None:
+    architecture = config.backend_architecture
+    try:
+        backend_relative = path.relative_to(root / architecture.root)
+    except ValueError:
+        return None
+    relative = path.relative_to(root).as_posix()
+    if len(backend_relative.parts) == 1:
+        if backend_relative.name in architecture.composition_files:
+            return None
+        return Finding(
+            RULES["AR001"],
+            Severity.ERROR,
+            relative,
+            f"Backend root module '{backend_relative.name}' is not a configured composition file.",
+            actual=f"unclassified-root:{backend_relative.name}",
+            threshold="configured backend composition file",
+            line=1,
+        )
+    directory = backend_relative.parts[0]
+    classified = (
+        architecture.api_layers
+        | architecture.application_layers
+        | architecture.domain_layers
+        | architecture.infrastructure_layers
+        | architecture.support_directories
+    )
+    if directory in classified:
+        return None
+    return Finding(
+        RULES["AR001"],
+        Severity.ERROR,
+        relative,
+        f"Backend directory '{directory}' is not a configured layer or support directory.",
+        actual=f"unclassified:{directory}",
+        threshold="configured backend layer or support directory",
+        line=1,
+    )
 
 
 def _module_name(path: Path, backend_root: Path, package: str) -> tuple[str, str]:
@@ -44,37 +92,21 @@ def _module_name(path: Path, backend_root: Path, package: str) -> tuple[str, str
     return module, current_package
 
 
-def _imported_modules(tree: ast.AST, current_package: str) -> list[tuple[str, int]]:
-    imports: list[tuple[str, int]] = []
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            imports.extend((alias.name, node.lineno) for alias in node.names)
-            continue
-        if not isinstance(node, ast.ImportFrom):
-            continue
-        module = node.module or ""
-        if node.level:
-            try:
-                base = importlib.util.resolve_name(f"{'.' * node.level}{module}", current_package)
-            except (ImportError, ValueError):
-                continue
-        else:
-            base = module
-        if base:
-            imports.append((base, node.lineno))
-        if not module or base.partition(".")[0] == base:
-            imports.extend(
-                (f"{base}.{alias.name}".strip("."), node.lineno) for alias in node.names if alias.name != "*"
-            )
-    return imports
-
-
 def _target_backend_layer(module: str, config: QualityConfig) -> str | None:
     parts = module.split(".")
     architecture = config.backend_architecture
-    if len(parts) < 2 or parts[0] != architecture.package:
+    package_parts = architecture.package.split(".")
+    root_parts = list(Path(architecture.root).parts)
+    prefixes = [package_parts]
+    if root_parts != package_parts:
+        prefixes.append(root_parts)
+    prefix = next(
+        (candidate for candidate in prefixes if parts[: len(candidate)] == candidate),
+        None,
+    )
+    if prefix is None or len(parts) <= len(prefix):
         return None
-    directory = parts[1]
+    directory = parts[len(prefix)]
     if directory in architecture.api_layers:
         return "api"
     if directory in architecture.application_layers:
@@ -168,6 +200,59 @@ def _backend_import_findings(
     return findings
 
 
+def _backend_frontend_finding(relative: str, imported: str, line: int) -> Finding | None:
+    if imported != "frontend" and not imported.startswith("frontend."):
+        return None
+    return Finding(
+        RULES["AR001"],
+        Severity.ERROR,
+        relative,
+        f"Backend code imports frontend implementation module {imported}.",
+        actual="backend->frontend",
+        threshold="backend must use shared contracts, not frontend implementation",
+        line=line,
+    )
+
+
+def _findings_for_backend_imports(
+    tree: ast.AST,
+    current_package: str,
+    layer: str | None,
+    relative: str,
+    config: QualityConfig,
+) -> list[Finding]:
+    findings: list[Finding] = []
+    seen: set[tuple[str, int, str]] = set()
+    architecture = config.backend_architecture
+    package_roots = frozenset(
+        {
+            architecture.package,
+            ".".join(architecture.root.parts),
+        }
+    )
+    for imported, line in imported_modules(tree, current_package, expand_from_roots=package_roots):
+        candidates = []
+        boundary_finding = _backend_frontend_finding(relative, imported, line)
+        if boundary_finding is not None:
+            candidates.append(boundary_finding)
+        if layer is not None:
+            candidates.extend(
+                _backend_import_findings(
+                    layer=layer,
+                    imported=imported,
+                    line=line,
+                    relative=relative,
+                    config=config,
+                )
+            )
+        for finding in candidates:
+            key = (finding.rule.rule_id, line, imported)
+            if key not in seen:
+                findings.append(finding)
+                seen.add(key)
+    return findings
+
+
 def _router_size_findings(
     tree: ast.AST,
     relative: str,
@@ -205,12 +290,17 @@ def _check_backend(root: Path, config: QualityConfig, metrics: list[SourceMetric
     if not backend_root.is_dir():
         return
     metric_map = {source.path: source for source in metrics}
-    seen: set[tuple[str, str, int, str]] = set()
-    for path in sorted(backend_root.rglob("*.py")):
+    backend_paths = sorted(
+        source.path
+        for source in metrics
+        if source.path.suffix.lower() == ".py" and source.path.is_relative_to(backend_root)
+    )
+    for path in backend_paths:
         layer = _backend_layer(path, root, config)
-        if layer is None:
-            continue
         relative = path.relative_to(root).as_posix()
+        classification_finding = _backend_classification_finding(path, root, config)
+        if classification_finding is not None:
+            result.findings.append(classification_finding)
         try:
             text = path.read_text(encoding="utf-8")
             tree = ast.parse(text)
@@ -219,23 +309,72 @@ def _check_backend(root: Path, config: QualityConfig, metrics: list[SourceMetric
             result.detail = f"backend architecture parsing failed for {relative}: {exc}"
             continue
         _, current_package = _module_name(path, backend_root, architecture.package)
-        for imported, line in _imported_modules(tree, current_package):
-            for finding in _backend_import_findings(
-                layer=layer,
-                imported=imported,
-                line=line,
-                relative=relative,
-                config=config,
-            ):
-                key = (finding.rule.rule_id, relative, line, imported)
-                if key not in seen:
-                    result.findings.append(finding)
-                    seen.add(key)
+        result.findings.extend(_findings_for_backend_imports(tree, current_package, layer, relative, config))
+        if layer is None:
+            continue
         if layer != "api":
             continue
         source_metric = metric_map.get(path)
         code_lines = source_metric.code_line_numbers if source_metric else frozenset()
         result.findings.extend(_router_size_findings(tree, relative, code_lines, architecture.router_handler_max_lines))
+
+
+def _tooling_import_findings(relative: str, imported: str, line: int) -> list[Finding]:
+    findings: list[Finding] = []
+    quality_source = relative.startswith("tools/quality/")
+    imports_dispatcher = any(
+        imported == forbidden or imported.startswith(f"{forbidden}.") for forbidden in QUALITY_FORBIDDEN_TOOLING_IMPORTS
+    )
+    if quality_source and imports_dispatcher:
+        findings.append(
+            Finding(
+                RULES["AR001"],
+                Severity.ERROR,
+                relative,
+                f"Quality implementation imports the top-level CLI dispatcher {imported}.",
+                actual="quality->control",
+                threshold="control->command->quality",
+                line=line,
+            )
+        )
+    if imported == "frontend" or imported.startswith("frontend."):
+        findings.append(
+            Finding(
+                RULES["AR001"],
+                Severity.ERROR,
+                relative,
+                f"Tooling code imports frontend implementation module {imported}.",
+                actual="tooling->frontend",
+                threshold="tooling must use repository contracts, not frontend UI implementation",
+                line=line,
+            )
+        )
+    return findings
+
+
+def _check_tooling(root: Path, metrics: list[SourceMetrics], result: CheckResult) -> None:
+    tooling_root = root / "tools"
+    if not tooling_root.is_dir():
+        return
+    tooling_paths = sorted(
+        source.path
+        for source in metrics
+        if source.path.suffix.lower() == ".py" and source.path.is_relative_to(tooling_root)
+    )
+    for path in tooling_paths:
+        relative_path = path.relative_to(tooling_root)
+        if relative_path.parts and relative_path.parts[0] == "tests":
+            continue
+        relative = path.relative_to(root).as_posix()
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, SyntaxError) as exc:
+            result.passed = False
+            result.detail = f"tooling architecture parsing failed for {relative}: {exc}"
+            continue
+        _, current_package = _module_name(path, tooling_root, "tools")
+        for imported, line in imported_modules(tree, current_package):
+            result.findings.extend(_tooling_import_findings(relative, imported, line))
 
 
 def _frontend_relative(path: str, config: QualityConfig) -> Path | None:
@@ -258,7 +397,12 @@ def _resolve_frontend_import(root: Path, edge: TypeScriptImport, config: Quality
         base = source.parent / specifier
     else:
         return None
-    candidates = [base]
+    if base.suffix == ".js":
+        candidates = [base.with_suffix(suffix) for suffix in (".ts", ".tsx", ".d.ts", ".js", ".jsx")]
+    elif base.suffix == ".jsx":
+        candidates = [base.with_suffix(suffix) for suffix in (".tsx", ".ts", ".d.ts", ".jsx", ".js")]
+    else:
+        candidates = [base]
     if not base.suffix:
         candidates.extend(base.with_suffix(suffix) for suffix in (".ts", ".tsx", ".js", ".jsx"))
         candidates.extend(base / name for name in config.frontend_architecture.public_module_names)
@@ -297,6 +441,15 @@ def _is_public_feature_target(path: Path, feature: str, config: QualityConfig) -
     )
 
 
+def _invalid_frontend_layer(source_kind: str, target_kind: str, target_relative: Path) -> bool:
+    target_is_entry = target_relative.as_posix() in FRONTEND_ENTRY_MODULES
+    if source_kind == "shared":
+        return target_kind in {"api", "app", "feature", "ui"}
+    if source_kind == "api":
+        return target_kind in {"feature", "ui"} or target_is_entry
+    return source_kind == "feature" and target_is_entry
+
+
 def _check_frontend(
     root: Path,
     config: QualityConfig,
@@ -315,13 +468,7 @@ def _check_frontend(
             continue
         source_kind, source_feature = _frontend_kind(source_relative, config)
         target_kind, target_feature = _frontend_kind(target_relative, config)
-        invalid_layer = (source_kind == "shared" and target_kind in {"api", "app", "feature", "ui"}) or (
-            source_kind == "api"
-            and (
-                target_kind in {"feature", "ui"}
-                or target_relative.as_posix() in {"main.js", "main.jsx", "main.ts", "main.tsx"}
-            )
-        )
+        invalid_layer = _invalid_frontend_layer(source_kind, target_kind, target_relative)
         if invalid_layer:
             result.findings.append(
                 Finding(
@@ -362,6 +509,7 @@ def architecture_result(
 ) -> CheckResult:
     result = CheckResult("Architecture")
     _check_backend(root, config, metrics, result)
+    _check_tooling(root, metrics, result)
     if (root / config.frontend_architecture.root).is_dir():
         _check_frontend(root, config, typescript, result)
     return result

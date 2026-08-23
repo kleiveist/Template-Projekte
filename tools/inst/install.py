@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from tools import logger
+from tools.inst.tooling_runtime import TOOLING_RUNTIME_PROBE
 from tools.process import prepare_command
 from tools.profiles import runtime as profile_runtime
 
@@ -341,21 +342,17 @@ def _install_backend() -> StepResult:
     return StepResult("backend", "FAIL", f"backend install failed without uv: {pip_msg}")
 
 
-def _runtime_imports(python: Path, modules: str) -> bool:
+def _tooling_runtime_ready(python: Path) -> bool:
     if not python.exists():
         return False
-    completed = _run([str(python), "-c", f"import {modules}"], cwd=ROOT)
+    completed = _run([str(python), "-c", TOOLING_RUNTIME_PROBE], cwd=ROOT)
     return completed.returncode == 0
 
 
 def _install_tooling_runtime() -> StepResult:
     tooling_python = _venv_python(TOOLS_VENV)
-    if _runtime_imports(tooling_python, "pytest"):
-        return StepResult("tooling", "OK", "tools/.venv already provides pytest")
-
-    backend_python = _venv_python(ROOT / "backend" / ".venv")
-    if not TOOLS_VENV.exists() and _runtime_imports(backend_python, "pytest"):
-        return StepResult("tooling", "OK", "pytest provided by backend virtualenv")
+    if _tooling_runtime_ready(tooling_python):
+        return StepResult("tooling", "OK", "tools/.venv already provides quality and test dependencies")
 
     if not TOOLS_REQUIREMENTS.exists():
         return StepResult("tooling", "FAIL", "missing tools/requirements.txt")

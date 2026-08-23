@@ -9,10 +9,28 @@ Here, \emph{Core} denotes the paths included in every product project. A
 while a \emph{profile} represents a permissible combination of features. A
 \emph{capability} optionally extends a profile and is not itself a platform
 profile. The \emph{manifest} records the selection in the generated project
-\parencite{kleiveist2026profiles,kleiveist2026template}.
+\parencite{kleiveist2026profiles,kleiveist2026governance-snapshot}.
 The Core includes version information, configuration, documentation, profile
 descriptions, shared artifacts, and tooling, among other elements. Technical
 runtime components, by contrast, reside in the selected feature paths.
+
+Governance~v1 extends the Core with \path{AGENTS.md},
+\path{config/code-quality.toml}, the quality documentation, and
+\path{tools/quality/}; the generator copies these paths into all five profiles
+\parencite{kleiveist2026quality-policy}. Component-dependent checks are derived
+from the generated structure: frontend tools require an existing
+\path{frontend/package.json}, Rust checks require
+\path{src-tauri/Cargo.toml}, and architecture checks require the corresponding
+source path. A normally generated \texttt{web-only} project therefore needs no
+Rust toolchain.
+
+This compatibility is structure-based, not manifest-based. A subsystem that
+is active in the manifest but accidentally absent can be reported as
+\enquote{not enabled} with a successful check; the reporter has no dedicated
+\texttt{SKIP} status. Manifest consistency remains the responsibility of the
+doctor, profile, and generator checks. The claim that the gate respects
+profiles therefore applies to normally generated scaffolds, not arbitrary
+inconsistent directory states.
 
 \input{workspace/figures/profiles/profile-model}
 
@@ -40,7 +58,7 @@ tooling validates it and handles only active services and workflows. The
 master manifest uses \texttt{full-platform + postgres} without modifying the
 preset itself. Runtime values, ports, URLs, and secrets instead belong to the
 separate configuration model
-\parencite{kleiveist2026configuration,kleiveist2026template}.
+\parencite{kleiveist2026configuration,kleiveist2026governance-snapshot}.
 Requested optional features and the resolved result remain separately visible
 in the manifest. This distinction makes transitive dependencies traceable.
 

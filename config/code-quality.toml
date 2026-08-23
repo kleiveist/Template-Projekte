@@ -64,6 +64,8 @@ api_layers = ["api"]
 application_layers = ["application", "services"]
 domain_layers = ["domain"]
 infrastructure_layers = ["db", "infrastructure"]
+support_directories = ["config"]
+composition_files = ["__init__.py", "main.py"]
 forbidden_dependencies = [
   "api->infrastructure",
   "application->api",

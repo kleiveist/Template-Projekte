@@ -13,4 +13,61 @@ state and the artifact \parencite{lamb2022reproducible-builds}. It should be
 possible to generate target artifacts in a controlled manner, and configuration
 priorities should be comprehensible; server-side secrets remain separate from
 client configuration.
+
+Governance~v1 functionally adds the loading and validation of a versioned
+policy, selection of supported source files, code and physical-line counts,
+scope metrics, architecture rules, exclusions, temporary exceptions, and text
+and JSON reporting. Findings should identify the path, optional line and
+symbol, rule ID and name, severity, actual value, threshold, explanation, and
+remediation. Non-functional requirements include a shared local and CI entry
+point, quality logic separated from the dispatcher, controlled failures for
+invalid configuration, and compatibility with generated profiles
+\parencite{kleiveist2026quality-policy}.
+
+Table~\ref{tab:quality-thresholds} shows the implemented default
+classification. \emph{WARNING} and \emph{STRONG\_WARNING} provide information
+without changing the exit code by themselves; \emph{ERROR} blocks unless an
+applicable exception exists.
+
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \renewcommand{\arraystretch}{1.08}
+  \caption{Project-specific thresholds in Governance~v1}
+  \label{tab:quality-thresholds}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X>{\centering\arraybackslash}p{0.13\textwidth}>{\centering\arraybackslash}p{0.15\textwidth}>{\centering\arraybackslash}p{0.18\textwidth}>{\centering\arraybackslash}p{0.13\textwidth}@{}}
+    \toprule
+    \textbf{Metric} & \textbf{PASS} & \textbf{WARNING} &
+      \textbf{STRONG\_WARNING} & \textbf{ERROR} \\
+    \midrule
+    Code LOC per file       & 0--600  & 601--750 & 751--900 & 901 or more \\
+    Physical lines          & 0--1200 & 1201 or more & --  & -- \\
+    Code LOC per function   & 0--50   & 51--80   & 81--120 & 121 or more \\
+    Code LOC per class      & 0--300  & 301--500 & 501--700 & 701 or more \\
+    Cyclomatic complexity   & 1--10   & 11--15   & 16--20   & 21 or more \\
+    Nesting depth           & 0--3    & 4        & 5        & 6 or more \\
+    Parameters per function & 0--5    & 6--8     & 9--10    & 11 or more \\
+    FastAPI handler, code LOC & 0--50  & --       & --       & 51 or more \\
+    \bottomrule
+  \end{tabularx}
+  \smallskip
+  {\footnotesize Source: Author's own compilation based on
+  \textcite{kleiveist2026quality-config}.\par}
+\end{table}
+
+The 900-code-line boundary is a project-specific governance decision, not a
+universal scientific clean-code threshold: 900 LOC are permitted but already
+fall in the strong-warning band; 901 LOC are normally classified as
+\texttt{CQ001 ERROR}. Likewise, 120 function lines, 700 class lines,
+complexity~20, five nesting levels, and ten parameters operationalize this
+repository's policy. McCabe's source establishes the cyclomatic metric, not
+the threshold of 20 chosen here \parencite{mccabe1976complexity}.
+
+The file limit is an outer safety net. A file with 850 LOC may be problematic
+despite satisfying the hard limit; a file with 200 LOC may still exhibit high
+complexity, unfavorable dependencies, or mixed responsibilities. The metrics
+are automatable indicators and replace neither domain-aware code review nor an
+empirical maintainability measurement. The technical suppressibility of
+\texttt{CQ001} is therefore assessed separately in
+Section~\ref{subsec:schwaechen-grenzen}.
 \beginnerinput{workspace/statement/200_anforderungen/240}

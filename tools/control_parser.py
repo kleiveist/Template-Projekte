@@ -392,7 +392,7 @@ def _add_config_parser(subparsers: argparse._SubParsersAction) -> None:
 def _add_docs_parser(subparsers: argparse._SubParsersAction) -> None:
     docs_parser = subparsers.add_parser(
         "docs",
-        help="manage documentation navigation with PyGitIndex",
+        help="check documentation navigation and regenerate it with PyGitIndex",
         description="Documentation map. A bare 'docs' shows the available maintenance actions.",
         formatter_class=HelpFormatter,
     )
@@ -402,6 +402,13 @@ def _add_docs_parser(subparsers: argparse._SubParsersAction) -> None:
         title="documentation actions",
         metavar="<action>",
     )
+    docs_check_parser = docs_subparsers.add_parser(
+        "check",
+        help="validate generated indices, backlinks, targets, and page coverage",
+        description="Check documentation navigation without requiring the external PyGitIndex script.",
+        formatter_class=HelpFormatter,
+    )
+    docs_check_parser.add_argument("--docs-dir", default="docs", help="documentation directory (default: docs)")
     docs_index_parser = docs_subparsers.add_parser(
         "index",
         help="regenerate indices and backlinks with the system PyGitIndex script",
@@ -412,6 +419,7 @@ def _add_docs_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_examples(
         docs_parser,
         """examples:
+  python tools/control.py docs check
   python tools/control.py docs index --dry-run
   python tools/control.py docs index""",
     )

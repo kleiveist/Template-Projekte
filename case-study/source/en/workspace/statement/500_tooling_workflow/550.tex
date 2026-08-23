@@ -12,4 +12,18 @@ the source code into a deliverable artifact, such as web output or a desktop
 package, depending on the path. A ZIP groups files in an archive; a container
 image packages a runtime environment from which a container can be started.
 
+An AST is a tree representation of a language's structure that can identify
+imports, functions, or classes. An exclusion removes files from the scope
+altogether, for example generated artifacts. An exception instead temporarily
+suppresses a specific finding in a handwritten file with a rationale. Both
+must be narrow, or relevant problems can become invisible. Static analysis
+does not execute code as a test case; it examines structure and consequently
+cannot detect every domain-level or dynamic violation.
+
+For Rust, a parser built with Syn~2.0.119 reads the language structure. Its
+checked-in WASI program runs under Wasmtime~47.0.1, so this metric analysis does
+not require a locally installed Rust compiler. Checksums and bounded resources
+protect execution; invalid syntax or a changed artifact produces an error.
+Type checking, macro expansion, and Clippy remain separate checks.
+
 \end{beginnerstatement}

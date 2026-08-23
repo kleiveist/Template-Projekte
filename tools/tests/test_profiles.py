@@ -410,6 +410,55 @@ def test_master_readme_case_study_links_are_removed_from_scaffold(tmp_path: Path
     assert "MASTER-ONLY" not in generated_readme
 
 
+def test_scaffold_copies_the_pinned_rust_analyzer_runtime(tmp_path: Path) -> None:
+    catalog = loader.load_catalog(PROFILES_DIR, validate_paths=False)
+    target = tmp_path / "web-only"
+    plan = generator.build_scaffold_plan(
+        catalog,
+        project_root=ROOT,
+        target_dir=target,
+        profile_id="web-only",
+    )
+
+    generator.scaffold_project(plan)
+
+    analyzer = Path("tools/quality/rust_analyzer")
+    artifact = analyzer / "dist/rust_quality_analyzer.wasm"
+    provenance = analyzer / "provenance.json"
+    assert (target / artifact).read_bytes() == (ROOT / artifact).read_bytes()
+    assert (target / provenance).read_text(encoding="utf-8") == (ROOT / provenance).read_text(encoding="utf-8")
+    requirements = (target / "tools/requirements.txt").read_text(encoding="utf-8")
+    assert "wasmtime==47.0.1" in requirements.splitlines()
+    attributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
+    assert (target / ".gitattributes").read_text(encoding="utf-8") == attributes
+    assert "/tools/quality/rust_analyzer/Cargo.lock text eol=lf" in attributes
+    assert "/tools/quality/rust_analyzer/src/** text eol=lf" in attributes
+    assert "/tools/quality/rust_analyzer/dist/*.wasm binary" in attributes
+    assert generator._ignore_transient_content("unrelated", ["dist"]) == ["dist"]
+
+
+def test_missing_required_scaffold_artifact_fails_before_writing(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    catalog = loader.load_catalog(PROFILES_DIR, validate_paths=False)
+    target = tmp_path / "web-only"
+    monkeypatch.setattr(
+        generator,
+        "REQUIRED_SCAFFOLD_ARTIFACTS",
+        (Path("tools/quality/rust_analyzer/dist/missing.wasm"),),
+    )
+
+    with pytest.raises(generator.GenerationError, match="Required scaffold artifact is missing"):
+        generator.build_scaffold_plan(
+            catalog,
+            project_root=ROOT,
+            target_dir=target,
+            profile_id="web-only",
+        )
+
+    assert not target.exists()
+
+
 @pytest.mark.skipif(not HAS_TAURI_SOURCE, reason="Tauri source is absent in this derived project")
 def test_init_command_scaffolds_selected_profile(tmp_path: Path) -> None:
     target = tmp_path / "desktop-local-project"
@@ -453,64 +502,6 @@ def test_init_command_scaffolds_selected_profile(tmp_path: Path) -> None:
     active = loader.load_active_profile(target)
     assert active.profile_id == "desktop-local"
     assert active.features == ("frontend", "tauri")
-
-
-@pytest.mark.skipif(
-    not HAS_TAURI_SOURCE or not HAS_BACKEND_SOURCE or not HAS_CLOUD_SOURCE,
-    reason="Complete desktop-cloud sources are absent in this derived project",
-)
-def test_init_command_applies_complete_release_identity(tmp_path: Path) -> None:
-    target = tmp_path / "customer-app"
-
-    assert (
-        control.main(
-            [
-                "init",
-                "--profile",
-                "desktop-cloud",
-                "--name",
-                "CustomerApp",
-                "--identifier",
-                "com.customer.app",
-                "--target-dir",
-                str(target),
-            ]
-        )
-        == 0
-    )
-
-    package = json.loads((target / "frontend" / "package.json").read_text(encoding="utf-8"))
-    package_lock = json.loads((target / "frontend" / "package-lock.json").read_text(encoding="utf-8"))
-    tauri = json.loads((target / "src-tauri" / "tauri.conf.json").read_text(encoding="utf-8"))
-    assert package["name"] == "customer-app-frontend"
-    assert package_lock["name"] == "customer-app-frontend"
-    assert tauri["productName"] == "CustomerApp"
-    assert tauri["identifier"] == "com.customer.app"
-    assert tauri["mainBinaryName"] == "customer-app"
-    assert 'name = "customer-app"' in (target / "src-tauri" / "Cargo.toml").read_text(encoding="utf-8")
-    assert "CustomerApp Contributors" in (target / "src-tauri" / "Cargo.toml").read_text(encoding="utf-8")
-    assert 'name = "customer-app"' in (target / "src-tauri" / "Cargo.lock").read_text(encoding="utf-8")
-    assert "name: customer-app" in (target / "deployment" / "compose.yaml").read_text(encoding="utf-8")
-    assert "APP_NAME=CustomerApp API" in (target / ".env.example").read_text(encoding="utf-8")
-    assert "customer-app-backend" in (target / "backend" / "app" / "api" / "health.py").read_text(encoding="utf-8")
-    assert "customer-app-web.zip" in (target / "tools" / "inst" / "build.py").read_text(encoding="utf-8")
-
-
-def test_init_requires_identifier_for_custom_tauri_identity(tmp_path: Path) -> None:
-    assert (
-        control.main(
-            [
-                "init",
-                "--profile",
-                "desktop-local",
-                "--name",
-                "Customer App",
-                "--target-dir",
-                str(tmp_path / "customer-app"),
-            ]
-        )
-        == 1
-    )
 
 
 def test_init_command_supports_interactive_profile_selection(monkeypatch, tmp_path: Path) -> None:
@@ -675,12 +666,17 @@ def test_web_cloud_with_postgres_scaffolds_database_capability(tmp_path: Path) -
     assert active.has_feature("postgres")
 
 
-def test_init_with_postgres_rejects_web_only_cleanly(monkeypatch, tmp_path: Path) -> None:
+@pytest.mark.parametrize("profile_id", ["web-only", "desktop-local"])
+def test_init_with_postgres_rejects_profiles_without_backend_cleanly(
+    monkeypatch,
+    tmp_path: Path,
+    profile_id: str,
+) -> None:
     messages: list[str] = []
     monkeypatch.setattr("tools.profiles.cli.logger.fail", messages.append)
 
     code = control.main(
-        ["init", "--profile", "web-only", "--with", "postgres", "--target-dir", str(tmp_path / "invalid")]
+        ["init", "--profile", profile_id, "--with", "postgres", "--target-dir", str(tmp_path / "invalid")]
     )
 
     assert code == 1

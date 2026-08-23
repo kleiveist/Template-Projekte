@@ -12,9 +12,23 @@ with a backend. \texttt{control.py} standardizes the development path.
 Generated projects remain independent and receive no automatic updates from
 the master repository.
 
+Commit \texttt{461fc751} extended the previously mostly documented code-quality
+and architecture governance with central policy, 13 rule IDs, severity and
+exception models, scanners, language adapters, architecture checks, structured
+reports, focused quality commands, and CI enforcement. The normal
+classification of tested boundary cases, including 900/901 code LOC, and the
+detection of constructed architecture violations are substantiated. The gate
+remains outside the product runtime, and the dispatcher delegates checks to a
+dedicated package.
+
 The local acceptance of an earlier commit supports the profile, PostgreSQL,
-test, web build, and Linux packaging paths. The current external CI is only
-partially successful; further evidence is either unavailable or
-product-specific. The evidence therefore demonstrates a baseline with
-controlled variability, not production readiness or empirical suitability for
-customer projects.
+test, web build, and Linux packaging paths. With the governance commit as the
+technical baseline, the direct Pytest run passed 333 tests, including 135
+focused quality and workflow tests. The case-study tests checked the present,
+not-yet-versioned retrospective documentation at the same time. The web build
+and master quality gate also passed. Generated backend-profile gates, the
+local Rust/Tauri path, and Windows remained unsuccessful or incomplete;
+further evidence is unavailable or product-specific. The result establishes a
+baseline with controlled variability and stronger technical rule enforcement,
+not clean code, production readiness, long-term maintainability, or empirical
+suitability for customer projects.

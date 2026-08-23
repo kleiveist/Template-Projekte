@@ -9,22 +9,42 @@ database, and Tauri prerequisites have their own stricter diagnostic paths
 
 \texttt{install} sets up only active components: frontend dependencies are
 preferentially installed from the lockfile, and backend dependencies are
-installed in a virtual environment. Database packages, the tooling
-environment, and Chromium are added only when required; for Python, a pip/venv
-fallback is available alongside \texttt{uv}. A local \texttt{.env} remains
-unchanged. \texttt{tauri install} handles native operating-system and Rust
-prerequisites separately.
+installed in a virtual environment. The dedicated \path{tools/.venv} is set up
+for repository tools, including Ruff, regardless of profile; the
+\path{backend/.venv} remains separate. Database packages and Chromium are
+added only when required; for Python, a pip/venv fallback is available
+alongside \texttt{uv}. A local \texttt{.env} remains unchanged. \texttt{tauri
+install} handles native operating-system and Rust prerequisites separately.
 Specifically, the frontend uses \texttt{npm ci} when a lockfile is present. An
 active backend receives its own environment and only the profile-dependent
 requirement sets. Chromium is installed only when Playwright is configured;
 disabled layers are skipped.
 
-The README requires Git, Python 3.11 or later, Node.js 20 or later, and Rust
+At the historical observation state \texttt{461fc751}, generated backend
+profiles had an installation discrepancy relevant to governance: \texttt{install}
+could provide Ruff through \path{backend/.venv} and omit
+\path{tools/.venv}, while the quality adapter expected Ruff there or on the
+global search path. In a freshly generated \texttt{web-cloud} profile,
+installation completed successfully, but the subsequent quality command
+reported Ruff as unavailable. Core CI avoided this combination through
+\texttt{install --skip-backend}; the generated backend-profile jobs did not.
+This commit-bound observation explains the profile failures at the time and
+remains part of the historical evidence
+\parencite{kleiveist2026quality-implementation,kleiveist2026quality-ci}.
+
+In the v1.0.0 release state, the discrepancy is corrected: \texttt{install}
+provides \path{tools/.venv} regardless of profile, and the quality adapter uses
+this dedicated tooling runtime. The local \texttt{install} $\rightarrow$
+\texttt{quality} path therefore has a uniform contract for Ruff resolution.
+This later correction does not rewrite the commit-bound CI results of the
+baseline.
+
+The README requires Git, Python 3.11 or later, Node.js 24 or later, and Rust
 Stable for desktop profiles. The general Doctor does not check Git or these
 version ranges; the Tauri Doctor accepts any active Rust toolchain. CI, by
 contrast, explicitly sets up the specified major versions of Python and Node.
 Local enforcement therefore differs from the documentation
-\parencite{kleiveist2026template,kleiveist2026ci}.
+\parencite{kleiveist2026governance-snapshot,kleiveist2026ci}.
 This limitation concerns how the prerequisite is checked, not whether the
 documented prerequisite applies.
 \beginnerinput{workspace/statement/500_tooling_workflow/530}

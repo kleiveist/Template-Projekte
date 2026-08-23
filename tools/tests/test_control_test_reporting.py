@@ -94,24 +94,17 @@ def test_subprocess_start_failure_becomes_a_ci_compatible_result(monkeypatch) ->
     assert "missing runtime" in completed.stderr
 
 
-def test_tooling_runtime_ignores_stale_virtualenv(monkeypatch, tmp_path) -> None:
+def test_tooling_runtime_never_falls_back_to_backend_virtualenv(monkeypatch, tmp_path) -> None:
     from tools.inst import run_test
 
     tooling_python = tmp_path / "tools" / ".venv" / "bin" / "python"
     backend_python = tmp_path / "backend" / ".venv" / "bin" / "python"
-    tooling_python.parent.mkdir(parents=True)
     backend_python.parent.mkdir(parents=True)
-    tooling_python.touch()
     backend_python.touch()
 
-    def fake_run(command: list[str], cwd=None) -> subprocess.CompletedProcess[str]:
-        returncode = 0 if command[0] == str(backend_python) else 1
-        return subprocess.CompletedProcess(command, returncode, stdout="", stderr="")
-
     monkeypatch.setattr(run_test, "ROOT", tmp_path)
-    monkeypatch.setattr(run_test, "_run", fake_run)
 
-    assert run_test._tooling_python() == backend_python
+    assert run_test._tooling_python() == tooling_python
 
 
 def test_tools_suite_includes_optional_master_case_study_tests(monkeypatch, tmp_path) -> None:

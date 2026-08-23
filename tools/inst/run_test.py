@@ -107,24 +107,9 @@ def _backend_python() -> Path:
 def _tooling_python() -> Path:
     windows_python = ROOT / "tools" / ".venv" / "Scripts" / "python.exe"
     unix_python = ROOT / "tools" / ".venv" / "bin" / "python"
-    tooling_python = windows_python if windows_python.exists() else unix_python
-    if _tooling_runtime_ready(tooling_python):
-        return tooling_python
-
-    backend_python = _backend_python()
-    if _tooling_runtime_ready(backend_python):
-        return backend_python
-    if tooling_python.exists():
-        return tooling_python
-    return backend_python if backend_python.exists() else Path(sys.executable)
-
-
-def _tooling_runtime_ready(python: Path) -> bool:
-    if not python.exists():
-        return False
-    completed = _run([str(python), "-c", "import jsonschema, pytest"], cwd=ROOT)
-    ruff = _run([str(python), "-m", "ruff", "--version"], cwd=ROOT)
-    return completed.returncode == 0 and ruff.returncode == 0
+    if windows_python.exists():
+        return windows_python
+    return unix_python
 
 
 def _needs_backend_runtime(selected_suites: list[str]) -> bool:

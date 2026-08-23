@@ -39,14 +39,17 @@ Größenschwelle und dünne Tauri-Adapter bleiben teilweise oder vollständig
 Reviewgegenstand. Eine Datei unter 900 LOC kann deshalb weiterhin strukturell
 problematisch sein.
 
-Die profilbezogene Anwendbarkeit folgt vorhandenen Dateien und nicht dem
-Manifest; der Reporter besitzt keinen eigenen SKIP-Status. Hinzu kommen die
-Ruff-Auflösungsabweichung backendhaltiger generierter Profile und veraltete
-öffentliche Dokumentationspfade: README und Tooling-Guide nennen den
-Quality-Einstieg nicht vollständig, die CI-Dokumentation beschreibt noch die
-ältere Jobstruktur. Der Dry-Run bestätigt ausstehende Index- und
-Backlinksynchronisierung. Diese Befunde begrenzen die Verständlichkeit und
-Profilreife der ansonsten zentralen Governance.
+Am historischen Beobachtungsstand folgte die profilbezogene Anwendbarkeit
+vorhandenen Dateien und nicht dem Manifest; der Reporter besaß keinen eigenen
+SKIP-Status. Hinzu kamen die Abweichung bei der Ruff-Auflösung in generierten
+Backendprofilen und veraltete öffentliche Dokumentationspfade: README und
+Tooling-Guide nannten den Quality-Einstieg nicht vollständig, die
+CI-Dokumentation beschrieb noch die ältere Jobstruktur. Der Dry-Run bestätigte
+ausstehende Änderungen an Index und Backlinks. Diese Befunde begrenzten die
+Verständlichkeit und Profilreife der ansonsten zentralen Governance. Im
+v1.0.0-Freigabestand ist speziell die Ruff-Abweichung durch die stets
+bereitgestellte \path{tools/.venv} behoben; der historische Befund und seine
+damaligen CI-Ergebnisse bleiben davon unberührt.
 
 Die Bündelung im Master erhöht die interne Komplexität: Änderungen an Core,
 Generator oder Katalog erfordern Regressionstests über mehrere Profile.

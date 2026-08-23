@@ -22,10 +22,12 @@
       installation, startup, testing, and building. & Several specialist tools and native
       prerequisites remain necessary. & Fewer distinct interaction paths, but no
       technology-independent workflow. \\
-    Quality & Tests, the profile matrix, build paths, and the release gate are recorded in the
-      acceptance report. & Current tooling, desktop-profile, and
-      Windows jobs fail; Branch Protection has not been demonstrated. &
-      A sound local verification basis, but no consistently successful remote evidence. \\
+    Quality & Central policy, 13 rule IDs, exception and architecture tests;
+      135 focused tests and a green master quality job. & Generated profiles
+      with a backend fail during quality; the aggregate local run is limited by
+      Rust system libraries; \texttt{CQ001} is suppressible. & Defined
+      violations are detected more reproducibly; general code quality or
+      maintainability is not guaranteed. \\
     Reproducibility & Two identically configured projects were byte-for-byte identical in the
       documented experiment. & Evidence covers only one
       combination and one examination environment. & Specific evidence without
@@ -45,5 +47,5 @@
   {\footnotesize Source: Author's own evaluation based on
   Chapters~\ref{sec:architektur}--\ref{sec:qualitaetssicherung-verifikation},
   the acceptance report, and the current CI runs
-  \parencite{kleiveist2026acceptance,kleiveist2026ci-core-run,kleiveist2026ci-profiles-run,kleiveist2026ci-postgres-run,kleiveist2026ci-desktop-run}.\par}
+  \parencite{kleiveist2026acceptance,kleiveist2026ci-core-run,kleiveist2026ci-profiles-run,kleiveist2026ci-postgres-run,kleiveist2026ci-desktop-run,kleiveist2026quality-implementation,kleiveist2026governance-core-run,kleiveist2026governance-profiles-run}.\par}
 \end{table}

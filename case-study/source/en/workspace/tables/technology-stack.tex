@@ -2,24 +2,27 @@
   \centering
   \scriptsize
   \renewcommand{\arraystretch}{1.08}
-  \caption{Declared and resolved technology stack in the examined commit}
+  \caption{Technology stack of the baseline and the v1.0.0 release state}
   \label{tab:technology-stack}
   \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.14\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}>{\raggedright\arraybackslash}p{0.22\textwidth}>{\raggedright\arraybackslash}X@{}}
     \toprule
     \textbf{Technology} & \textbf{Role in the template} & \textbf{Version / source} & \textbf{Project evidence} \\
     \midrule
+    Node.js & frontend tools and CI runtime & major version 24 & \path{README.md}, \path{.github/workflows} \\
     Vite & development server and frontend build & range from 6.0.7; lock: 6.4.2 & \path{frontend/package.json}, \path{frontend/package-lock.json} \\
     TypeScript & static checking of the frontend & range from 5.7.3; lock: 5.9.3 & \path{frontend/package.json}, \path{frontend/tsconfig.json} \\
     FastAPI & HTTP API and validation & $\geq$0.111, $<$1; production: 0.111.0 & \path{backend/requirements.txt}, \path{backend/requirements-production.txt} \\
     Tauri & desktop webview and packaging boundary & major version 2; lock: 2.11.5 & \path{src-tauri/Cargo.toml}, \path{src-tauri/Cargo.lock} \\
-    Rust & native composition layer & at least 1.77; edition 2021 & \path{src-tauri/Cargo.toml} \\
-    PostgreSQL & optional relational runtime unit & container: 16.4-alpine3.20 & \path{deployment/compose.yaml} \\
+    Rust & native composition layer and analyzer build & Tauri: at least 1.77, edition 2021; analyzer: rustc 1.97.1, edition 2024 & \path{src-tauri/Cargo.toml}, \path{tools/quality/rust_analyzer/rust-toolchain.toml} \\
+    Syn/WASI/Wasmtime & portable Rust scope and control-flow analysis & Syn 2.0.119; proc-macro2 1.0.107; \texttt{wasm32-wasip1}; Wasmtime 47.0.1 & \path{tools/quality/rust_analyzer}, \path{tools/requirements.txt} \\
+    PostgreSQL & optional relational runtime unit & container: 16.15-alpine3.24 & \path{deployment/compose.yaml} \\
     SQLAlchemy & engine, session, and model foundation & $\geq$2, $<$3; production: 2.0.36 & \path{backend/requirements-database*.txt} \\
     Alembic & explicit schema migrations & $\geq$1.13, $<$2; production: 1.14.0 & \path{backend/requirements-database*.txt} \\
     Psycopg & PostgreSQL driver & $\geq$3.2, $<$4; production: 3.2.3 & \path{backend/requirements-postgres*.txt} \\
     \bottomrule
   \end{tabularx}
   \smallskip
-  {\footnotesize Source: Author's own compilation based on the examined
-  project state \parencite{kleiveist2026template}.\par}
+  {\footnotesize Source: Author's own compilation based on the historical
+  baseline \parencite{kleiveist2026governance-snapshot}, the current release
+  manifests, and the verified analyzer provenance.\par}
 \end{table}

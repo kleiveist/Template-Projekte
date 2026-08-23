@@ -8,6 +8,47 @@ Although scope boundaries create a need for adaptation, they do not constitute
 an unmet requirement. A lack of verification does not yet permit either a
 positive or a negative technical judgment.
 
+The normal file-size classification is unambiguous: 900 code LOC are permitted
+and produce a \emph{STRONG\_WARNING}; 901 code LOC produce
+\texttt{CQ001 ERROR}. The project documentation defines 900 LOC as an absolute
+maximum. The list of permitted exceptions technically also includes
+\texttt{CQ001}, however; an exactly matching entry can suppress the 901-LOC
+error and make the gate pass. There is no integrated regression test for the
+complete path from 901 LOC through \texttt{CQ001} and an exception to gate
+status. The policy is therefore intended and documented as absolute, but is
+suppressible in the examined state. This discrepancy must neither be hidden by
+a blanket success claim nor by modifying the technical project during the
+retrospective analysis.
+
+There are further validation boundaries for exceptions. Leading slashes are
+removed before the absolute-path check, so absolute POSIX and Windows paths are
+normalized instead of rejected as documented. An exception for an existing
+but excluded or unscanned file remains valid; optional symbols are not checked
+against source text. Expiry dates, unknown IDs, duplicates, and missing files
+are tested and handled as errors. Time limits and rationales support
+governance but cannot automatically prevent repeated extensions or excessively
+broad exclusions; review remains necessary.
+
+LOC, scope size, and cyclomatic complexity are structural indicators, not
+measurements of comprehensibility, cohesion, or domain correctness. Import
+analysis captures direct, statically resolvable relationships, not every
+dynamic, transitive, or semantic architecture violation. The frontend resolver
+ignores unknown aliases; router logic below the size threshold and thin Tauri
+adapters remain partly or wholly matters for review. A file below 900 LOC can
+therefore still be structurally problematic.
+
+At the historical observation state, profile applicability followed the files
+present rather than the manifest, and the reporter had no dedicated SKIP
+status. Other limitations were differing Ruff resolution in generated backend
+profiles and outdated public documentation paths: README and the
+tooling guide did not fully name the quality entry point, and the CI
+documentation still described the older job structure. The dry run confirmed
+pending index and backlink changes. These findings limited the clarity
+and profile maturity of the otherwise central governance. In the v1.0.0
+release state, the Ruff discrepancy in particular is corrected by the
+consistently provided \path{tools/.venv}; the historical finding and its CI
+results at the time remain unchanged.
+
 Consolidation in the master repository increases internal complexity: changes
 to the core, generator, or catalog require regression tests across several
 profiles. In addition, the frontend and backend do not use the shared JSON
@@ -15,12 +56,12 @@ schemas at runtime; contract changes remain manual. Direct CLI selection
 distinguishes \texttt{optional} and \texttt{selectable} less clearly than the
 dialog does. Both discrepancies create risks of maintenance errors or
 incorrect operation.
-The examined HEAD also has conflicting evidence: the web profiles and the local
-tooling run passed, while the external tooling, desktop-profile, and Windows
-checks failed.
-This finding does not retroactively call the earlier, commit-specific
-acceptance into question, but it prevents a fully successful assessment of the
-more recent state.
+The evidence also conflicts by commit: on \texttt{a4487ac}, web profiles and
+local tooling tests passed while external tooling, desktop-profile, and Windows
+checks failed. On \texttt{461fc751}, the master quality gate passed, while
+backend-profile gates and Windows did not. These findings do not retroactively
+call earlier commit-specific acceptance into question, but they prevent a fully
+green assessment of the governance state.
 
 The deliberate exclusions are a backend in \texttt{web-only}, a cloud API in
 \texttt{desktop-local}, and PostgreSQL without a backend. Domain logic,
@@ -36,7 +77,7 @@ Protection have not been conclusively verified. Unsigned Linux and macOS
 packages were built, while Windows packaging failed. Signing, notarization,
 publication, and production cloud operation remain product- or
 infrastructure-specific
-\parencite{kleiveist2026ci-core-run,kleiveist2026ci-desktop-run,kleiveist2026acceptance}.
+\parencite{kleiveist2026governance-core-run,kleiveist2026governance-desktop-run,kleiveist2026acceptance}.
 The packaging results therefore demonstrate neither signed releases nor
 production cloud operation. The subject of the evaluation is the template
 baseline, not the production readiness of a product.

@@ -38,6 +38,7 @@ def test_bare_docs_prints_documentation_map(capsys) -> None:
     output = capsys.readouterr().out
     assert "documentation actions" in output
     assert "PyGitIndex" in output
+    assert "check" in output
     assert "index" in output
 
 

@@ -407,7 +407,13 @@ def _tauri_version() -> str:
             return version
     except (OSError, tomllib.TOMLDecodeError):
         pass
-    return "0.1.0"
+    try:
+        version = (paths.ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    except OSError as exc:
+        raise AppImageInstallError("Could not determine the AppImage version from Cargo.toml or VERSION") from exc
+    if not version:
+        raise AppImageInstallError("Could not determine the AppImage version from Cargo.toml or VERSION")
+    return version
 
 
 def _data_home() -> Path:

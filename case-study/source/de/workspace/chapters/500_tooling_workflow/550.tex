@@ -26,10 +26,10 @@ zusammen.
       Prettier & LOC, Klassen und Importe, Funktionsmetriken, Lint, Typen,
       Format & Architekturauflösung nur für bekannte relative und konfigurierte
       Alias-Pfade. \\
-    Rust/Tauri & LOC-Lexer, rustfmt, Clippy, Cargo & Dateigröße, Format,
-      Funktionslänge, Parameter, kognitive Komplexität, Compilercheck &
-      keine strukturierten CQ-Warnbänder für Clippy; Adaptersemantik bleibt
-      Review. \\
+    Rust/Tauri & LOC-Lexer, Syn-AST-Analyzer (WASI), Wasmtime, rustfmt,
+      Clippy, Cargo & Datei- und Funktionsgröße, Komplexität, Verschachtelung,
+      Parameter, Format, Lint, Compilercheck & Syn analysiert Syntax ohne
+      Typauflösung oder Makroexpansion; Adaptersemantik bleibt Review. \\
     \bottomrule
   \end{tabularx}
   \smallskip
@@ -39,21 +39,47 @@ zusammen.
 
 Deklariert ist Ruff \texttt{>=0.14,<1.0}; lokal wurde Version~0.16.4
 ausgeführt. Das Frontend-Lockfile fixiert ESLint~9.39.5, Prettier~3.9.6,
-TypeScript~5.9.3 und typescript-eslint~8.67.0. CI verwendet Rust Stable mit
-rustfmt und Clippy; das Tauri-Manifest nennt Rust~1.77 als Mindestversion.
-Diese Stände erhöhen die Nachvollziehbarkeit des Snapshots, bleiben aber
-zeit- und umgebungsabhängig.
+TypeScript~5.9.3 und typescript-eslint~8.67.0; die Release-Workflows verwenden
+Node~24. Das Tauri-Anwendungsmanifest nennt Rust~1.77 und Edition~2021 als
+Mindeststand. Davon getrennt fixiert die Analyzer-Buildumgebung rustc~1.97.1
+und Edition~2024. Ihr Lockfile bindet Syn~2.0.119 und proc-macro2~1.0.107; die
+Tooling-Umgebung bindet Wasmtime~47.0.1. Diese Stände erhöhen die
+Nachvollziehbarkeit des Snapshots, bleiben aber zeit- und umgebungsabhängig.
 
 Der Scanner berücksichtigt \path{.py}, \path{.ts}, \path{.tsx}, \path{.js},
 \path{.jsx}, \path{.mjs}, \path{.cjs} und \path{.rs}. Physische Zeilen werden
 von Code-LOC unterschieden: Leerzeilen und reine Kommentarzeilen zählen nicht,
 Code mit nachgestelltem Kommentar dagegen einmal. Python-Docstrings und andere
 mehrzeilige Zeichenketten zählen als Code. Für JavaScript-/C-artige Syntax
-behandelt ein eigener Lexer Blockkommentare; für Rust zusätzlich verschachtelte
-Blockkommentare und Raw Strings. Dies ist keine vollständige Parseranalyse.
+behandelt ein eigener Lexer Blockkommentare; die Rust-LOC-Ermittlung zusätzlich
+verschachtelte Blockkommentare und Raw Strings. Diese Lexer-Stufe klassifiziert
+nur Codezeilen. Rust-Scope- und Kontrollflussmetriken werden separat durch den
+mit Syn~2.0.119 gebauten Parser aus einem vollständigen Syntaxbaum ermittelt.
 \path{.mjs} und \path{.cjs} erhalten Datei-LOC und normale anwendbare
 Frontendchecks, aber keine repositoryeigenen Scope-Metriken oder
 Architekturprüfung.
+
+Der eingecheckte Analyzer ist für \texttt{wasm32-wasip1} gebaut und wird durch
+Wasmtime~47.0.1 aus der Tooling-Umgebung ausgeführt. Das 535\,787~Byte große
+Artefakt besitzt den SHA-256-Wert
+\path{7a27cb02a9392b62c487b4ce73a03524d7260b804c0c49eb4520ceb1a1cacfd8}.
+Seine Provenienz bindet den exakten rustc-1.97.1-Compilercommit, Ziel und
+Dependency-Stände sowie einen Quelldigest über \path{build.py},
+\path{Cargo.toml}, \path{Cargo.lock}, \path{rust-toolchain.toml} und
+\path{src/**/*.rs}.
+
+Der Build entfernt geerbte Compiler-, Flag-, Ziel- und Releaseprofil-Overrides.
+Ein versionierter Remapping-Vertrag kanonisiert Quellwurzel, Benutzer-Home,
+Cargo-Home und -Target, Rust-Sysroot sowie jede Dependency-Wurzel; breite
+Abbildungen stehen vor spezifischen, weil bei rustc der letzte passende Eintrag
+gewinnt. Verbleibende private physische Buildpfade im Artefakt führen zum
+Abbruch. Vor jedem Lauf prüft der Host Provenienz und Artefakt. Die WASI-Instanz
+besitzt begrenzten Speicher und Fuel; fehlerhafte oder nicht unterstützte
+Syntax, eine ungültige Provenienz, ein defektes Artefakt,
+Ressourcenüberschreitungen und inkonsistente JSON-Metriken brechen die Analyse
+ab. Damit können auch generierte Profile ohne Rust-Toolchain dieselbe
+Rust-Analyse ausführen. Der Analyzer ersetzt weder rustc noch Clippy: Er löst
+keine Typen auf, expandiert keine Makros und prüft keine Laufzeitsemantik.
 
 Ausgeschlossen sind die Verzeichnisse \path{.cache}, \path{.dist},
 \path{.generated}, \path{.git}, \path{.pytest_cache}, \path{.venv},

@@ -7,13 +7,13 @@
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
-| Last review | 2026-08-06 |
+| Last review | 2026-08-23 |
 | Audience | Contributors and release operators |
 | Related ATP | N/A — template-level tooling reference |
 
 ## Purpose
 
-This guide explains the central entry point for profile-based project scaffolding, setup, development, testing, optional database migrations, builds, Tauri, and documentation maintenance. It is designed for contributors returning after a long break as well as first-time users of the template.
+This guide explains the central entry point for profile-based project scaffolding, setup, development, code-quality and architecture governance, testing, optional database migrations, builds, Tauri, release validation, and documentation maintenance. It is designed for contributors returning after a long break as well as first-time users of the template.
 
 ## Scope
 
@@ -32,10 +32,11 @@ Use this sequence to restore context and prepare the environment:
 ```sh
 python tools/control.py doctor
 python tools/control.py install
+python tools/control.py quality
 python tools/control.py run
 ```
 
-`doctor` checks runtimes, dependencies, the active profile, effective configuration, and configured ports. `install` prepares enabled frontend and backend dependencies without creating or changing `.env`. Frontend installation uses `npm ci` when `package-lock.json` exists. The command also prepares a small `tools/.venv` for shared Python tests when Pytest is not available from the backend virtualenv, and installs Playwright only when E2E tests are configured. `run` starts the enabled local services. In foreground mode, `Ctrl+C` stops those processes.
+`doctor` checks runtimes, dependencies, the active profile, effective configuration, and configured ports. `install` prepares enabled frontend and backend dependencies without creating or changing `.env`. Frontend installation uses `npm ci` when `package-lock.json` exists. The command always prepares a dedicated `tools/.venv` containing Pytest, JSON Schema validation, Ruff, and Wasmtime 47.0.1 for shared tests and quality checks; it never reuses the backend runtime for that tooling contract. The tracked Syn 2.0.119 Rust analyzer runs as a checksum-verified WASI module, so Rust-free profiles do not need a native Rust toolchain merely to enforce the shared scanner. `doctor` exercises that real analyzer path rather than checking only that a Python package can be imported. Playwright is installed only when E2E tests are configured. `quality` runs the complete policy and language-tool gate for enabled components. `run` starts the enabled local services. In foreground mode, `Ctrl+C` stops those processes.
 
 ## Command map
 
@@ -47,6 +48,7 @@ python tools/control.py run
 | `console` | Open the guided interactive interface | `python tools/control.py console --help` |
 | `run` | Start the enabled local services | `python tools/control.py run --help` |
 | `stop` | Stop tracked development services | `python tools/control.py stop --help` |
+| `quality` | Run code-quality and architecture governance checks | `python tools/control.py quality --help` |
 | `test` | Select test suites and reports | `python tools/control.py test` |
 | `build` | Select a web, desktop, or container build | `python tools/control.py build` |
 | `container` | Diagnose and validate Docker/Compose deployment files | `python tools/control.py container` |
@@ -54,7 +56,7 @@ python tools/control.py run
 | `release` | Run the non-publishing release gate | `python tools/control.py release` |
 | `config` | Show or validate effective runtime configuration | `python tools/control.py config` |
 | `db` | Diagnose optional database configuration and run Alembic | `python tools/control.py db` |
-| `docs` | Maintain navigation with PyGitIndex | `python tools/control.py docs` |
+| `docs` | Check navigation semantically or regenerate it with PyGitIndex | `python tools/control.py docs` |
 | `tauri` | Manage desktop diagnostics, development, and artifacts | `python tools/control.py tauri` |
 
 Group commands display the next level of help when called without an action:
@@ -71,6 +73,8 @@ python tools/control.py release
 ```
 
 An unknown command displays the relevant help map, explains the error, and provides the next `--help` command.
+
+The former root aliases `--doctor`, `--install`, `--run`, `--stop`, `--test`, and `--build` remain compatibility shims. New documentation and automation use the command map above.
 
 ## Initialize a derived project
 
@@ -153,6 +157,29 @@ Values resolve in this order:
 `config show` displays only variables applicable to the active features and masks secrets. `config doctor` validates environment names, hosts, ports, public URLs, CORS origins, and feature-required values without opening connections or changing files. The general `doctor` includes this validation. Use `db doctor --connect` only for the optional read-only database connection probe.
 
 The root `.env.example` is safe to commit. Local `.env` files are ignored and are never generated or overwritten by `install`. See [Runtime Configuration](../def/configuration.md) for the complete variable table and runtime boundaries.
+
+## Quality and architecture governance
+
+A bare quality command performs the complete gate:
+
+```sh
+python tools/control.py quality
+```
+
+Focused actions are available for diagnosis without defining a second policy:
+
+```sh
+python tools/control.py quality size
+python tools/control.py quality complexity
+python tools/control.py quality architecture
+python tools/control.py quality lint
+python tools/control.py quality format
+python tools/control.py quality check --format json
+```
+
+The command loads `config/code-quality.toml`, scans handwritten source, validates controlled exceptions, checks configured architecture boundaries, and delegates language-specific work to Ruff, ESLint, Prettier, TypeScript, rustfmt, Clippy, and Cargo for the enabled profile. `WARNING` and `STRONG_WARNING` findings do not fail by themselves. An unsuppressed `ERROR`, invalid policy, failed required tool, or analysis failure returns a non-zero exit code. A `CQ001` file-size finding above 900 code lines is an unsuppressible error; a configured exception cannot turn 901 lines into an accepted file.
+
+The dispatcher remains `tools/control.py`; parser construction lives in `tools/control_parser.py`, and policy loading, scanning, exception handling, reporting, architecture analysis, and tool adapters live under `tools/quality/`. Run the complete bare command before hand-off even when a focused action was used during investigation. See [Code quality and architecture governance](../def/code-quality.md) for thresholds and stable rule IDs.
 
 ## Tests and reports
 
@@ -246,7 +273,7 @@ python tools/control.py build container
 python tools/control.py build container --component backend
 ```
 
-Version and release validation remain separate from publication:
+Version display, synchronization, and release validation remain separate from publication:
 
 ```sh
 python tools/control.py version
@@ -255,20 +282,32 @@ python tools/control.py version check
 python tools/control.py release check
 ```
 
+Bare `version` prints the `VERSION` source of truth. `version sync` updates enabled component metadata, while `version check` compares it without writing. `release check` validates version consistency, identity, Tauri security, tag context, and repository cleanliness; it neither creates a tag nor publishes a release.
+
 See [Container Builds](container-builds.md) and [Release Model](release-model.md) for production boundaries, migrations, signing, and platform artifacts.
 
-## Documentation indexing with PyGitIndex
+## Documentation checks and indexing
 
-Preview index and backlink changes before writing:
+Run the self-contained semantic gate at any time:
+
+```sh
+python tools/control.py docs check
+```
+
+`docs check` is read-only and does not require PyGitIndex. It validates generated marker structure, expected backlinks, link targets, duplicate and stale entries, and the page coverage of directory and README navigation blocks. It returns non-zero when tracked navigation is inconsistent. Core CI exposes it as `Core / Documentation Check`, one of six active Core jobs, and Release Validation repeats it for the candidate SHA.
+
+After adding, moving, renaming, or deleting Markdown files, optionally preview the index and backlink changes:
 
 ```sh
 python tools/control.py docs index --dry-run
 ```
 
-Apply the update after adding, moving, renaming, or deleting Markdown files:
+Apply the update intentionally, inspect the resulting diff, and run the semantic gate:
 
 ```sh
 python tools/control.py docs index
+git diff -- README.md docs
+python tools/control.py docs check
 ```
 
 The wrapper searches in this order:
@@ -289,7 +328,7 @@ python tools/control.py docs index --no-readme
 python tools/control.py docs index --script /path/to/PyGitIndex.py
 ```
 
-Do not manually edit blocks between `AUTO-GENERATED` markers.
+PyGitIndex is required only for regeneration. `docs index --dry-run` returning zero means the external preview completed; it does not mean that navigation was already current. CI and release validation use `docs check` so drift fails without silently rewriting tracked files. Do not manually edit blocks between `AUTO-GENERATED` markers.
 
 ## Troubleshooting
 
@@ -297,7 +336,7 @@ Do not manually edit blocks between `AUTO-GENERATED` markers.
 2. Run `python tools/control.py doctor`.
 3. Repair project dependencies with `python tools/control.py install`.
 4. For desktop problems, also run `python tools/control.py tauri doctor`.
-5. For indexing problems, run `python tools/control.py docs index --dry-run --script <path>`.
+5. For navigation drift, run `python tools/control.py docs check`; for regeneration problems, run `python tools/control.py docs index --dry-run --script <path>`.
 6. Rerun only the affected test suite, then run `--suite all` before hand-off.
 
 Missing optional suites are reported as `SKIP` during `test --suite all`. Missing optional accelerators such as `uv` do not reduce the Doctor status. A `FAIL` means the selected workflow did not complete successfully.
@@ -308,12 +347,17 @@ After a tooling change, run at least:
 
 ```sh
 python tools/control.py
+python tools/control.py doctor
+python tools/control.py config doctor
 python tools/control.py init --profile web-only --dry-run
+python tools/control.py quality
 python tools/control.py build
 python tools/control.py docs
 python tools/control.py test
 python tools/control.py tauri
-python tools/control.py docs index --dry-run
+python tools/control.py version check
+python tools/control.py release check
+python tools/control.py docs check
 python tools/control.py test --suite tools
 python tools/control.py build desktop --dry-run --no-clean
 ```

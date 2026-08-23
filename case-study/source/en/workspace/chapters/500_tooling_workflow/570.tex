@@ -8,15 +8,30 @@ Product code, configuration, tests, and commits then belong in the derived
 repository.
 Template maintenance, by contrast, takes place in the master and validates the
 entire baseline there
-\parencite{kleiveist2026template,kleiveist2026profiles}.
+\parencite{kleiveist2026governance-snapshot,kleiveist2026profiles}.
 This separation prevents product development from inadvertently modifying the
 shared template.
 
-The basic prerequisites are Git, Python 3.11 or later, and Node.js 20 or later.
+The basic prerequisites are Git, Python 3.11 or later, and Node.js 24 or later.
 Desktop profiles additionally require Rust Stable and platform-specific Tauri
 packages; Docker, PostgreSQL, and PyGitIndex are required only for the
 respective optional tasks. Optional tools therefore do not block every
 profile.
+
+\path{AGENTS.md} also provides the repository policy to supporting coding
+agents. It defines 900 code LOC as a permitted absolute maximum, requires
+evaluation from 600 LOC and normally a split plan above 750 LOC, prohibits
+merely weakening rules, and requires thin routers, adapters, Tauri commands,
+and composition roots. After structural code changes, the complete quality
+gate is to run before handoff, followed by relevant tests. Changes that cross
+subsystem boundaries require the complete applicable suite. Remaining findings
+must be disclosed \parencite{kleiveist2026agents}.
+
+The agent file is explicit normative context, not empirical evidence of
+effectiveness. Its existence proves neither that a particular model follows
+the rules reliably nor that agent-assisted code is automatically clean.
+Technically enforced rules, human review, and model behavior remain separate
+layers.
 
 The README and specialized documents organize getting started, tooling,
 profiles, configuration, CI, containers, and releases into separate areas.

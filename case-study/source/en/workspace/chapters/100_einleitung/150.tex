@@ -4,7 +4,14 @@
 The investigation follows a technical case-study approach
 \parencite{runeson2009case-study}. An inventory records the structure,
 components, and boundaries of responsibility within the master repository. The
-subsequent architecture analysis examines the frontend, backend, desktop
+subsequent analysis binds the observed state to branch \texttt{main}, version
+\texttt{0.1.0}, and commit
+\path{461fc7519e0db638330904a7496c488e8a0d18bc}; the working tree was clean at
+the outset. It compares the governance commit with its parent
+\texttt{0cbe1ba} in a before-and-after analysis
+\parencite{kleiveist2026governance-snapshot,kleiveist2026governance-commit}.
+
+The architecture analysis examines the frontend, backend, desktop
 integration, interfaces, persistence, and deployment. It distinguishes
 substantiated properties from assumptions and unresolved verification points
 \parencite{kleiveist2026architecture}.
@@ -16,10 +23,24 @@ generation, system checks, installation, development, testing, builds, and relea
 Internal project descriptions of the architecture, profiles, and tools serve as
 primary sources for the documented state.
 
-Existing tests, build results, and documented acceptance results are mapped to
-the requirements and architecture decisions. External or product-specific
-checks remain separate. This evidence underpins the assessment and the transfer
-of findings to potential customer projects
+For the governance, configuration, implementation, boundary and regression
+tests, CLI exit codes, workflow files, local command output, and current CI
+runs are cross-checked. An internal evidence matrix maps each central claim to
+repository, test, and, where applicable, CI evidence and a target chapter. The
+claim that 901 code LOC normally produces an error therefore rests on the
+configuration, classification, the 900/901 transition test, and the
+non-ignored result of the quality command; identified counterexamples are
+reported as limitations.
+
+On 22~August~2026, help commands, focused and complete quality runs, 333
+directly executable tooling and case-study tests, and the public paths
+\texttt{doctor}, \texttt{test --suite all}, \texttt{build web}, and
+\texttt{docs index --dry-run} were executed. The technical baseline remained
+commit \texttt{461fc751}; the case-study tests simultaneously checked the
+emerging, not-yet-versioned German document state. Missing system libraries,
+services, or toolchains are classified neither as success nor as a test of the
+disabled subject. External or product-specific checks remain separate. This
+evidence complements the earlier acceptance
 \parencite{kleiveist2026acceptance}. Figure~\ref{fig:case-study-method} shows the
 sequence of the investigation.
 Assessment and transfer therefore take place only after the inventory, analysis,
