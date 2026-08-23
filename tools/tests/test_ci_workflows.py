@@ -207,11 +207,16 @@ def test_desktop_ci_builds_unsigned_native_artifacts_on_each_platform() -> None:
     assert "name: Install portable tooling runtime" in content
     assert "python tools/control.py install --skip-backend --skip-frontend --skip-playwright" in content
     assert "name: Verify the portable Rust analyzer runtime" in content
-    assert "run: python tools/control.py doctor" in content
+    analyzer_step = _step_named(content, "Verify the portable Rust analyzer runtime")
+    assert "env:" in analyzer_step
+    assert "DATABASE_URL: postgresql+psycopg://template_test:test-password@127.0.0.1:5432/template_test" in (
+        analyzer_step
+    )
+    assert "run: python tools/control.py doctor" in analyzer_step
     assert "name: Verify UTF-8 Rust analyzer transport" in content
     assert "test_subprocess_transport_is_utf8_when_child_text_stdio_is_cp1252" in content
     assert "if:" not in _step_named(content, "Install portable tooling runtime")
-    assert "if:" not in _step_named(content, "Verify the portable Rust analyzer runtime")
+    assert "if:" not in analyzer_step
     assert "if:" not in _step_named(content, "Verify UTF-8 Rust analyzer transport")
     assert "tools\\.venv\\Scripts\\python.exe -m pytest -q tools/tests/test_process.py" in content
     assert "python tools/control.py test --suite tauri" in content

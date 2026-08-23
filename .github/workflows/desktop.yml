@@ -75,6 +75,8 @@ jobs:
       - name: Install native Tauri prerequisites
         run: python tools/control.py tauri install --skip-rust --skip-node --skip-frontend
       - name: Verify the portable Rust analyzer runtime
+        env:
+          DATABASE_URL: postgresql+psycopg://template_test:test-password@127.0.0.1:5432/template_test
         run: python tools/control.py doctor
       - name: Verify UTF-8 Rust analyzer transport
         shell: bash

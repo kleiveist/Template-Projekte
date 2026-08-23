@@ -108,6 +108,8 @@ def _install_backend_with_uv(
 
 
 def _select_venv_seed_python() -> str:
+    if sys.platform == "win32":
+        return sys.executable
     python3 = shutil.which("python3")
     if python3:
         return python3

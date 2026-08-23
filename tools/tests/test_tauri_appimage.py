@@ -61,7 +61,11 @@ def test_windows_portable_output_path_repairs_owner_directory_permissions(tmp_pa
 
 def test_tauri_linux_build_accepts_explicit_bundle_selection(monkeypatch) -> None:
     calls: list[list[str]] = []
+    preflight: list[bool] = []
 
+    monkeypatch.setattr(
+        appimage, "_appimage_prerequisites_ready", lambda *args, **kwargs: preflight.append(True) or True
+    )
     monkeypatch.setattr(
         common,
         "run_command",
@@ -72,6 +76,7 @@ def test_tauri_linux_build_accepts_explicit_bundle_selection(monkeypatch) -> Non
     code = control.main(["tauri", "build", "--target", "linux", "--bundles", "appimage"])
 
     assert code == 0
+    assert preflight == [True]
     assert calls[0][-3:] == ["build", "--bundles", "appimage"]
 
 
@@ -172,7 +177,7 @@ def test_tauri_linux_build_accepts_fresh_appimage_when_linuxdeploy_returns_failu
 
     monkeypatch.setattr(common, "frontend_dependencies_ready", lambda: True)
     monkeypatch.setattr(appimage, "_appimage_prerequisites_ready", lambda *args, **kwargs: True)
-    monkeypatch.setattr(appimage, "_appimage_snapshot", lambda: {})
+    monkeypatch.setattr(appimage, "_appimage_snapshot", dict)
     monkeypatch.setattr(
         appimage,
         "_fresh_appimage_from_snapshot",
@@ -277,7 +282,7 @@ def test_tauri_build_appimage_shortcut_installs_fresh_appimage_when_linuxdeploy_
     monkeypatch.setattr(common, "host_os", lambda: "linux")
     monkeypatch.setattr(common, "frontend_dependencies_ready", lambda: True)
     monkeypatch.setattr(appimage, "_appimage_prerequisites_ready", lambda: True)
-    monkeypatch.setattr(appimage, "_appimage_snapshot", lambda: {})
+    monkeypatch.setattr(appimage, "_appimage_snapshot", dict)
     monkeypatch.setattr(
         appimage,
         "_fresh_appimage_from_snapshot",

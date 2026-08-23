@@ -111,6 +111,17 @@ def test_tooling_install_probe_exercises_verified_analyzer(monkeypatch, tmp_path
     assert "analyze_tree('fn tooling_runtime_probe() {}\\n')" in commands[0][2]
 
 
+def test_windows_venv_seed_uses_setup_python_instead_of_path_alias(monkeypatch) -> None:
+    monkeypatch.setattr(install.sys, "platform", "win32")
+    monkeypatch.setattr(
+        install.shutil,
+        "which",
+        lambda name: r"C:\\Users\\runneradmin\\AppData\\Local\\Microsoft\\WindowsApps\\python3.exe",
+    )
+
+    assert install._select_venv_seed_python() == sys.executable
+
+
 def test_frontend_install_uses_npm_ci_when_lockfile_exists(monkeypatch, tmp_path: Path) -> None:
     frontend = tmp_path / "frontend"
     frontend.mkdir()
