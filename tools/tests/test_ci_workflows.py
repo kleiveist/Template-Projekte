@@ -134,6 +134,7 @@ def test_core_ci_uses_supported_runtimes_and_public_tooling() -> None:
 
 def test_profile_matrix_generates_and_tests_every_profile() -> None:
     content = _workflow("profiles.yml")
+    cargo_cache_step = _step_named(content, "Cache Cargo dependencies")
 
     assert "fail-fast: false" in content
     for profile_id in (
@@ -159,6 +160,8 @@ def test_profile_matrix_generates_and_tests_every_profile() -> None:
     assert "actions/setup-python@v7" in content
     assert "actions/setup-node@v7" in content
     assert "actions/cache@v6" in content
+    assert ".generated/ci-${{ matrix.profile }}/src-tauri/target" in cargo_cache_step
+    assert content.index("name: Generate profile project") < content.index("name: Cache Cargo dependencies")
     assert content.index("python tools/control.py quality") < content.index("python tools/control.py test --suite all")
 
 

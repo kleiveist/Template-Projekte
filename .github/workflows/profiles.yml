@@ -63,6 +63,11 @@ jobs:
         run: |
           rustup toolchain install 1.97.1 --profile minimal --component rustfmt,clippy
           rustup default 1.97.1
+      - name: Generate profile project
+        run: >-
+          python tools/control.py init
+          --profile ${{ matrix.profile }}
+          --target-dir .generated/ci-${{ matrix.profile }}
       - name: Cache Cargo dependencies
         if: matrix.desktop
         uses: actions/cache@v6
@@ -75,11 +80,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-profile-${{ matrix.profile }}-
             ${{ runner.os }}-cargo-
-      - name: Generate profile project
-        run: >-
-          python tools/control.py init
-          --profile ${{ matrix.profile }}
-          --target-dir .generated/ci-${{ matrix.profile }}
       - name: Inspect generated project structure
         working-directory: .generated/ci-${{ matrix.profile }}
         run: python tools/control.py doctor
