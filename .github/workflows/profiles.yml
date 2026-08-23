@@ -68,6 +68,18 @@ jobs:
           python tools/control.py init
           --profile ${{ matrix.profile }}
           --target-dir .generated/ci-${{ matrix.profile }}
+      - name: Verify generated template lifecycle
+        working-directory: .generated/ci-${{ matrix.profile }}
+        run: |
+          python tools/control.py template status
+          python tools/control.py template verify
+          python tools/control.py template status --format json | python -c '
+          import json, sys
+          status = json.load(sys.stdin)
+          assert status["provenance"] == "generated"
+          assert status["source_reproducible"] is True
+          assert status["baseline_manifest"] == "valid"
+          '
       - name: Cache Cargo dependencies
         if: matrix.desktop
         uses: actions/cache@v6

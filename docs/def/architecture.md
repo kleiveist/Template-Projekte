@@ -9,7 +9,7 @@
 | Owner | Project team |
 | Last review | 2026-08-23 |
 | Audience | Developers and architects |
-| Related ATP | N/A — template-level architecture |
+| Related ATP | [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md) |
 
 ## Purpose
 
@@ -222,6 +222,7 @@ flowchart LR
     Governance[Quality and architecture governance]
     Tests[Tests and reports]
     Database[Database diagnostics and migrations]
+    Lifecycle[Template lifecycle and structural migrations]
     Builds[Web, container and Tauri builds]
     Delivery[Version and release validation]
     DocsCheck[Semantic documentation check]
@@ -237,6 +238,7 @@ flowchart LR
     CLI --> Governance
     CLI --> Tests
     CLI --> Database
+    CLI --> Lifecycle
     CLI --> Builds
     CLI --> Delivery
     CLI --> DocsCheck
@@ -280,6 +282,34 @@ flowchart LR
 CI orchestrates the same project tooling used by developers locally. Workflow files set up runtimes, caches, temporary services, and job boundaries; they do not reimplement profile, test, migration, or build behavior. The core workflow has six required jobs: the quality gate plus tooling, documentation, backend, frontend and container jobs that depend on it. Profile and PostgreSQL matrices also run quality inside each generated project before treating its tests and build plans as evidence.
 
 The same CLI also exposes `python tools/control.py init`, which scaffolds a derived project from the declarative profile catalog. Optional capabilities are selected with `--with`, for example `init --profile web-cloud --with postgres`. The active generated project stores its selected optional capabilities and fully resolved features in `project-profile.toml`, and the shared tooling reads that manifest to skip disabled components instead of treating them as missing by default.
+
+### Template lifecycle subsystem
+
+Reusable update behavior lives under `tools/template_lifecycle/`. `tools/control.py` only dispatches the `template` group, and `tools/control_parser.py` only attaches the parser constructed by the lifecycle package. The package separates immutable models, tracked state, local Git source resolution, manifest creation, scaffold reconstruction, planning, three-way merge, migration execution, transactional application, verification, and reporting.
+
+Every generated or adopted product tracks two files:
+
+```text
+.template/
+├── state.toml       Provenance, selection, identity, and applied migration IDs
+└── baseline.json    Deterministic hashes and metadata for template-managed files
+```
+
+The exact full template commit is the technical provenance key. The template SemVer is a human-readable release classification, while the product root `VERSION` remains product-owned. Two template revisions with the same SemVer but different commits are distinct lifecycle inputs.
+
+The planner reconstructs three trees from a trusted local template checkout:
+
+```text
+BASE      scaffold from the recorded template commit
+LOCAL     current product tree
+INCOMING  scaffold from the requested target commit
+```
+
+Both generated scaffolds use the recorded profile, capabilities, product identity, and current product version. Files absent from the baseline are product-owned and remain untouched. Text changes use a real three-way merge; binary changes and delete/add collisions follow explicit conflict rules. Any conflict blocks the whole apply operation, and conflict markers are confined to ignored reports or temporary staging.
+
+Structural migrations are declarative, ordered, versioned, and constrained to staging. They may transform known template paths or configuration keys but cannot execute shell commands, access the network, modify Git history, or touch product/user data. Applying an update requires a clean product worktree, verifies the target commit again, stages and verifies all changes, updates lifecycle state last, and restores the original tree on failure.
+
+Version 1 resolves only local Git sources. It never fetches automatically and never changes the source checkout's branch or working tree. Remote source resolution, pull-request automation, product-specific migrations, automatic profile changes, and automatic conflict resolution are outside this subsystem.
 
 `docs check` is a read-only semantic validator for generated marker structure, expected backlinks, valid link targets, and complete index coverage; it runs without the external generator. `docs index` locates the system `PyGitIndex.py` script and delegates index, README navigation, and backlink regeneration to it. A narrow post-processing step translates only known non-English empty-state labels inside generated markers. Authored documentation is not automatically rewritten.
 
@@ -379,6 +409,7 @@ python tools/control.py build desktop
 
 - [Project README](../../README.md)
 - [Project profiles](project-profiles.md)
+- [Template lifecycle](template-lifecycle.md)
 - [Provider-neutral persistence architecture](persistence-architecture.md)
 - [Optional database feature](database-feature.md)
 - [Runtime configuration](configuration.md)
@@ -387,5 +418,6 @@ python tools/control.py build desktop
 - [Documentation standard](../README.md)
 - [ATP workflow](../atp/README.md)
 - [Tooling guide](../tools/tooling.md)
+- [Template migrations](../tools/template-migrations.md)
 - [Continuous integration](../tools/ci.md)
 - [Release model](../tools/release-model.md)

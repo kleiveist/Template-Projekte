@@ -143,10 +143,9 @@ def _expected_index_targets(overview: Path, docs_root: Path) -> set[Path]:
         child_overview = _directory_overview(child, docs_root)
         if child_overview.is_file():
             expected.add(child_overview.resolve())
-        if directory == docs_root:
-            expected.update(
-                path.resolve() for path in child.glob("*.md") if path.name != "README.md" and path != child_overview
-            )
+        expected.update(
+            path.resolve() for path in child.glob("*.md") if path.name != "README.md" and path != child_overview
+        )
     return expected
 
 

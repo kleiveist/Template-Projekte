@@ -135,6 +135,7 @@ def test_core_ci_uses_supported_runtimes_and_public_tooling() -> None:
 def test_profile_matrix_generates_and_tests_every_profile() -> None:
     content = _workflow("profiles.yml")
     cargo_cache_step = _step_named(content, "Cache Cargo dependencies")
+    lifecycle_step = _step_named(content, "Verify generated template lifecycle")
 
     assert "fail-fast: false" in content
     for profile_id in (
@@ -146,6 +147,12 @@ def test_profile_matrix_generates_and_tests_every_profile() -> None:
     ):
         assert f"profile: {profile_id}" in content
     assert "python tools/control.py init" in content
+    assert "working-directory: .generated/ci-${{ matrix.profile }}" in lifecycle_step
+    assert "python tools/control.py template status" in lifecycle_step
+    assert "python tools/control.py template verify" in lifecycle_step
+    assert 'status["provenance"] == "generated"' in lifecycle_step
+    assert 'status["source_reproducible"] is True' in lifecycle_step
+    assert 'status["baseline_manifest"] == "valid"' in lifecycle_step
     assert "python tools/control.py doctor" in content
     assert "python tools/control.py config doctor" in content
     assert "python tools/control.py install --skip-playwright" in content
@@ -162,12 +169,15 @@ def test_profile_matrix_generates_and_tests_every_profile() -> None:
     assert "actions/cache@v6" in content
     assert ".generated/ci-${{ matrix.profile }}/src-tauri/target" in cargo_cache_step
     assert content.index("name: Generate profile project") < content.index("name: Cache Cargo dependencies")
+    assert content.index("name: Generate profile project") < content.index("name: Verify generated template lifecycle")
+    assert content.index("name: Verify generated template lifecycle") < content.index("name: Cache Cargo dependencies")
     assert content.index("python tools/control.py quality") < content.index("python tools/control.py test --suite all")
 
 
 def test_postgres_ci_uses_isolated_service_health_check_and_migration() -> None:
     content = _workflow("postgres.yml")
     generated_content = content.split("  generated-postgres:", maxsplit=1)[1]
+    lifecycle_step = _step_named(generated_content, "Verify generated template lifecycle")
 
     assert content.count("image: postgres:16.15-alpine3.24") == 2
     assert "POSTGRES_PASSWORD: test-password" in content
@@ -180,6 +190,12 @@ def test_postgres_ci_uses_isolated_service_health_check_and_migration() -> None:
     assert "python tools/control.py test --suite postgres" in content
     assert "--profile ${{ matrix.profile }}" in content
     assert "--with postgres" in content
+    assert "working-directory: .generated/ci-${{ matrix.profile }}-postgres" in lifecycle_step
+    assert "python tools/control.py template status" in lifecycle_step
+    assert "python tools/control.py template verify" in lifecycle_step
+    assert 'status["provenance"] == "generated"' in lifecycle_step
+    assert 'status["source_reproducible"] is True' in lifecycle_step
+    assert 'status["baseline_manifest"] == "valid"' in lifecycle_step
     for profile_id in ("web-cloud", "desktop-cloud", "full-platform"):
         assert f"profile: {profile_id}" in content
     assert "python tools/control.py container validate" in content
@@ -191,6 +207,9 @@ def test_postgres_ci_uses_isolated_service_health_check_and_migration() -> None:
     assert "actions/checkout@v7" in content
     assert "actions/setup-python@v7" in content
     assert "actions/setup-node@v7" in content
+    assert generated_content.index("name: Generate PostgreSQL profile project") < generated_content.index(
+        "name: Verify generated template lifecycle"
+    )
     assert generated_content.index("python tools/control.py quality") < generated_content.index(
         "python tools/control.py test --suite all"
     )

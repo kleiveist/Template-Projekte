@@ -21,10 +21,12 @@
 - 📝 [Deployment architecture](def/deployment-architecture.md)
 - 📝 [Provider-neutral persistence architecture](def/persistence-architecture.md)
 - 📝 [Project profiles](def/project-profiles.md)
+- 📝 [Template lifecycle](def/template-lifecycle.md)
 
 ## 📁 DEV
 - 🗂️ [Overview](dev/dev.md)
 - 📝 [Template v1.0.0 final acceptance](dev/template-final-acceptance.md)
+- 📝 [Template lifecycle acceptance](dev/template-lifecycle-acceptance.md)
 
 ## 📁 Tools
 - 🗂️ [Overview](tools/tools.md)
@@ -32,6 +34,7 @@
 - 📝 [Container builds and local production simulation](tools/container-builds.md)
 - 📝 [Release and desktop packaging model](tools/release-model.md)
 - 📝 [Template-Projekte v1.0.0 release notes](tools/release-notes-v1.0.0.md)
+- 📝 [Template migrations](tools/template-migrations.md)
 - 📝 [Tooling Guide](tools/tooling.md)
 
 ## 📁 USR

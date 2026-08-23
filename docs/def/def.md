@@ -13,5 +13,6 @@
 - 📝 [Deployment architecture](deployment-architecture.md)
 - 📝 [Provider-neutral persistence architecture](persistence-architecture.md)
 - 📝 [Project profiles](project-profiles.md)
+- 📝 [Template lifecycle](template-lifecycle.md)
 
 <!-- AUTO-GENERATED:docs-index END -->

@@ -9,7 +9,7 @@
 | Owner | Project team |
 | Last review | 2026-08-23 |
 | Audience | Release operators and desktop developers |
-| Related ATP | N/A — template-level release baseline |
+| Related ATP | [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md) |
 
 ## Purpose
 
@@ -65,16 +65,20 @@ A product repository may add protected signing and publication jobs only after t
 4. secrets scoped only to the platform signing job; and
 5. write permission granted only to the final publication job.
 
-## Version source of truth
+## Version sources of truth
 
-`VERSION` is the intended application version. It uses semantic versioning. Enabled component metadata mirrors that value in:
+In the template source repository, root `VERSION` classifies the template release. During generation it is recorded as the installed template version. In a generated repository, root `VERSION` becomes the product version and the product owns its future release sequence. The installed template SemVer and exact template commit remain separately recorded in `.template/state.toml`.
+
+The exact template commit is authoritative lifecycle provenance. SemVer is a human-readable release classification: equal template versions at different commits do not make the revisions identical.
+
+The current repository's root `VERSION` uses semantic versioning. Enabled product component metadata mirrors that value in:
 
 - `frontend/package.json` and `frontend/package-lock.json`;
 - `src-tauri/tauri.conf.json`;
 - `src-tauri/Cargo.toml` and the root package entry in `Cargo.lock`; and
 - FastAPI OpenAPI metadata at runtime.
 
-Change `VERSION`, synchronize metadata, and verify it:
+Change a product `VERSION`, synchronize its metadata, and verify it:
 
 ```sh
 python tools/control.py version
@@ -82,9 +86,23 @@ python tools/control.py version sync
 python tools/control.py version check
 ```
 
-`version sync` changes metadata but never creates a tag or publishes an artifact.
+`version sync` changes product metadata but never changes installed template provenance, creates a tag, or publishes an artifact. `template update` never calls `version sync` and never replaces the product version with the template version.
 
 For a release version, verify the enabled canonical values in `VERSION`, the frontend package and root lockfile package, the Tauri configuration, and the Rust package and its root `Cargo.lock` entry. Dependency, schema, API, and document-format versions are not application-version mirrors and must not be changed by a broad text replacement.
+
+## Managed product lifecycle preflight
+
+A managed product release checks lifecycle integrity independently from release version consistency:
+
+```sh
+python tools/control.py template status
+python tools/control.py template verify
+python tools/control.py version check
+```
+
+Status and verification require no network. A template update is a separate maintenance operation against an explicitly trusted local checkout; it does not belong implicitly in a product release. After applying an update, review the lifecycle report and product diff, run the complete product gate, and commit the accepted product and `.template/` changes through the normal product workflow. `release check` still requires the resulting worktree to be clean.
+
+An invalid manifest, unknown template ID, dirty-source baseline, identity mismatch, unexpected profile/capability change, unknown migration ID, or inconsistent product version blocks lifecycle acceptance. No release result should conceal such a failure.
 
 ## Project identity and release gate
 
@@ -211,6 +229,8 @@ python tools/control.py release check
 
 Also complete the five-profile matrix, the three valid PostgreSQL combinations with real database connections, the two invalid-combination checks, and the native Linux/macOS/Windows workflow matrix. Investigate every warning. A skipped or unexecuted path must remain recorded as such and cannot be promoted to `PASS`.
 
+For every generated profile, the matrix also runs `template status` and `template verify` immediately after generation. A clean CI source must produce `provenance = "generated"`, `source_dirty = false`, and a valid baseline manifest.
+
 Before signing, also verify the product icon, bundle identifier ownership, privacy declarations, license files, changelog, API origin/CSP match, platform entitlements, certificate validity, and recovery access to signing credentials.
 
 ## Verification
@@ -224,3 +244,5 @@ Workflow structure is covered by `tools/tests/test_ci_workflows.py`. Identity, v
 - [Container builds](container-builds.md)
 - [Deployment architecture](../def/deployment-architecture.md)
 - [Framework architecture](../def/architecture.md)
+- [Template lifecycle](../def/template-lifecycle.md)
+- [Template migrations](template-migrations.md)

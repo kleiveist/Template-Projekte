@@ -121,6 +121,33 @@ def test_navigation_check_accepts_complete_indices_and_backlinks(monkeypatch, tm
     assert docs_index.check(argparse.Namespace(docs_dir="docs")) == 0
 
 
+def test_navigation_check_accepts_child_pages_in_a_nested_section_index(monkeypatch, tmp_path) -> None:
+    root = tmp_path / "project"
+    docs = root / "docs"
+    section = docs / "section"
+    child = section / "active"
+    child.mkdir(parents=True)
+    (root / "README.md").write_text(
+        f"# Project\n{docs_index.INDEX_START}\n[Docs](docs/index.md)\n"
+        "[Section](docs/section/section.md)\n"
+        f"{docs_index.INDEX_END}\n",
+        encoding="utf-8",
+    )
+    (docs / "index.md").write_text(
+        _page("Docs", "../README.md", "[Section](section/section.md)"),
+        encoding="utf-8",
+    )
+    (section / "section.md").write_text(
+        _page("Section", "../index.md", "[Active](active/active.md)\n[ATP](active/ATP-0001.md)"),
+        encoding="utf-8",
+    )
+    (child / "active.md").write_text(_page("Active", "../section.md", "[ATP](ATP-0001.md)"), encoding="utf-8")
+    (child / "ATP-0001.md").write_text(_page("ATP", "active.md"), encoding="utf-8")
+    monkeypatch.setattr(docs_index, "ROOT", root)
+
+    assert docs_index.check(argparse.Namespace(docs_dir="docs")) == 0
+
+
 def test_navigation_check_includes_root_markdown_pages(monkeypatch, tmp_path) -> None:
     root = tmp_path / "project"
     docs = root / "docs"

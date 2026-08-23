@@ -6,6 +6,6 @@
 <!-- AUTO-GENERATED:docs-index START -->
 
 ## 📄 Pages
-- ⏭️ (no pages)
+- 📝 [ATP-0001: Template lifecycle foundation](ATP-0001-template-lifecycle.md)
 
 <!-- AUTO-GENERATED:docs-index END -->

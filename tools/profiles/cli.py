@@ -4,10 +4,21 @@ import argparse
 from pathlib import Path
 
 from tools import logger
-from tools.profiles.generator import GenerationError, ScaffoldPlan, build_scaffold_plan, scaffold_project
+from tools.profiles.generator import (
+    GenerationError,
+    ScaffoldPlan,
+    build_scaffold_plan,
+    scaffold_project,
+)
 from tools.profiles.loader import load_catalog
 from tools.profiles.model import FeatureDefinition, ProfileCatalog, ProfileDefinition
-from tools.profiles.validator import CatalogValidationError, ProfileLookupError, resolve_optional_features
+from tools.profiles.validator import (
+    CatalogValidationError,
+    ProfileLookupError,
+    resolve_optional_features,
+)
+from tools.template_lifecycle.model import LifecycleError
+from tools.template_lifecycle.scaffold import finalize_generated_project
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -45,13 +56,16 @@ def main(args: argparse.Namespace) -> int:
         return 1
 
     _print_plan(plan)
+    dry_run = bool(getattr(args, "dry_run", False))
     try:
-        scaffold_project(plan, dry_run=bool(getattr(args, "dry_run", False)))
-    except (GenerationError, OSError) as exc:
+        scaffold_project(plan, dry_run=dry_run)
+        if not dry_run:
+            finalize_generated_project(plan)
+    except (GenerationError, LifecycleError, OSError) as exc:
         logger.fail(str(exc))
         return 1
 
-    if getattr(args, "dry_run", False):
+    if dry_run:
         logger.ok("Init dry-run completed; no files were written")
         return 0
 

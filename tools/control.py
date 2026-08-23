@@ -30,6 +30,7 @@ profile_runtime = importlib.import_module("tools.profiles.runtime")
 quality_control = importlib.import_module("tools.quality.control")
 tauri_build = importlib.import_module("tools.tauri.build")
 tauri_control = importlib.import_module("tools.tauri.control")
+template_lifecycle_cli = importlib.import_module("tools.template_lifecycle.cli")
 control_parser = importlib.import_module("tools.control_parser")
 
 Handler = Callable[[argparse.Namespace], int]
@@ -164,6 +165,7 @@ def _handlers() -> dict[str, Handler]:
         "stop": stop.main,
         "test": _handle_test,
         "tauri": tauri_control.main,
+        "template": template_lifecycle_cli.main,
     }
 
 

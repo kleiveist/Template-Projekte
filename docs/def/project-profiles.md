@@ -9,7 +9,7 @@
 | Owner | Project team |
 | Last review | 2026-08-23 |
 | Audience | Developers and architects |
-| Related ATP | N/A — template-level profile model |
+| Related ATP | [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md) |
 
 ## Purpose
 
@@ -22,7 +22,8 @@ This document defines how the repository models project profiles. A profile is a
 - feature and profile terminology;
 - declarative profile definitions under `profiles/`;
 - the active project manifest in `project-profile.toml`;
-- the scaffold flow behind `python tools/control.py init`; and
+- the scaffold flow behind `python tools/control.py init`;
+- lifecycle preservation of the selected profile and optional capabilities; and
 - the current baseline profile set.
 
 ### Excluded
@@ -147,8 +148,9 @@ The generated project receives:
 
 - shared core paths from `profiles/features.toml`;
 - feature-owned directories such as `frontend/`, `backend/`, or `src-tauri/`;
-- the copied `profiles/` definitions for future reference; and
-- a generated `project-profile.toml` manifest.
+- the copied `profiles/` definitions for future reference;
+- a generated `project-profile.toml` manifest; and
+- tracked `.template/state.toml` provenance and a deterministic `.template/baseline.json` scaffold manifest.
 
 The shared core deliberately includes the governance and release surface: `AGENTS.md`, `VERSION`, `config/`, `docs/`, `shared/`, and `tools/`. Consequently every derived project carries the same code-quality policy, architecture checks, command entry point, and version contract. Feature selection removes disabled runtime implementations; it does not remove the controls used to verify the resulting project.
 
@@ -157,6 +159,8 @@ When `--name` is supplied, the generator also derives or validates the project s
 For profiles without `tauri`, the generator also removes the Tauri npm script and CLI dependency from the copied frontend package metadata and lockfile. This keeps disabled desktop tooling out of web dependency installation without maintaining a second frontend template.
 
 The generator does not clone separate template repositories. It also does not mutate the master template root.
+
+Lifecycle metadata is created after all profile filtering, environment-example rendering, identity replacement, and metadata normalization. `init --dry-run` writes neither the scaffold nor lifecycle files. A clean template checkout records `provenance = "generated"`; a development scaffold from uncommitted template content records `provenance = "working-tree"` and cannot be updated automatically until it is explicitly re-adopted against a clean commit.
 
 Master repository tests validate that every catalog path exists. Each generator run validates the selected scaffold plan before writing files. A derived project loads the same catalog without requiring paths owned by disabled features, then validates its active feature selection from `project-profile.toml`. This distinction lets reduced projects keep shared tooling while intentionally omitting inactive layers.
 
@@ -180,6 +184,12 @@ The shared tooling reads `project-profile.toml` and adjusts behavior:
 
 Profile awareness must never weaken repository governance. In particular, the hard `CQ001` error for a handwritten source file above 900 code lines remains unsuppressible in every generated project.
 
+## Lifecycle invariants
+
+An ordinary template update preserves `profile` and `optional_features`. It must not silently enable a backend, Tauri, PostgreSQL, or another capability, remove an enabled capability, or switch between platform profiles. A changed meaning of a resolved profile is an architecture change and requires an explicit lifecycle migration with documented preconditions and postconditions.
+
+The lifecycle state records both the selected optional capabilities and the fully resolved feature set. `template status` warns about drift; `template verify` fails unsafe or inconsistent state. Adoption records an existing project's declared selection without changing product source files. General interactive profile migration is intentionally outside version 1.
+
 ## Extension path
 
 To add a future capability:
@@ -196,13 +206,13 @@ This keeps profile growth additive rather than architectural. Do not add empty c
 
 The profile workflow generates all five presets into fresh target directories. It then installs their selected dependencies and applies this matrix:
 
-| Profile | Quality and all applicable tests | Web build | Container validation | Tauri doctor and desktop dry-run |
-| --- | ---: | ---: | ---: | ---: |
-| `web-only` | Required | Required | Not applicable | Not applicable |
-| `web-cloud` | Required | Required | Required | Not applicable |
-| `desktop-local` | Required | Required | Not applicable | Required |
-| `desktop-cloud` | Required | Required | Required | Required |
-| `full-platform` | Required | Required | Required | Required |
+| Profile | Lifecycle status and verify | Quality and all applicable tests | Web build | Container validation | Tauri doctor and desktop dry-run |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `web-only` | Required | Required | Required | Not applicable | Not applicable |
+| `web-cloud` | Required | Required | Required | Required | Not applicable |
+| `desktop-local` | Required | Required | Required | Not applicable | Required |
+| `desktop-cloud` | Required | Required | Required | Required | Required |
+| `full-platform` | Required | Required | Required | Required | Required |
 
 PostgreSQL verification is a separate three-entry matrix because the capability requires an existing backend:
 
@@ -224,14 +234,23 @@ python tools/control.py quality
 python tools/control.py test --suite tools
 ```
 
-Run generated-project checks from the generated project root. Generation and validation must leave the master repository unchanged; CI closes each matrix entry with `git diff --exit-code`.
+Run lifecycle checks from an actual generated-project root:
+
+```sh
+python tools/control.py template status
+python tools/control.py template verify
+```
+
+Generation and validation must leave the master repository unchanged; CI closes each matrix entry with `git diff --exit-code`.
 
 ## Related documents
 
 - [Framework architecture](architecture.md)
+- [Template lifecycle](template-lifecycle.md)
 - [Provider-neutral persistence architecture](persistence-architecture.md)
 - [Database feature](database-feature.md)
 - [Runtime configuration](configuration.md)
 - [Deployment architecture](deployment-architecture.md)
 - [Tooling Guide](../tools/tooling.md)
+- [Template migrations](../tools/template-migrations.md)
 - [Project README](../../README.md)

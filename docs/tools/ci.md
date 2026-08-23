@@ -9,7 +9,7 @@
 | Owner | Project team |
 | Last review | 2026-08-23 |
 | Audience | Contributors and repository maintainers |
-| Related ATP | N/A - automated evidence supports, but does not replace, feature ATPs |
+| Related ATP | [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md) |
 
 ## Purpose
 
@@ -34,6 +34,7 @@ python tools/control.py
       +-- quality
       +-- test --suite <name>
       +-- db upgrade
+      +-- template status / template verify
       +-- build web
       +-- container validate / build container
       +-- version check / release check
@@ -64,7 +65,7 @@ Tests that exercise generator capabilities outside a derived project's enabled f
 | Level | Coverage | Public command |
 | --- | --- | --- |
 | Governance | Repository metrics, architecture boundaries, lint, formatting, type/compiler checks, and exception policy | `python tools/control.py quality` |
-| Core tests | Tooling, profiles, configuration, schema, FastAPI, SQLAlchemy, frontend, Tauri, and Rust | `python tools/control.py test --suite <name>` |
+| Core tests | Tooling, lifecycle, profiles, configuration, schema, FastAPI, SQLAlchemy, frontend, Tauri, and Rust | `python tools/control.py test --suite <name>` |
 | External service tests | PostgreSQL connectivity and Alembic migration | `python tools/control.py test --suite postgres`, `python tools/control.py db upgrade` |
 | Generated project tests | Real scaffolds for every supported profile | `python tools/control.py init`, followed by generated-project commands |
 | Build verification | Vite, provider-neutral images, and native Tauri packages | `python tools/control.py build web`, `build container`, `build desktop` |
@@ -101,17 +102,17 @@ The five downstream jobs are independent and run in parallel after Quality succe
 
 ### Profile Matrix
 
-`.github/workflows/profiles.yml` generates `web-only`, `web-cloud`, `desktop-local`, `desktop-cloud`, and `full-platform` projects. Each matrix entry runs an initial structure doctor, dependency installation, a prepared-environment doctor, the profile-aware complete suite, and a production web build. Desktop entries also install Linux Tauri prerequisites, run Tauri doctor, and execute Cargo checks. Cloud entries validate their generated Compose model.
+`.github/workflows/profiles.yml` generates `web-only`, `web-cloud`, `desktop-local`, `desktop-cloud`, and `full-platform` projects. Immediately after generation, each matrix entry runs `template status` and `template verify` from the generated root. A clean checkout must report generated, reproducible provenance and a valid deterministic baseline before dependency caches or product checks are trusted. Each entry then runs an initial structure doctor, dependency installation, a prepared-environment doctor, the profile-aware complete suite, and a production web build. Desktop entries also install Linux Tauri prerequisites, run Tauri doctor, and execute Cargo checks. Cloud entries validate their generated Compose model.
 
 Every entry runs `python tools/control.py quality` after installation and before its final Doctor, tests, and build:
 
-| Profile | Quality | Tests | Web build | Container validation | Tauri checks |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| `web-only` | Required | Required | Required | N/A | N/A |
-| `web-cloud` | Required | Required | Required | Required | N/A |
-| `desktop-local` | Required | Required | Required | N/A | Required |
-| `desktop-cloud` | Required | Required | Required | Required | Required |
-| `full-platform` | Required | Required | Required | Required | Required |
+| Profile | Lifecycle | Quality | Tests | Web build | Container validation | Tauri checks |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `web-only` | Required | Required | Required | Required | N/A | N/A |
+| `web-cloud` | Required | Required | Required | Required | Required | N/A |
+| `desktop-local` | Required | Required | Required | Required | N/A | Required |
+| `desktop-cloud` | Required | Required | Required | Required | Required | Required |
+| `full-platform` | Required | Required | Required | Required | Required | Required |
 
 On Debian-family Linux runners, `tauri install` refreshes apt metadata before a non-interactive install. It uses the Tauri v2 WebKitGTK 4.1 dependency set and selects the release-appropriate FUSE 2 package name (`libfuse2` on Ubuntu 22.04 and `libfuse2t64` on Ubuntu 24.04 and newer). Missing required compile-time libraries make `tauri doctor` fail; AppImage-only helpers remain warnings during check-only CI.
 
@@ -136,15 +137,15 @@ Alembic upgrade head
 PostgreSQL integration test
 ```
 
-The same workflow generates `web-cloud`, `desktop-cloud`, and `full-platform` with `--with postgres`. Each generated project runs doctor, migration, the complete profile-aware suite, the web build, and container-model validation. Desktop entries also run Tauri checks. `DATABASE_URL` and `DATABASE_URL_TEST` point only to the job-local service.
+The same workflow generates `web-cloud`, `desktop-cloud`, and `full-platform` with `--with postgres`. Each generated project first runs lifecycle status and verification so CI proves that the optional `postgres` selection and its fully resolved `database` dependency are recorded. It then runs doctor, migration, the complete profile-aware suite, the web build, and container-model validation. Desktop entries also run Tauri checks. `DATABASE_URL` and `DATABASE_URL_TEST` point only to the job-local service.
 
 The PostgreSQL acceptance matrix is:
 
-| Generated variant | Real service connection | Migration | Quality | API/profile tests | Web build | Desktop checks |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `web-cloud + postgres` | Required | Required | Required | Required | Required | N/A |
-| `desktop-cloud + postgres` | Required | Required | Required | Required | Required | Required |
-| `full-platform + postgres` | Required | Required | Required | Required | Required | Required |
+| Generated variant | Lifecycle | Real service connection | Migration | Quality | API/profile tests | Web build | Desktop checks |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `web-cloud + postgres` | Required | Required | Required | Required | Required | Required | N/A |
+| `desktop-cloud + postgres` | Required | Required | Required | Required | Required | Required | Required |
+| `full-platform + postgres` | Required | Required | Required | Required | Required | Required | Required |
 
 `web-only + postgres` and `desktop-local + postgres` are invalid combinations and must fail before a partial target is written. A skipped PostgreSQL suite without a real `DATABASE_URL_TEST` is not release evidence for this matrix.
 
@@ -238,6 +239,8 @@ GitHub-hosted caches cover:
 
 Caches improve execution time but are never required for correctness.
 
+The profile workflow intentionally generates the project before configuring the generated Cargo target cache. Lifecycle status and verification remain between those steps. Workflow regression tests protect that order together with the generated cache path.
+
 ## Permissions and secrets
 
 Every workflow declares only `contents: read`. Pull requests from forks do not require repository secrets. PostgreSQL uses the temporary user, password, and database declared in workflow YAML; those values exist only inside an isolated CI run and are not production credentials.
@@ -316,13 +319,22 @@ python tools/control.py docs check
 
 PostgreSQL verification additionally requires a disposable test database through `DATABASE_URL` and `DATABASE_URL_TEST`.
 
+Run `template status` and `template verify` from a generated or adopted product root. The master template itself does not use product lifecycle state.
+
+```sh
+python tools/control.py template status
+python tools/control.py template verify
+```
+
 ## Related documents
 
 - [Tooling Guide](tooling.md)
 - [Framework Architecture](../def/architecture.md)
 - [Project Profiles](../def/project-profiles.md)
+- [Template Lifecycle](../def/template-lifecycle.md)
 - [Database Feature](../def/database-feature.md)
 - [Runtime Configuration](../def/configuration.md)
 - [Deployment Architecture](../def/deployment-architecture.md)
 - [Release Model](release-model.md)
+- [Template Migrations](template-migrations.md)
 - [ATP Workflow](../atp/README.md)

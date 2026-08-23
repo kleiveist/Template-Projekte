@@ -7,6 +7,7 @@ from tools import logger
 from tools.inst import configuration, db
 from tools.quality import control as quality_control
 from tools.tauri import control as tauri_control
+from tools.template_lifecycle import cli as template_lifecycle_cli
 
 
 class HelpFormatter(argparse.RawDescriptionHelpFormatter):
@@ -48,6 +49,7 @@ Groups with their own command maps:
   python tools/control.py docs
   python tools/control.py quality
   python tools/control.py tauri
+  python tools/control.py template
   python tools/control.py version
   python tools/control.py release
 """
@@ -69,6 +71,7 @@ examples:
   python tools/control.py db current
   python tools/control.py docs index --dry-run
   python tools/control.py tauri
+  python tools/control.py template status
 
 Compatibility:
   The former aliases --doctor, --install, --run, --stop, --test and --build remain available.
@@ -113,6 +116,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_test_parser(subparsers)
     _add_quality_parser(subparsers)
     _add_tauri_parser(subparsers)
+    template_lifecycle_cli.configure_parser(subparsers, formatter_class=HelpFormatter)
     return parser
 
 

@@ -123,6 +123,18 @@ jobs:
           --profile ${{ matrix.profile }}
           --with postgres
           --target-dir .generated/ci-${{ matrix.profile }}-postgres
+      - name: Verify generated template lifecycle
+        working-directory: .generated/ci-${{ matrix.profile }}-postgres
+        run: |
+          python tools/control.py template status
+          python tools/control.py template verify
+          python tools/control.py template status --format json | python -c '
+          import json, sys
+          status = json.load(sys.stdin)
+          assert status["provenance"] == "generated"
+          assert status["source_reproducible"] is True
+          assert status["baseline_manifest"] == "valid"
+          '
       - name: Inspect generated project structure
         working-directory: .generated/ci-${{ matrix.profile }}-postgres
         run: python tools/control.py doctor

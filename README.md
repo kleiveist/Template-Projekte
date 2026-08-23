@@ -34,6 +34,8 @@ git clone
     -> python tools/control.py doctor
     -> python tools/control.py init
     -> cd into the generated project
+    -> python tools/control.py template status
+    -> python tools/control.py template verify
     -> python tools/control.py doctor
     -> python tools/control.py install
     -> python tools/control.py quality
@@ -150,7 +152,7 @@ After either explicit `../MyProject` example above, run:
 cd ../MyProject
 ```
 
-This directory is now the product project. Product code, configuration, tests, and commits belong here. The original `Template-Projekte` directory remains the master template.
+This directory is now the product project. Product code, configuration, tests, and commits belong here. The original `Template-Projekte` directory remains the master template. The generated `.template/state.toml` and `.template/baseline.json` files record the exact template commit, selected profile and capabilities, product identity, and deterministic scaffold baseline. Commit both lifecycle files with the product.
 
 #### Step 6: Check the generated project
 
@@ -166,6 +168,15 @@ The generated `project-profile.toml` records the selected profile and resolved f
 - Docker is optional unless a container workflow is used.
 
 For a detailed check of desktop system prerequisites, use `python tools/control.py tauri doctor` after the general project doctor.
+
+Lifecycle status and verification are local, read-only checks:
+
+```sh
+python tools/control.py template status
+python tools/control.py template verify
+```
+
+The root `VERSION` in this generated repository is the product version. The installed template version and exact template commit live in `.template/state.toml`; a template update never replaces the product version with the template version.
 
 #### Step 7: Install dependencies
 
@@ -201,6 +212,44 @@ Frontend code is under `frontend/`. Backend code, when enabled, is under `backen
 ```sh
 python tools/control.py test --suite all
 ```
+
+### Maintain or adopt a product
+
+Lifecycle operations use an explicitly trusted local template checkout and never fetch, push, commit, tag, publish, or release automatically. Inspect a legacy product before adoption:
+
+```sh
+python tools/control.py template audit \
+  --target-dir ../Product \
+  --source-dir . \
+  --to-ref <trusted-template-tag-or-sha>
+
+python tools/control.py template adopt \
+  --target-dir ../Product \
+  --source-dir . \
+  --baseline-ref <trusted-template-tag-or-sha> \
+  --profile <profile-id> \
+  --name "<Product Name>" \
+  --slug <product-slug> \
+  --identifier <reverse-domain-identifier> \
+  --apply
+```
+
+For an already managed product, plan before applying:
+
+```sh
+python tools/control.py template plan \
+  --target-dir ../Product \
+  --source-dir . \
+  --to-ref <trusted-template-tag-or-sha>
+
+python tools/control.py template update \
+  --target-dir ../Product \
+  --source-dir . \
+  --to-ref <trusted-template-tag-or-sha> \
+  --apply
+```
+
+Planning is read-only. Applying requires a completely clean product worktree, re-resolves the target ref to a full commit, blocks on any conflict, updates lifecycle state last, verifies the staged result, and rolls back on failure. See [Template lifecycle](docs/def/template-lifecycle.md) and [Template migrations](docs/tools/template-migrations.md) for the state model, reports, migration boundary, and recovery rules.
 
 ### Guided console
 
@@ -281,6 +330,7 @@ PostgreSQL support adds SQLAlchemy, Alembic, and Psycopg only when selected with
 
 ```text
 AGENTS.md           Coding-agent governance copied into generated projects
+.template/           Tracked template provenance and deterministic scaffold baseline
 backend/             FastAPI application and API tests (backend profiles only)
 config/              Runtime environment and code-quality policy
 deployment/          Provider-neutral Docker and Compose baseline (cloud profiles only)
@@ -299,6 +349,8 @@ VERSION              Application version source of truth
 The README answers “How do I start?” The linked guides answer “How does it work?”
 
 - [Tooling Guide](docs/tools/tooling.md): complete command and console reference
+- [Template lifecycle](docs/def/template-lifecycle.md): provenance, audit, adoption, planning, update, and verification
+- [Template migrations](docs/tools/template-migrations.md): versioned structural migration registry and safety rules
 - [Project profiles](docs/def/project-profiles.md): profiles, features, and generation rules
 - [Runtime configuration](docs/def/configuration.md): environment contract and precedence
 - [Provider-neutral persistence architecture](docs/def/persistence-architecture.md): data categories, sources of truth, and provider decisions
@@ -339,10 +391,12 @@ English is the only documentation language for this repository and projects deri
 - 📝 [Deployment architecture](docs/def/deployment-architecture.md)
 - 📝 [Provider-neutral persistence architecture](docs/def/persistence-architecture.md)
 - 📝 [Project profiles](docs/def/project-profiles.md)
+- 📝 [Template lifecycle](docs/def/template-lifecycle.md)
 
 ## 📁 DEV
 - 🗂️ [Overview](docs/dev/dev.md)
 - 📝 [Template v1.0.0 final acceptance](docs/dev/template-final-acceptance.md)
+- 📝 [Template lifecycle acceptance](docs/dev/template-lifecycle-acceptance.md)
 
 ## 📁 Tools
 - 🗂️ [Overview](docs/tools/tools.md)
@@ -350,6 +404,7 @@ English is the only documentation language for this repository and projects deri
 - 📝 [Container builds and local production simulation](docs/tools/container-builds.md)
 - 📝 [Release and desktop packaging model](docs/tools/release-model.md)
 - 📝 [Template-Projekte v1.0.0 release notes](docs/tools/release-notes-v1.0.0.md)
+- 📝 [Template migrations](docs/tools/template-migrations.md)
 - 📝 [Tooling Guide](docs/tools/tooling.md)
 
 ## 📁 USR

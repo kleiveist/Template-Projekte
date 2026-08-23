@@ -6,3 +6,7 @@
 /tools/quality/rust_analyzer/src/** text eol=lf
 /tools/quality/rust_analyzer/tests/** text eol=lf
 /tools/quality/rust_analyzer/dist/*.wasm binary
+
+# Keep tracked lifecycle provenance deterministic on every checkout platform.
+/.template/state.toml text eol=lf
+/.template/baseline.json text eol=lf
