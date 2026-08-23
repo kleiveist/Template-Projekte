@@ -367,6 +367,14 @@ The README answers “How do I start?” The linked guides answer “How does it
 
 English is the only documentation language for this repository and projects derived from it. A new or changed feature is complete only when its code, tests, acceptance evidence, and affected documentation are updated together.
 
+## Community and contributing
+
+Contributions to this master template are welcome. Read the [contribution guide](CONTRIBUTING.md) and follow the [Code of Conduct](CODE_OF_CONDUCT.md). Use the provided public GitHub Issue forms for reproducible bugs and well-scoped feature requests.
+
+Do not report security vulnerabilities in a public issue. Follow the private reporting instructions in the [Security Policy](.github/SECURITY.md). This repository is licensed under the [MIT License](LICENSE).
+
+Projects derived from this template must review and replace their repository description, license and copyright owner, security and Code-of-Conduct contacts, and community links before inviting contributors or releasing the product.
+
 ## Documentation index
 
 <!-- AUTO-GENERATED:docs-index START -->

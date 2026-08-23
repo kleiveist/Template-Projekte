@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability privately
+    url: https://github.com/kleiveist/Template-Projekte/security
+    about: Use the private vulnerability reporting route described on the repository Security tab. Do not open a public issue.
