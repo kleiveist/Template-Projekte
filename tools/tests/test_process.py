@@ -40,7 +40,7 @@ def test_prepare_command_executes_batch_launcher_with_spaced_path_and_arguments(
     launcher_dir = tmp_path / "launcher path with spaces"
     launcher_dir.mkdir()
     launcher = launcher_dir / "argument probe.cmd"
-    launcher.write_text('@echo off\r\n<nul set /p "=[%~1]|[%~2]"\r\n', encoding="utf-8")
+    launcher.write_text('@echo off\r\n<nul set /p "=[%~1]|[%~2]"\r\nexit /b 0\r\n', encoding="utf-8")
 
     completed = subprocess.run(
         process.prepare_command([str(launcher), "first value", "second value"]),
