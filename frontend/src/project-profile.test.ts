@@ -15,4 +15,10 @@ describe("active project profile", () => {
     }
     expect(hasFeature("not-a-project-feature")).toBe(false);
   });
+
+  it("keeps feature queries valid across generated profiles", () => {
+    const backendEnabled: boolean = hasFeature("backend");
+
+    expect(backendEnabled).toBe(new Set<string>(enabledFeatures).has("backend"));
+  });
 });

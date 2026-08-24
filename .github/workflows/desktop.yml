@@ -40,14 +40,17 @@ jobs:
             os: ubuntu-latest
             target: linux
             bundles: deb
+            archive: desktop-linux-unsigned.tar.gz
           - label: macOS
             os: macos-latest
             target: macos
             bundles: all
+            archive: desktop-macos-unsigned.tar.gz
           - label: Windows
             os: windows-latest
             target: windows
             bundles: all
+            archive: desktop-windows-unsigned.zip
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -121,18 +124,93 @@ jobs:
             --target linux \
             --bundles "$LINUX_BUNDLES" \
             --summary-file "$GITHUB_STEP_SUMMARY"
+      - name: Archive unsigned POSIX verification artifacts
+        if: matrix.target != 'windows'
+        shell: bash
+        env:
+          ARCHIVE_NAME: ${{ matrix.archive }}
+          DESKTOP_TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          archive_root=".dist/desktop/artifacts"
+          archive_path="$archive_root/$ARCHIVE_NAME"
+          bundle_root="src-tauri/target/release/bundle"
+          archive_inputs=("$bundle_root")
+
+          test -d "$bundle_root"
+          test ! -L "$bundle_root"
+          if [[ "$DESKTOP_TARGET" == "linux" ]]; then
+            archive_inputs+=(
+              ".dist/desktop/linux/linux-bundles.json"
+              ".dist/desktop/linux/SHA256SUMS"
+            )
+          fi
+          for archive_input in "${archive_inputs[@]}"; do
+            test -e "$archive_input"
+            test ! -L "$archive_input"
+          done
+
+          mkdir -p "$archive_root"
+          test ! -e "$archive_path"
+          tar --create --gzip --file "$archive_path" -- "${archive_inputs[@]}"
+          test -s "$archive_path"
+          tar --list --gzip --file "$archive_path" >/dev/null
+      - name: Archive unsigned Windows verification artifacts
+        if: matrix.target == 'windows'
+        shell: pwsh
+        env:
+          ARCHIVE_NAME: ${{ matrix.archive }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $archiveRoot = ".dist/desktop/artifacts"
+          $archivePath = Join-Path $archiveRoot $env:ARCHIVE_NAME
+          $bundleRoot = "src-tauri/target/x86_64-pc-windows-msvc/release/bundle"
+
+          if (-not (Test-Path -LiteralPath $bundleRoot -PathType Container)) {
+            throw "Windows bundle directory is missing: $bundleRoot"
+          }
+          $reparsePoint = Get-ChildItem -LiteralPath $bundleRoot -Force -Recurse |
+            Where-Object { ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0 } |
+            Select-Object -First 1
+          if ($null -ne $reparsePoint) {
+            throw "Windows bundle directory contains an unsafe reparse point: $($reparsePoint.FullName)"
+          }
+          $candidate = Get-ChildItem -LiteralPath $bundleRoot -File -Recurse | Select-Object -First 1
+          if ($null -eq $candidate) {
+            throw "Windows bundle directory contains no files: $bundleRoot"
+          }
+
+          New-Item -ItemType Directory -Path $archiveRoot -Force | Out-Null
+          if (Test-Path -LiteralPath $archivePath) {
+            throw "Refusing to overwrite an existing desktop archive: $archivePath"
+          }
+          Compress-Archive -LiteralPath $bundleRoot -DestinationPath $archivePath -CompressionLevel Optimal
+          if (
+            -not (Test-Path -LiteralPath $archivePath -PathType Leaf) -or
+            (Get-Item -LiteralPath $archivePath).Length -le 0
+          ) {
+            throw "Windows desktop archive is missing or empty: $archivePath"
+          }
+
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $resolvedArchivePath = (Resolve-Path -LiteralPath $archivePath).Path
+          $archive = [System.IO.Compression.ZipFile]::OpenRead($resolvedArchivePath)
+          try {
+            if ($archive.Entries.Count -eq 0) {
+              throw "Windows desktop archive contains no entries: $archivePath"
+            }
+          } finally {
+            $archive.Dispose()
+          }
       - name: Upload unsigned verification artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: desktop-${{ matrix.target }}-unsigned
           if-no-files-found: error
           include-hidden-files: true
+          compression-level: 0
           retention-days: 14
-          path: |
-            src-tauri/target/release/bundle/**
-            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/**
-            .dist/desktop/linux/linux-bundles.json
-            .dist/desktop/linux/SHA256SUMS
+          path: .dist/desktop/artifacts/${{ matrix.archive }}
       - name: Verify repository files are unchanged
         shell: bash
         run: git diff --exit-code

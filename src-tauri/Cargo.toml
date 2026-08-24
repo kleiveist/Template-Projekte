@@ -1,6 +1,6 @@
 [package]
 name = "project-template"
-version = "1.0.1"
+version = "1.0.2"
 description = "Reusable Vite, FastAPI and Tauri desktop project template"
 authors = ["Template Project Contributors"]
 edition = "2021"

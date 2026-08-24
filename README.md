@@ -7,17 +7,18 @@ This repository is the master template for applications built with Vite and Type
 
 | Field | Value |
 | --- | --- |
-| Template version | `1.0.0` |
-| Validation status | `PASS` — all five required workflows succeeded on release commit `a09c0b9` |
-| Lifecycle status | `READY FOR SUNODM PILOT` |
-| Published release tag | [`v1.0.0`](https://github.com/kleiveist/Template-Projekte/releases/tag/v1.0.0) |
-| Validated release commit | `a09c0b9998881e3dbbbd6292fdd22715b402bee8` |
+| Source version | `1.0.2` |
+| v1 lifecycle status | `READY FOR SUNODM PILOT` |
+| Historical completed acceptance | [`v1.0.0`](https://github.com/kleiveist/Template-Projekte/releases/tag/v1.0.0) on `a09c0b9998881e3dbbbd6292fdd22715b402bee8` |
+| Publication authority | Protected immutable version tag, native immutable GitHub Release, and generated exact-SHA evidence |
 | Historical architecture baseline | `461fc7519e0db638330904a7496c488e8a0d18bc` |
 | Documentation review | 2026-08-24 |
 
 The annotated `v1.0.0` tag and its GitHub Release identify the same validated commit. Core CI, Desktop CI, PostgreSQL Integration, Profile Matrix, and tag-triggered Release Validation all completed successfully on that exact SHA. The tag remains immutable; the post-release documentation closure on `main` records the evidence without moving or replacing `v1.0.0`. See the [completed ATP-0001](docs/atp/completed/ATP-0001-template-lifecycle.md) for the exact run IDs and acceptance decision.
 
-Normal Desktop CI defaults to an unsigned DEB on Linux. Release Validation requires unsigned DEB, RPM, and AppImage verification candidates for Linux x86_64 and retains the packages, deterministic manifest, and SHA-256 checksums in the `desktop-linux-unsigned` workflow artifact. Release `v1.0.0` republishes the verified outputs in platform ZIP files solely as unsigned verification builds; they are not production-signed packages and do not claim runtime compatibility with every Linux distribution.
+The immutable `v1.0.1` tag was created before its reduced-profile regression had successful replacement evidence and has no GitHub Release. It is not moved or retroactively published. Version `1.0.2` is validly published only when Core CI, Desktop CI, PostgreSQL Integration, Profile Matrix, and Security succeed on its exact commit, tag-triggered Release Validation also succeeds, an active non-bypassable `v*` tag ruleset blocks updates and deletion, and the separate publisher creates the evidence-bearing native immutable GitHub Release.
+
+Normal Desktop CI defaults to an unsigned DEB on Linux. Release Validation requires unsigned DEB, RPM, and AppImage verification candidates for Linux x86_64. The completed-tag publisher bundles the tracked source, tested web and desktop artifacts, SPDX SBOM, exact-SHA workflow evidence, and aggregate SHA-256 checksums. Release Validation supplies build-provenance and SBOM attestations for the byte-identical web ZIP; native immutable publication supplies the release attestation for the complete asset set. Desktop artifacts remain unsigned verification builds; they are not production-signed packages and do not claim runtime compatibility with every Linux distribution.
 <!-- MASTER-ONLY END -->
 
 ## Start here

@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { defineConfig } from "vite";
 
-import { enabledFeatures } from "./src/project-profile.ts";
+import { hasFeature } from "./src/project-profile.ts";
 
 function parsePort(value: string | undefined, fallback: number): number {
   const port = Number(value ?? fallback);
@@ -49,7 +49,7 @@ export default defineConfig(() => {
   };
   const frontendHost = env.FRONTEND_HOST || "127.0.0.1";
   const frontendPort = parsePort(env.FRONTEND_PORT, 5173);
-  const backendEnabled = enabledFeatures.some((feature) => feature === "backend");
+  const backendEnabled = hasFeature("backend");
   const backendHost = clientHost(env.BACKEND_HOST || "127.0.0.1");
   const backendPort = parsePort(env.BACKEND_PORT, 8000);
   const apiBaseUrl = backendEnabled ? env.VITE_API_BASE_URL || `http://${backendHost}:${backendPort}` : undefined;

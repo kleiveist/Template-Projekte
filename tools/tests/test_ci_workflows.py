@@ -192,6 +192,21 @@ def test_dependabot_covers_every_versioned_dependency_ecosystem() -> None:
     assert content.count("interval: weekly") == 8
 
 
+def test_dependabot_groups_routine_updates_and_keeps_majors_individual() -> None:
+    content = DEPENDABOT.read_text(encoding="utf-8")
+
+    assert content.count("open-pull-requests-limit: 3") == 8
+    assert "open-pull-requests-limit: 10" not in content
+    assert content.count("cooldown:") == 5
+    assert content.count("semver-major-days: 30") == 5
+    assert content.count("groups:") == 8
+    assert content.count("applies-to: version-updates") == 8
+    assert content.count('patterns:\n          - "*"') == 8
+    assert content.count("update-types:\n          - minor\n          - patch") == 8
+    assert "version-update:semver-major" not in content
+    assert "          - major" not in content
+
+
 def test_codeowners_assigns_security_sensitive_master_paths() -> None:
     content = CODEOWNERS.read_text(encoding="utf-8")
 
@@ -408,7 +423,11 @@ def test_desktop_ci_declares_typed_linux_bundle_inputs_with_deb_defaults() -> No
         assert expected_input in event
 
     assert (
-        "          - label: Linux\n            os: ubuntu-latest\n            target: linux\n            bundles: deb\n"
+        "          - label: Linux\n"
+        "            os: ubuntu-latest\n"
+        "            target: linux\n"
+        "            bundles: deb\n"
+        "            archive: desktop-linux-unsigned.tar.gz\n"
     ) in content
 
 
@@ -431,21 +450,45 @@ def test_desktop_ci_resolves_linux_bundle_input_without_shell_interpolation() ->
     assert '--summary-file "$GITHUB_STEP_SUMMARY"' in verify_step
 
 
-def test_desktop_ci_verifies_linux_candidates_before_aggregate_upload() -> None:
+def test_desktop_ci_prearchives_native_candidates_before_aggregate_upload() -> None:
     content = _workflow("desktop.yml")
     build_step = _step_named(content, "Build unsigned Linux packages")
     verify_step = _step_named(content, "Verify unsigned Linux packages")
+    posix_archive_step = _step_named(content, "Archive unsigned POSIX verification artifacts")
+    windows_archive_step = _step_named(content, "Archive unsigned Windows verification artifacts")
     upload_step = _step_named(content, "Upload unsigned verification artifacts")
 
-    assert content.index(build_step) < content.index(verify_step) < content.index(upload_step)
+    assert (
+        content.index(build_step)
+        < content.index(verify_step)
+        < content.index(posix_archive_step)
+        < content.index(windows_archive_step)
+        < content.index(upload_step)
+    )
+    assert "if: matrix.target != 'windows'" in posix_archive_step
+    assert "shell: bash" in posix_archive_step
+    assert "ARCHIVE_NAME: ${{ matrix.archive }}" in posix_archive_step
+    assert 'bundle_root="src-tauri/target/release/bundle"' in posix_archive_step
+    assert 'tar --create --gzip --file "$archive_path" -- "${archive_inputs[@]}"' in posix_archive_step
+    assert 'tar --list --gzip --file "$archive_path"' in posix_archive_step
+    assert ".dist/desktop/linux/linux-bundles.json" in posix_archive_step
+    assert ".dist/desktop/linux/SHA256SUMS" in posix_archive_step
+    assert "if: matrix.target == 'windows'" in windows_archive_step
+    assert "shell: pwsh" in windows_archive_step
+    assert "ARCHIVE_NAME: ${{ matrix.archive }}" in windows_archive_step
+    assert '$bundleRoot = "src-tauri/target/x86_64-pc-windows-msvc/release/bundle"' in windows_archive_step
+    assert "[System.IO.FileAttributes]::ReparsePoint" in windows_archive_step
+    assert "Compress-Archive -LiteralPath $bundleRoot" in windows_archive_step
+    assert "[System.IO.Compression.ZipFile]::OpenRead" in windows_archive_step
     _assert_action_major(upload_step, "actions/upload-artifact", "v7", count=1)
     assert "name: desktop-${{ matrix.target }}-unsigned" in upload_step
     assert "if-no-files-found: error" in upload_step
     assert "include-hidden-files: true" in upload_step
-    assert "src-tauri/target/release/bundle/**" in upload_step
-    assert "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/**" in upload_step
-    assert ".dist/desktop/linux/linux-bundles.json" in upload_step
-    assert ".dist/desktop/linux/SHA256SUMS" in upload_step
+    assert "compression-level: 0" in upload_step
+    assert "path: .dist/desktop/artifacts/${{ matrix.archive }}" in upload_step
+    assert "src-tauri/target/release/bundle" not in upload_step
+    assert "src-tauri/target/x86_64-pc-windows-msvc/release/bundle" not in upload_step
+    assert ".dist/desktop/linux" not in upload_step
     assert ".dist/desktop/**" not in upload_step
 
 
@@ -455,19 +498,22 @@ def test_desktop_ci_preserves_macos_and_windows_build_contracts() -> None:
     upload_step = _step_named(content, "Upload unsigned verification artifacts")
 
     assert (
-        "          - label: macOS\n            os: macos-latest\n            target: macos\n            bundles: all\n"
+        "          - label: macOS\n"
+        "            os: macos-latest\n"
+        "            target: macos\n"
+        "            bundles: all\n"
+        "            archive: desktop-macos-unsigned.tar.gz\n"
     ) in content
     assert (
         "          - label: Windows\n"
         "            os: windows-latest\n"
         "            target: windows\n"
         "            bundles: all\n"
+        "            archive: desktop-windows-unsigned.zip\n"
     ) in content
     assert "if: matrix.target != 'linux'" in native_step
     assert "run: python tools/control.py build desktop --target ${{ matrix.target }}" in native_step
     assert "name: desktop-${{ matrix.target }}-unsigned" in upload_step
-    assert "desktop-macos-unsigned" not in content
-    assert "desktop-windows-unsigned" not in content
 
 
 def test_release_validation_is_explicit_and_never_publishes() -> None:
@@ -538,3 +584,105 @@ def test_release_validation_hands_off_exact_linux_bundle_contract() -> None:
     assert "secrets:" not in desktop_job
     assert "publish" not in content.lower()
     assert "deploy" not in content.lower()
+
+
+def test_release_publication_runs_only_after_successful_tag_validation() -> None:
+    content = _workflow("release-publish.yml")
+    prepare_job = _block_named(content, "prepare", indent=2)
+    publish_job = _block_named(content, "publish", indent=2)
+
+    assert "workflow_run:" in content
+    assert "- Release Validation" in content
+    assert "- completed" in content
+    assert "workflow_dispatch:" not in content
+    assert "pull_request:" not in content
+    assert "github.event.workflow_run.conclusion == 'success'" in prepare_job
+    assert "github.event.workflow_run.event == 'push'" in prepare_job
+    assert "startsWith(github.event.workflow_run.head_branch, 'v')" in prepare_job
+    assert "needs: prepare" in publish_job
+    assert "group: release-publication-${{ github.event.workflow_run.head_branch }}" in content
+    assert "cancel-in-progress: false" in content
+    assert "continue-on-error" not in content
+
+
+def test_release_publication_uses_candidate_bound_least_privilege_control_plane() -> None:
+    content = _workflow("release-publish.yml")
+    prepare_job = _block_named(content, "prepare", indent=2)
+    publish_job = _block_named(content, "publish", indent=2)
+    candidate_checkout = _step_named(content, "Check out validated release source as data")
+
+    assert "actions: read" in prepare_job
+    assert "contents: read" in prepare_job
+    assert "contents: write" not in prepare_job
+    assert "id-token: write" not in content
+    assert "attestations: write" not in content
+    assert "actions/attest@" not in content
+    assert "actions: read" in publish_job
+    assert "attestations: read" in publish_job
+    assert "contents: write" in publish_job
+    assert content.count('run: test "$PUBLISHER_CONTROL_SHA" = "$RELEASE_SHA"') == 2
+    assert content.count("ref: ${{ github.workflow_sha }}") == 2
+    assert "ref: ${{ github.event.workflow_run.head_sha }}" in candidate_checkout
+    assert "path: .release-source" in candidate_checkout
+    assert "fetch-depth: 0" in candidate_checkout
+    assert "persist-credentials: false" in candidate_checkout
+    _assert_action_major(content, "actions/checkout", "v7", count=3)
+
+
+def test_release_publication_hands_off_only_same_run_exact_sha_bundle() -> None:
+    content = _workflow("release-publish.yml")
+    artifact_download = _step_named(content, "Download validated release artifacts")
+    prepare = _step_named(content, "Verify exact-SHA gates and prepare publication bundle")
+    upload = _step_named(content, "Upload verified publication bundle")
+    same_run_download = _step_named(content, "Download same-run verified publication bundle")
+    bundle_verification = _step_named(content, "Reverify bundle and remote annotated tag")
+
+    _assert_action_major(content, "actions/download-artifact", "v7", count=2)
+    _assert_action_major(upload, "actions/upload-artifact", "v7", count=1)
+    assert "run-id: ${{ github.event.workflow_run.id }}" in artifact_download
+    assert "github-token: ${{ secrets.GITHUB_TOKEN }}" in artifact_download
+    assert "name: exact-sha-release-publication" in upload
+    assert "name: exact-sha-release-publication" in same_run_download
+    assert "PYTHONPATH=.publisher-control python -m tools.inst.release_publish_cli prepare" in prepare
+    assert "--root .release-source" in prepare
+    assert '--tag "$RELEASE_TAG"' in prepare
+    assert '--sha "$RELEASE_SHA"' in prepare
+    assert '--release-run-id "$RELEASE_RUN_ID"' in prepare
+    assert '--release-run-attempt "$RELEASE_RUN_ATTEMPT"' in prepare
+    assert content.count("github.event.workflow_run.run_attempt") == 7
+    assert content.count('--release-run-attempt "$RELEASE_RUN_ATTEMPT"') == 9
+    assert "verify-bundle" in bundle_verification
+    assert "verify-remote-tag" in bundle_verification
+    assert content.index(prepare) < content.index(upload) < content.index(bundle_verification)
+
+
+def test_release_publication_is_governed_resumable_and_native_immutable() -> None:
+    content = _workflow("release-publish.yml")
+    bundle_verification = _step_named(content, "Reverify bundle and remote annotated tag")
+    governance = _step_named(content, "Require immutable release and protected tag governance")
+    resume = _step_named(content, "Inspect resumable publication state")
+    draft = _step_named(content, "Create and verify complete draft release")
+    publication = _step_named(content, "Publish verified draft against protected tag")
+    final_verification = _step_named(content, "Verify immutable publication and release attestation")
+
+    assert "RELEASE_GOVERNANCE_TOKEN" in governance
+    assert "verify-governance" in governance
+    assert "publication-state" in resume
+    assert 'echo "state=$state" >> "$GITHUB_OUTPUT"' in resume
+    assert "if: steps.publication.outputs.state == 'absent'" in draft
+    assert "if: steps.publication.outputs.state == 'absent'" in publication
+    assert 'gh release create "$RELEASE_TAG"' in draft
+    assert "--draft" in draft
+    assert 'gh release upload "$RELEASE_TAG"' in draft
+    assert "--state draft" in draft
+    assert "verify-remote-tag" in publication
+    assert content.count("verify-remote-tag") == 3
+    assert "--draft=false" in publication
+    assert "--state published" in final_verification
+    assert 'gh release verify "$RELEASE_TAG"' in final_verification
+    assert "for attempt in 1 2 3 4 5" in final_verification
+    assert 'if [ "$STARTING_STATE" = "absent" ]' in final_verification
+    assert 'gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft' in final_verification
+    assert content.index(bundle_verification) < content.index(governance) < content.index(resume)
+    assert content.index(resume) < content.index(draft) < content.index(publication)
+    assert content.index(publication) < content.index(final_verification)

@@ -4,11 +4,12 @@
 
 | Version | Supported |
 | --- | --- |
-| `1.0.0` | Yes |
+| Latest fully validated `1.0.x` GitHub Release | Yes |
+| Tag-only or incomplete candidates, including `v1.0.1` | No |
 | Current `main` | Best effort |
-| Earlier releases | No |
+| Earlier major or minor release lines | No |
 
-Security reports about the published template release and the current `main` development line are assessed on a best-effort basis. A project generated from this template must define its own supported versions and security policy; support for the template does not automatically extend to generated products.
+Security reports about the latest fully validated template release and the current `main` development line are assessed on a best-effort basis. An annotated tag alone does not establish a supported release: the applicable same-SHA workflows, tag-triggered validation, and governed GitHub Release publication must all complete successfully. Publications from `v1.0.2` onward additionally require an active non-bypassable release-tag ruleset and native GitHub Release immutability. A project generated from this template must define its own supported versions and security policy; support for the template does not automatically extend to generated products.
 
 ## Report a vulnerability privately
 

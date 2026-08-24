@@ -10,9 +10,10 @@
 | Last review | 2026-08-24 |
 | Audience | Release operators and desktop developers |
 | Related ATP | [ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md) |
-| Current template version | `1.0.0` |
-| Current publication state | `v1.0.0` published and validated |
-| Validated release commit | `a09c0b9998881e3dbbbd6292fdd22715b402bee8` |
+| Source version | `1.0.2` |
+| Historical completed acceptance | `v1.0.0` on `a09c0b9998881e3dbbbd6292fdd22715b402bee8` |
+| Excluded immutable tag | `v1.0.1` on `fbbb229db05d85fd01ed5f9b81234fac7ed7f405`; same-SHA Profile Matrix failed and no governed GitHub Release exists |
+| Publication authority | Protected immutable version tag, native immutable GitHub Release, and generated exact-SHA evidence |
 
 ## Purpose
 
@@ -24,12 +25,13 @@ This document separates continuous verification, release validation, signing, pu
 
 - version consistency and release identity checks;
 - unsigned Windows, macOS, and Linux verification artifacts;
-- explicit tag or manual release validation; and
+- explicit tag or manual release validation;
+- exact-SHA, immutable-tag GitHub Release publication; and
 - signing and notarization activation requirements.
 
 ### Excluded
 
-- real certificates, Apple credentials, updater keys, artifact publication, application stores, update services, and cloud deployment.
+- real certificates, Apple credentials, updater keys, application stores, update services, and cloud deployment.
 
 ## Responsibility flow
 
@@ -40,19 +42,23 @@ flowchart LR
     Artifact[Unsigned build artifact]
     Gate[Release validation]
     Signing[Protected signing job]
-    Publishing[Publishing]
+    TemplatePublishing[Unsigned template publication]
+    ProductPublishing[Signed product publication]
     Deployment[Deployment]
 
-    Development --> CI --> Artifact --> Gate --> Signing --> Publishing --> Deployment
+    Development --> CI --> Artifact --> Gate --> TemplatePublishing
+    Gate --> Signing --> ProductPublishing --> Deployment
 ```
 
-The baseline automates CI verification, unsigned artifacts, and the release gate. Signing, publishing, and deployment remain explicit product integrations. Normal CI never deploys, uses signing secrets, or creates a public release.
+The baseline automates CI verification, unsigned artifacts, the release gate, and publication of the unsigned template evidence bundle after all exact-SHA workflows have succeeded. Signing and deployment remain explicit product integrations. Normal CI never deploys, uses signing secrets, or creates a public release.
 
-For template release `1.0.0`, `461fc7519e0db638330904a7496c488e8a0d18bc` is the historical architecture baseline and comparison commit, not the validated migration baseline. The annotated tag `v1.0.0` resolves to `a09c0b9998881e3dbbbd6292fdd22715b402bee8`, the commit on which every required local and remote release check succeeded. The tag and published GitHub Release are immutable; later documentation or implementation changes require a new version instead of moving `v1.0.0`.
+For template release `1.0.0`, `461fc7519e0db638330904a7496c488e8a0d18bc` is the historical architecture baseline and comparison commit, not the validated migration baseline. The annotated tag `v1.0.0` resolves to `a09c0b9998881e3dbbbd6292fdd22715b402bee8`, the commit on which every required local and remote release check succeeded. The tag remains immutable; later documentation or implementation changes require a new version instead of moving `v1.0.0`.
+
+The annotated `v1.0.1` tag is likewise immutable. It was created before the reduced-profile TypeScript regression had a successful replacement matrix and has no GitHub Release. It must not be moved or retroactively published. A governed `v1.0.2` publication is valid only with complete same-SHA evidence and its own successful tag-triggered validation.
 
 ## Desktop verification matrix
 
-`.github/workflows/desktop.yml` runs natively on `windows-latest`, `macos-latest`, and `ubuntu-latest`. Each job installs the platform prerequisites, runs locked Cargo checks, invokes the existing `control.py build desktop` path, and uploads short-lived unsigned artifacts. Pushes, pull requests, and workflow invocations without an explicit Linux bundle input build only `deb`; a manual or reusable invocation may provide a validated explicit list. Release Validation always supplies `deb,rpm,appimage` and must not fall back to the normal DEB-only default.
+`.github/workflows/desktop.yml` runs natively on `windows-latest`, `macos-latest`, and `ubuntu-latest`. Each job installs the platform prerequisites, runs locked Cargo checks, invokes the existing `control.py build desktop` path, and creates one validated native prearchive before upload. Linux and macOS use `tar.gz` so POSIX executable modes and case-sensitive paths survive the Actions artifact boundary; Windows uses ZIP. `upload-artifact` receives only that single archive, never a raw bundle tree. Pushes, pull requests, and workflow invocations without an explicit Linux bundle input build only `deb`; a manual or reusable invocation may provide a validated explicit list. Release Validation always supplies `deb,rpm,appimage` and must not fall back to the normal DEB-only default.
 
 | Linux format | Intended verification purpose |
 | --- | --- |
@@ -60,13 +66,13 @@ For template release `1.0.0`, `461fc7519e0db638330904a7496c488e8a0d18bc` is the 
 | RPM | Candidate for RPM-based distributions |
 | AppImage | Portable candidate intended to reduce distribution-specific installation requirements |
 
-A real Linux build removes only the generated Linux bundle output directories before invoking Tauri. It then requires at least one fresh, regular, nonempty file for every requested format. The deterministic `.dist/desktop/linux/linux-bundles.json` manifest records repository-relative paths, sizes, and SHA-256 digests; `.dist/desktop/linux/SHA256SUMS` records the same package checksums. Release Validation uploads these evidence files together with the `.deb`, `.rpm`, and `.AppImage` files in the aggregate `desktop-linux-unsigned` artifact.
+A real Linux build removes only the generated Linux bundle output directories before invoking Tauri. It then requires at least one fresh, regular, nonempty file for every requested format. The deterministic `.dist/desktop/linux/linux-bundles.json` manifest records repository-relative paths, sizes, and SHA-256 digests; `.dist/desktop/linux/SHA256SUMS` records the same package checksums. Release Validation places these evidence files together with the `.deb`, `.rpm`, and executable `.AppImage` in `desktop-linux-unsigned.tar.gz`, validates that TAR, and uploads the prearchive as the sole content of the aggregate `desktop-linux-unsigned` artifact.
 
 All Linux outputs are unsigned x86_64 verification candidates built against the current Ubuntu runner and its glibc baseline. They are not published production packages, and a successful build does not guarantee runtime compatibility with every Linux distribution. ARM64, ARMv7, Flatpak, and Snap are outside this matrix; Flatpak and Snap require separate future distribution integrations. Tauri continues to create the technically available default bundle formats on Windows and macOS.
 
 ## Release triggers
 
-`.github/workflows/release.yml` runs only through `workflow_dispatch` or a tag matching `v*.*.*`. It runs the release-strict quality gate, the read-only semantic documentation check and its focused tests, the complete project tests, web and container builds, and `release check`; it then calls the unsigned desktop workflow with the explicit Linux bundle contract `deb,rpm,appimage`. It contains no publication job.
+`.github/workflows/release.yml` runs only through `workflow_dispatch` or a tag matching `v*.*.*`. It runs the release-strict quality gate, the read-only semantic documentation check and its focused tests, the complete project tests, web and container builds, and `release check`; it then calls the unsigned desktop workflow with the explicit Linux bundle contract `deb,rpm,appimage`. It contains no publication job, so the workflow can finish before publication evaluates it as evidence.
 
 The validation job generates an SPDX JSON software bill of materials from the committed source and dependency manifests before installing build dependencies. After building the web ZIP, it creates both GitHub build-provenance and SBOM attestations for that candidate. The job alone receives `attestations: write` and `id-token: write`; repository contents remain read-only, normal CI receives neither permission, and the SBOM action is forbidden from uploading directly to an existing release. The retained web workflow artifact contains both the ZIP and the SPDX document.
 
@@ -76,9 +82,15 @@ Verify evidence from a completed release run with the GitHub CLI:
 gh attestation verify <downloaded-web-zip> --repo kleiveist/Template-Projekte
 ```
 
-The attested SBOM describes dependencies discoverable from the released source tree. It does not claim that a generated product has the same dependencies after customization. The SBOM and attestation workflow was added after `v1.0.0`; a future patch release must execute it on its own immutable release commit before those controls can be claimed for a published asset.
+The attested SBOM describes dependencies discoverable from the released source tree. It does not claim that a generated product has the same dependencies after customization. The SBOM and attestation workflow was added after `v1.0.0`; a governed `v1.0.2` publication includes this evidence from its own immutable release commit.
 
-A product repository may add protected signing and publication jobs only after the validation job. Recommended activation conditions are:
+After a successful tag-triggered Release Validation run completes, `.github/workflows/release-publish.yml` evaluates that run through `workflow_run`. It accepts only a strict annotated version tag that matches `VERSION` and resolves locally and remotely to the validated SHA. Its executing workflow revision must also equal that SHA, so `main` remains frozen until publication finishes. The publisher then requires completed successful `main` push runs for Core CI, Desktop CI, PostgreSQL Integration, Profile Matrix, and Security from their exact workflow paths, plus the exact completed Release Validation run and attempt on the same SHA.
+
+The read-only preparation job downloads the triggering run's retained artifacts, creates a tracked-source ZIP with `git archive`, packages the tested web candidate, retains the validated native desktop prearchives byte-for-byte without extraction or ZIP wrapping, validates and includes the SPDX JSON SBOM, records a JSON evidence manifest, and produces aggregate `SHA256SUMS.txt`. The platform `tar.gz`/ZIP prearchives become the corresponding final desktop release assets directly. Keeping the POSIX TAR payloads opaque preserves their executable-mode metadata through the release handoff. It appends the full SHA and exact workflow run-attempt links to reviewed English release notes and binds those notes by digest in the evidence manifest. The write-scoped job consumes only this same-run bundle and reverifies its fixed inventory and checksums. Before draft creation it requires native Immutable Releases plus an active non-bypassable tag ruleset that protects `refs/tags/v*` from updates and deletion. It then creates a draft, uploads and verifies all assets, rechecks the protected remote tag, and publishes. Release Validation's tag-context attestations remain valid for the byte-identical web ZIP; GitHub's native immutable-release attestation covers the tag, commit, and full final asset set and is checked with `gh release verify`.
+
+`RELEASE_GOVERNANCE_TOKEN` exists only so the publisher can fail before draft creation when native Immutable Releases or release-tag protection are absent. The workflow uses it exclusively for REST `GET` requests. Its actor must have enough ruleset access for GitHub to return `bypass_actors`; otherwise the preflight deliberately fails closed. Scope the token to this repository and protect it as a release secret. Any API ambiguity, missing evidence, wrong workflow path, wrong SHA, wrong tag type, failed digest, disabled immutability, bypassable or incomplete tag protection, or non-success conclusion fails closed. The workflow never replaces or edits an existing release. A retry accepts an existing release only through read-only verification that it is native immutable and exactly matches the governed tag, notes, asset inventory, sizes, and digests; if a newly created release unexpectedly remains mutable after draft promotion, it is restored to draft and publication fails.
+
+A product repository may replace the unsigned template publisher with protected signing and product publication only after validation. Recommended activation conditions are:
 
 1. an annotated, reviewed semantic-version tag or an approved manual dispatch;
 2. a protected GitHub Environment with required reviewers;
@@ -150,7 +162,7 @@ The gate is necessary but not sufficient. A successful manual `release check` ou
 
 ## Candidate and same-SHA verification
 
-Create the candidate only after the complete local gate is green. Record its full SHA outside the versioned commit content, then push it without rewriting history. The required GitHub evidence consists of all six successful Core CI jobs, including `Core / Documentation Check`, plus successful Profile Matrix, PostgreSQL Integration, Desktop CI, and Release Validation runs whose `headSha` is exactly that candidate.
+Create the candidate only after the complete local gate is green. Record its full SHA outside the versioned commit content, then push it without rewriting history. The required GitHub evidence consists of all six successful Core CI jobs, including `Core / Documentation Check`, plus successful Profile Matrix, PostgreSQL Integration, Desktop CI, Security, and Release Validation runs whose `headSha` is exactly that candidate.
 
 ```sh
 FINAL_CANDIDATE_SHA=$(git rev-parse HEAD)
@@ -163,9 +175,9 @@ gh run list \
   -R kleiveist/Template-Projekte
 ```
 
-Use `workflow_dispatch` on the candidate ref when a required workflow was not triggered automatically, and watch each resulting run with `gh run watch <RUN_ID> --exit-status`. A fix creates a new candidate SHA and invalidates the earlier candidate as the common release proof; rerun every required gate affected by the new commit.
+Rerun a failed or cancelled `main` push run when one exists, and watch it with `gh run watch <RUN_ID> --exit-status`. A manually dispatched run is useful diagnostics but cannot satisfy governed publication. If a required push run is absent, create and push a new candidate commit so the complete exact-SHA workflow set runs again. A fix likewise creates a new candidate SHA and invalidates the earlier candidate as the common release proof. Freeze `main` from tag creation through Release Publication; a newer default-branch commit makes `github.workflow_sha` differ from the release SHA and intentionally blocks publication.
 
-Do not write `FINAL_CANDIDATE_SHA` into a file that is part of that same candidate commit. Record the exact final SHA in GitHub Actions evidence and the final operator report. A future annotated tag, optional GitHub Release, and external release manifest must refer to the same SHA.
+Do not write `FINAL_CANDIDATE_SHA` into a file that is part of that same candidate commit. The publisher records the exact final SHA and run IDs in the external GitHub Release notes and evidence manifest after those identifiers exist. The annotated tag, GitHub Release, and release manifest must refer to the same SHA.
 
 ## Workflow-run classification and retention
 
@@ -183,25 +195,27 @@ Cleanup is always by one explicit run ID. Never delete runs for the final releas
 
 ## Annotated tag procedure
 
-Tag only after the working tree is clean, all versions equal the intended release version, and all required local and same-SHA remote evidence is green:
+Tag only after the working tree is clean, all versions equal the intended release version, all required local and same-SHA remote evidence is green, native Immutable Releases are enabled, and an active tag ruleset protects `refs/tags/v*` from update and deletion without exclusions or bypass actors:
 
 ```sh
+RELEASE_VERSION=$(python tools/control.py version)
+RELEASE_TAG="v${RELEASE_VERSION}"
 FINAL_RELEASE_SHA=$(git rev-parse HEAD)
 git status --short
-git tag --list v1.0.0
+git tag --list "$RELEASE_TAG"
 
-git tag -a v1.0.0 \
+git tag -a "$RELEASE_TAG" \
   "$FINAL_RELEASE_SHA" \
-  -m "Template-Projekte v1.0.0"
+  -m "Template-Projekte $RELEASE_TAG"
 
-git rev-parse v1.0.0^{commit}
+git rev-parse "${RELEASE_TAG}^{commit}"
 git rev-parse HEAD
-git push origin v1.0.0
+git push origin "$RELEASE_TAG"
 ```
 
-The two resolved commit SHAs must match. Never use `--force`, replace an existing tag, or silently move it after a tag-workflow failure. If `v1.0.0` already exists, stop and compare its local target, remote target, and any associated release before taking further action. After pushing, verify both the annotated tag object and its peeled commit with `git ls-remote --tags origin v1.0.0 'v1.0.0^{}'`, then verify all tag-triggered runs. A failed tag workflow leaves the release incomplete; it does not authorize moving the tag.
+The two resolved commit SHAs must match. Never use `--force`, replace an existing tag, or silently move it after a tag-workflow failure. If the intended tag already exists, stop and compare its local target, remote target, and any associated release before taking further action. After pushing, verify both the annotated tag object and its peeled commit with `git ls-remote --tags origin "$RELEASE_TAG" "${RELEASE_TAG}^{}"`, then verify all tag-triggered runs. A failed tag workflow leaves the release incomplete; it does not authorize moving the tag.
 
-The baseline workflow deliberately contains no GitHub Release publication job. If maintainers explicitly choose to publish a GitHub Release, create it only after the annotated tag is pushed and verified, use reviewed English release notes, and keep the final SHA and known limitations explicit. That publication decision does not imply production readiness for every generated product.
+Release Validation deliberately contains no publication job. The separate Release Publication workflow runs only after validation has completed, uses reviewed English notes, records exact-SHA evidence dynamically, and refuses to replace an existing release. Publication of unsigned template evidence does not imply production readiness for every generated product.
 
 ## Signing and notarization preparation
 

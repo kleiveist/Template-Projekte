@@ -1,0 +1,285 @@
+name: Release Publication
+
+on:
+  workflow_run:
+    workflows:
+      - Release Validation
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-publication-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Release / Prepare Exact-SHA Evidence
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      startsWith(github.event.workflow_run.head_branch, 'v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Require candidate-bound publisher control plane
+        env:
+          PUBLISHER_CONTROL_SHA: ${{ github.workflow_sha }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: test "$PUBLISHER_CONTROL_SHA" = "$RELEASE_SHA"
+      - name: Check out trusted publisher control plane
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          path: .publisher-control
+          persist-credentials: false
+          ref: ${{ github.workflow_sha }}
+      - name: Check out validated release source as data
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          path: .release-source
+          persist-credentials: false
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Set up Python 3.11
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - name: Download validated release artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .dist/release-input
+          run-id: ${{ github.event.workflow_run.id }}
+      - name: Verify exact-SHA gates and prepare publication bundle
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_RUN_ID: ${{ github.event.workflow_run.id }}
+          RELEASE_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+          RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
+        run: >-
+          PYTHONPATH=.publisher-control python -m tools.inst.release_publish_cli prepare
+          --repository "$GITHUB_REPOSITORY"
+          --tag "$RELEASE_TAG"
+          --sha "$RELEASE_SHA"
+          --release-run-id "$RELEASE_RUN_ID"
+          --release-run-attempt "$RELEASE_RUN_ATTEMPT"
+          --input-dir .dist/release-input
+          --output-dir .dist/release-assets
+          --root .release-source
+          --api-url "$GITHUB_API_URL"
+      - name: Upload verified publication bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: exact-sha-release-publication
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            .dist/release-assets/*
+            .dist/RELEASE_NOTES.md
+
+  publish:
+    name: Release / Publish Verified Bundle
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      attestations: read
+      contents: write
+    steps:
+      - name: Require candidate-bound publisher control plane
+        env:
+          PUBLISHER_CONTROL_SHA: ${{ github.workflow_sha }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: test "$PUBLISHER_CONTROL_SHA" = "$RELEASE_SHA"
+      - name: Check out trusted publisher control plane
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          path: .publisher-control
+          persist-credentials: false
+          ref: ${{ github.workflow_sha }}
+      - name: Download same-run verified publication bundle
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: exact-sha-release-publication
+          path: .dist
+      - name: Reverify bundle and remote annotated tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_RUN_ID: ${{ github.event.workflow_run.id }}
+          RELEASE_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+          RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          PYTHONPATH=.publisher-control python -m tools.inst.release_publish_cli verify-bundle \
+            --repository "$GITHUB_REPOSITORY" \
+            --tag "$RELEASE_TAG" \
+            --sha "$RELEASE_SHA" \
+            --release-run-id "$RELEASE_RUN_ID" \
+            --release-run-attempt "$RELEASE_RUN_ATTEMPT" \
+            --output-dir .dist/release-assets \
+            --notes-file .dist/RELEASE_NOTES.md
+          PYTHONPATH=.publisher-control python -m tools.inst.release_publish_cli verify-remote-tag \
+            --repository "$GITHUB_REPOSITORY" \
+            --tag "$RELEASE_TAG" \
+            --sha "$RELEASE_SHA" \
+            --release-run-id "$RELEASE_RUN_ID" \
+            --release-run-attempt "$RELEASE_RUN_ATTEMPT" \
+            --output-dir .dist/release-assets \
+            --notes-file .dist/RELEASE_NOTES.md \
+            --api-url "$GITHUB_API_URL"
+      - name: Require immutable release and protected tag governance
+        env:
+          GOVERNANCE_TOKEN: ${{ secrets.RELEASE_GOVERNANCE_TOKEN }}
+          RELEASE_RUN_ID: ${{ github.event.workflow_run.id }}
+          RELEASE_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+          RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          PYTHONPATH=.publisher-control python -m tools.inst.release_publish_cli verify-governance \
+            --repository "$GITHUB_REPOSITORY" \
+            --tag "$RELEASE_TAG" \
+            --sha "$RELEASE_SHA" \
+            --release-run-id "$RELEASE_RUN_ID" \
+            --release-run-attempt "$RELEASE_RUN_ATTEMPT" \
+            --output-dir .dist/release-assets \
+            --notes-file .dist/RELEASE_NOTES.md \
+            --api-url "$GITHUB_API_URL"
+      - name: Inspect resumable publication state
+        id: publication
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_RUN_ID: ${{ github.event.workflow_run.id }}
+          RELEASE_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+          RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          state=$(PYTHONPATH=.publisher-control python -m tools.inst.release_publish_cli publication-state \
+            --repository "$GITHUB_REPOSITORY" \
+            --tag "$RELEASE_TAG" \
+            --sha "$RELEASE_SHA" \
+            --release-run-id "$RELEASE_RUN_ID" \
+            --release-run-attempt "$RELEASE_RUN_ATTEMPT" \
+            --output-dir .dist/release-assets \
+            --notes-file .dist/RELEASE_NOTES.md \
+            --api-url "$GITHUB_API_URL")
+          echo "state=$state" >> "$GITHUB_OUTPUT"
+      - name: Create and verify complete draft release
+        if: steps.publication.outputs.state == 'absent'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_RUN_ID: ${{ github.event.workflow_run.id }}
+          RELEASE_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+          RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Template-Projekte $RELEASE_TAG" \
+            --notes-file .dist/RELEASE_NOTES.md \
+            --verify-tag \
+            --draft
+          gh release upload "$RELEASE_TAG" \
+            .dist/release-assets/* \
+            --repo "$GITHUB_REPOSITORY"
+          draft_verified=false
+          for attempt in 1 2 3 4 5; do
+            if PYTHONPATH=.publisher-control python -m tools.inst.release_publish_cli verify-release \
+              --repository "$GITHUB_REPOSITORY" \
+              --tag "$RELEASE_TAG" \
+              --sha "$RELEASE_SHA" \
+              --release-run-id "$RELEASE_RUN_ID" \
+              --release-run-attempt "$RELEASE_RUN_ATTEMPT" \
+              --output-dir .dist/release-assets \
+              --notes-file .dist/RELEASE_NOTES.md \
+              --state draft \
+              --api-url "$GITHUB_API_URL"; then
+              draft_verified=true
+              break
+            fi
+            sleep $((attempt * 3))
+          done
+          test "$draft_verified" = "true"
+      - name: Publish verified draft against protected tag
+        if: steps.publication.outputs.state == 'absent'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_RUN_ID: ${{ github.event.workflow_run.id }}
+          RELEASE_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+          RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          PYTHONPATH=.publisher-control python -m tools.inst.release_publish_cli verify-remote-tag \
+            --repository "$GITHUB_REPOSITORY" \
+            --tag "$RELEASE_TAG" \
+            --sha "$RELEASE_SHA" \
+            --release-run-id "$RELEASE_RUN_ID" \
+            --release-run-attempt "$RELEASE_RUN_ATTEMPT" \
+            --output-dir .dist/release-assets \
+            --notes-file .dist/RELEASE_NOTES.md \
+            --api-url "$GITHUB_API_URL"
+          gh release edit "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft=false \
+            --verify-tag
+      - name: Verify immutable publication and release attestation
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_RUN_ID: ${{ github.event.workflow_run.id }}
+          RELEASE_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+          RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
+          STARTING_STATE: ${{ steps.publication.outputs.state }}
+        run: |
+          release_verified=false
+          for attempt in 1 2 3 4 5; do
+            if PYTHONPATH=.publisher-control python -m tools.inst.release_publish_cli verify-release \
+              --repository "$GITHUB_REPOSITORY" \
+              --tag "$RELEASE_TAG" \
+              --sha "$RELEASE_SHA" \
+              --release-run-id "$RELEASE_RUN_ID" \
+              --release-run-attempt "$RELEASE_RUN_ATTEMPT" \
+              --output-dir .dist/release-assets \
+              --notes-file .dist/RELEASE_NOTES.md \
+              --state published \
+              --api-url "$GITHUB_API_URL"; then
+              release_verified=true
+              break
+            fi
+            sleep $((attempt * 3))
+          done
+          if [ "$release_verified" != "true" ]; then
+            if [ "$STARTING_STATE" = "absent" ] && [ "$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isImmutable --jq .isImmutable)" = "false" ]; then
+              gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft
+            fi
+            exit 1
+          fi
+          PYTHONPATH=.publisher-control python -m tools.inst.release_publish_cli verify-remote-tag \
+            --repository "$GITHUB_REPOSITORY" \
+            --tag "$RELEASE_TAG" \
+            --sha "$RELEASE_SHA" \
+            --release-run-id "$RELEASE_RUN_ID" \
+            --release-run-attempt "$RELEASE_RUN_ATTEMPT" \
+            --output-dir .dist/release-assets \
+            --notes-file .dist/RELEASE_NOTES.md \
+            --api-url "$GITHUB_API_URL"
+          attestation_verified=false
+          for attempt in 1 2 3 4 5; do
+            if gh release verify "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY"; then
+              attestation_verified=true
+              break
+            fi
+            sleep $((attempt * 3))
+          done
+          test "$attestation_verified" = "true"

@@ -1,5 +1,10 @@
 version: 2
 
+# Keep routine maintenance compact without hiding breaking changes. Each
+# ecosystem gets one grouped minor/patch PR, while majors remain individual.
+# Ecosystems with SemVer cooldown support receive a 30-day major-update review
+# buffer. The PR limit and supported cooldowns apply to version updates;
+# security updates remain independent.
 updates:
   - package-ecosystem: github-actions
     directory: "/"
@@ -8,9 +13,10 @@ updates:
       day: monday
       time: "05:00"
       timezone: Europe/Berlin
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
     groups:
       github-actions-minor-and-patch:
+        applies-to: version-updates
         patterns:
           - "*"
         update-types:
@@ -24,9 +30,12 @@ updates:
       day: monday
       time: "05:10"
       timezone: Europe/Berlin
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
+    cooldown:
+      semver-major-days: 30
     groups:
       npm-minor-and-patch:
+        applies-to: version-updates
         patterns:
           - "*"
         update-types:
@@ -40,9 +49,12 @@ updates:
       day: monday
       time: "05:20"
       timezone: Europe/Berlin
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
+    cooldown:
+      semver-major-days: 30
     groups:
       backend-python-minor-and-patch:
+        applies-to: version-updates
         patterns:
           - "*"
         update-types:
@@ -56,9 +68,12 @@ updates:
       day: monday
       time: "05:30"
       timezone: Europe/Berlin
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
+    cooldown:
+      semver-major-days: 30
     groups:
       tooling-python-minor-and-patch:
+        applies-to: version-updates
         patterns:
           - "*"
         update-types:
@@ -72,9 +87,12 @@ updates:
       day: monday
       time: "05:40"
       timezone: Europe/Berlin
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
+    cooldown:
+      semver-major-days: 30
     groups:
       tauri-rust-minor-and-patch:
+        applies-to: version-updates
         patterns:
           - "*"
         update-types:
@@ -88,9 +106,12 @@ updates:
       day: monday
       time: "05:50"
       timezone: Europe/Berlin
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
+    cooldown:
+      semver-major-days: 30
     groups:
       analyzer-rust-minor-and-patch:
+        applies-to: version-updates
         patterns:
           - "*"
         update-types:
@@ -104,9 +125,10 @@ updates:
       day: monday
       time: "06:00"
       timezone: Europe/Berlin
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
     groups:
       dockerfile-minor-and-patch:
+        applies-to: version-updates
         patterns:
           - "*"
         update-types:
@@ -120,9 +142,10 @@ updates:
       day: monday
       time: "06:10"
       timezone: Europe/Berlin
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
     groups:
       compose-minor-and-patch:
+        applies-to: version-updates
         patterns:
           - "*"
         update-types:
