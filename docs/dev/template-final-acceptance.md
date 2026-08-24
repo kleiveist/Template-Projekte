@@ -5,7 +5,7 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Candidate validation blocked by unavailable Release Validation dispatch; not published |
+| Status | Candidate validation blocked by final exact-HEAD reruns and unavailable Release Validation dispatch; not published |
 | Owner | Project team |
 | Last review | 2026-08-24 |
 | Audience | Maintainers, reviewers, and release operators |
@@ -195,7 +195,7 @@ When these conditions hold, the technical decision is **PASS — VALIDATED RELEA
 
 Version 1.0.0 is published only if the additional publication conditions also hold: `v1.0.0` is an annotated, non-forced tag whose peeled commit equals the validated common SHA; the pushed tag and every tag-triggered workflow pass; and any GitHub Release or external release manifest identifies the same tag and commit. Until then, the publication decision remains **NOT PUBLISHED**.
 
-Current technical decision: **BLOCKED**. The candidate is synchronized to `origin/main`; local applicable gates, clean-tree `release check`, and the automatic exact-HEAD Core, Profile, PostgreSQL, and Desktop workflows passed. This environment has neither `gh` nor a GitHub API token, and unauthenticated Release Validation dispatch returned HTTP 401. Release Validation therefore has no run or successful conclusion on the candidate. Current publication decision: **NOT PUBLISHED**.
+Current technical decision: **BLOCKED**. Local applicable gates and clean-tree `release check` passed. Core, Profile, PostgreSQL, and Desktop workflows passed on the predecessor candidate, but the evidence update created a later local commit and invalidated those runs as final same-SHA proof. This environment cannot push that final commit, has neither `gh` nor a GitHub API token, and received HTTP 401 from unauthenticated Release Validation dispatch. Current publication decision: **NOT PUBLISHED**.
 
 ## Related documents
 

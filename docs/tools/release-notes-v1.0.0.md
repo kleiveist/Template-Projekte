@@ -6,7 +6,7 @@
 | Field | Value |
 | --- | --- |
 | Version | `1.0.0` |
-| Status | Automatic exact-HEAD validation successful; Release Validation dispatch and publication pending |
+| Status | Predecessor candidate passed automatic validation; final same-SHA reruns, Release Validation dispatch, and publication pending |
 | Published release tag | None |
 | Intended future tag | `v1.0.0` |
 | Historical architecture baseline | `461fc7519e0db638330904a7496c488e8a0d18bc` |
