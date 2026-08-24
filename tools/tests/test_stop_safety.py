@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -155,3 +156,17 @@ def test_single_token_npm_process_title_matches_without_separator(monkeypatch) -
         "--port",
         "5173",
     )
+
+
+def test_zombie_process_is_not_considered_alive(monkeypatch) -> None:
+    monkeypatch.setattr(stop, "_is_zombie_process", lambda pid: pid == 4242)
+
+    assert stop._is_process_alive(4242) is False
+
+
+def test_process_group_with_only_zombies_is_not_alive(monkeypatch) -> None:
+    monkeypatch.setattr(os, "listdir", lambda path: ["4242", "4243"] if path == "/proc" else [])
+    monkeypatch.setattr(os, "getpgid", lambda _pid: 4242)
+    monkeypatch.setattr(stop, "_is_zombie_process", lambda _pid: True)
+
+    assert stop._process_group_alive(4242) is False

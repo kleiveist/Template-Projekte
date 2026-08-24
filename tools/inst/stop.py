@@ -22,11 +22,26 @@ STATE_FILE = RUNTIME_DIR / "run_state.json"
 
 
 def _is_process_alive(pid: int) -> bool:
+    if _is_zombie_process(pid):
+        return False
     try:
         os.kill(pid, 0)
         return True
     except OSError:
         return False
+
+
+def _is_zombie_process(pid: int) -> bool:
+    if os.name == "nt":
+        return False
+    try:
+        stat = (Path("/proc") / str(pid) / "stat").read_text(encoding="utf-8")
+    except OSError:
+        return False
+    parts = stat.rsplit(") ", 1)
+    if len(parts) != 2:
+        return False
+    return parts[1].split(maxsplit=1)[0] == "Z"
 
 
 def _terminate_pid(pid: int, timeout_seconds: int = 8) -> bool:
@@ -367,6 +382,8 @@ def _tracked_identity_matches(service: dict, pid: int) -> tuple[bool, str]:
 
 
 def _process_group_alive(group_id: int) -> bool:
+    if os.name != "nt" and not _process_group_has_live_member(group_id):
+        return False
     try:
         os.killpg(group_id, 0)
         return True
@@ -374,6 +391,19 @@ def _process_group_alive(group_id: int) -> bool:
         return False
     except PermissionError:
         return True
+
+
+def _process_group_has_live_member(group_id: int) -> bool:
+    for pid_name in os.listdir("/proc"):
+        if not pid_name.isdigit():
+            continue
+        try:
+            pid = int(pid_name)
+            if os.getpgid(pid) == group_id and not _is_zombie_process(pid):
+                return True
+        except OSError:
+            continue
+    return False
 
 
 def _terminate_process_group(group_id: int, timeout_seconds: int = 8) -> bool:
