@@ -27,6 +27,7 @@ IGNORED_NAMES = {
     "target",
 }
 REQUIRED_SCAFFOLD_ARTIFACTS = (Path("tools/quality/rust_analyzer/dist/rust_quality_analyzer.wasm"),)
+MASTER_ONLY_ROOT_PAGES = ("CODE_OF_CONDUCT.md", "CONTRIBUTING.md")
 
 
 class GenerationError(RuntimeError):
@@ -113,7 +114,7 @@ def scaffold_project(plan: ScaffoldPlan, *, dry_run: bool = False) -> None:
             shutil.copy2(source, destination)
 
     _copy_required_artifacts(plan)
-    _remove_master_only_readme_blocks(plan.target_dir)
+    _remove_master_only_readme_content(plan.target_dir)
     _write_project_profile(plan.target_dir, plan.profile)
     _write_frontend_profile_module(plan.target_dir, plan.profile)
     _configure_frontend_dependencies(plan.target_dir, plan.profile)
@@ -345,7 +346,7 @@ def _configure_env_example(target_dir: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8", newline="\n")
 
 
-def _remove_master_only_readme_blocks(target_dir: Path) -> None:
+def _remove_master_only_readme_content(target_dir: Path) -> None:
     path = target_dir / "README.md"
     if not path.exists():
         return
@@ -355,7 +356,11 @@ def _remove_master_only_readme_blocks(target_dir: Path) -> None:
         r"^<!-- MASTER-ONLY START -->\n.*?^<!-- MASTER-ONLY END -->\n?",
         flags=re.MULTILINE | re.DOTALL,
     )
-    path.write_text(pattern.sub("", content), encoding="utf-8", newline="\n")
+    content = pattern.sub("", content)
+    for root_page in MASTER_ONLY_ROOT_PAGES:
+        index_entry = re.compile(rf"^- .*\]\({re.escape(root_page)}(?:#[^)]*)?\)\n?", flags=re.MULTILINE)
+        content = index_entry.sub("", content)
+    path.write_text(content, encoding="utf-8", newline="\n")
 
 
 def _source_identity(target_dir: Path) -> _SourceIdentity:

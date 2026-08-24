@@ -47,12 +47,12 @@ Describe compatibility impact, migration steps, and rollback considerations, or 
 
 ## Security impact
 
-Describe security implications, including any review of secrets, permissions, dependencies, or trust boundaries. Do not disclose vulnerabilities publicly; follow the [Security Policy](SECURITY.md).
+Describe security implications, including any review of secrets, permissions, dependencies, or trust boundaries. Do not disclose vulnerabilities publicly; follow the [Security Policy](https://github.com/kleiveist/Template-Projekte/security/policy).
 
 ## Author checklist
 
 - [ ] This pull request has a focused scope and does not include unrelated changes.
-- [ ] I followed the [contribution guide](../CONTRIBUTING.md) and [Code of Conduct](../CODE_OF_CONDUCT.md).
+- [ ] I followed the [contribution guide](https://github.com/kleiveist/Template-Projekte/blob/main/CONTRIBUTING.md) and [Code of Conduct](https://github.com/kleiveist/Template-Projekte/blob/main/CODE_OF_CONDUCT.md).
 - [ ] I recorded the applicable validation evidence above, including any not-applicable reason.
 - [ ] I added or updated relevant tests and English documentation, or explained why neither applies.
 - [ ] I documented breaking changes or migrations when applicable.

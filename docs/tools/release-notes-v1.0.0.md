@@ -6,15 +6,17 @@
 | Field | Value |
 | --- | --- |
 | Version | `1.0.0` |
-| Release tag | `v1.0.0` |
-| Baseline | `461fc7519e0db638330904a7496c488e8a0d18bc` |
-| Release date | 2026-08-23 |
+| Status | Candidate changes prepared and available local checks executed; clean-candidate and exact-HEAD validation pending |
+| Published release tag | None |
+| Intended future tag | `v1.0.0` |
+| Historical architecture baseline | `461fc7519e0db638330904a7496c488e8a0d18bc` |
+| Candidate review | 2026-08-24 |
 
 ## Purpose
 
-Version 1.0.0 establishes the first governed release of the reusable Template-Projekte master. It provides one profile-driven foundation for browser, cloud-backend, and Tauri desktop products. The release certifies the template and its generation paths; it does not claim that an uncustomized derived product is production-ready.
+Version 1.0.0 is the candidate for the first governed release of the reusable Template-Projekte master. It provides one profile-driven foundation for browser, cloud-backend, and Tauri desktop products. Candidate validation certifies the template and its generation paths as a commit-pinned migration basis; it does not publish a release or claim that an uncustomized derived product is production-ready.
 
-The exact release commit is deliberately not embedded in a file that participates in that commit. The annotated tag target is authoritative. The GitHub Release body and `.report/release-v1.0.0/release-manifest.json` record the full final SHA after same-commit validation.
+The exact validated candidate commit is deliberately not embedded in a file that participates in that commit. GitHub Actions evidence and the final operator report record the full SHA after same-commit validation. No tag or GitHub Release currently exists; any future `v1.0.0` tag and publication record must identify that same validated commit.
 
 ## Supported project profiles
 
@@ -54,7 +56,7 @@ The handwritten-source file limit is exact: 900 code lines produce a non-blockin
 
 ## Verification model
 
-Release evidence must come from one final commit. Required GitHub checks are the six Core CI jobs, including the semantic Documentation Check, the five-profile matrix, the three-profile PostgreSQL matrix with a real PostgreSQL service, native Windows/macOS/Linux Desktop CI, and manually dispatched or tag-triggered Release Validation. The release process does not use `continue-on-error` for a required gate.
+Candidate evidence must come from one final commit. Required GitHub checks are the six Core CI jobs, including the semantic Documentation Check, the five-profile matrix, the three-profile PostgreSQL matrix with a real PostgreSQL service, native Windows/macOS/Linux Desktop CI, and manually dispatched or tag-triggered Release Validation. The release process does not use `continue-on-error` for a required gate.
 
 Documentation navigation is regenerated with `docs index` and verified independently with the read-only `docs check`. The bilingual case study, its four PDF editions, translation validation, and checksums are part of the release evidence.
 

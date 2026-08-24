@@ -4,7 +4,7 @@
 | --- | --- |
 | Status | PASS |
 | Owner | Project team |
-| Last review | 2026-08-23 |
+| Last review | 2026-08-24 |
 | Audience | Case-study maintainers and reviewers |
 
 ## Purpose
@@ -12,9 +12,10 @@
 This record captures the structural, substantive, build, artifact-freshness,
 and targeted layout validation of the bilingual v1.0.0 case-study edition. The
 historical governance analysis remains tied to technical baseline
-`461fc7519e0db638330904a7496c488e8a0d18bc`; the final release commit is
-intentionally identified by the annotated `v1.0.0` tag rather than embedded in
-its own source.
+`461fc7519e0db638330904a7496c488e8a0d18bc`; after successful exact-HEAD
+validation, the exact candidate will be recorded in GitHub Actions evidence
+and the final operator report rather than embedded in its own source. No
+release tag is published.
 
 ## Result
 
@@ -22,8 +23,8 @@ its own source.
 
 The English edition now contains the governance material that was previously
 present only in German, including its evidence qualifications and documented
-limitations. Both languages also contain the concise v1.0.0 release-validation
-addendum. The final release state is synchronized for Node 24, PostgreSQL
+limitations. Both languages also contain the concise v1.0.0 candidate-validation
+addendum. The final candidate state is synchronized for Node 24, PostgreSQL
 16.15, the dedicated tooling runtime, and the Rust analyzer built with rustc
 1.97.1 and Syn 2.0.119 and executed through Wasmtime 47.0.1. All four
 language/edition combinations built successfully, their reviewed checksums
@@ -40,8 +41,8 @@ were refreshed, and source/PDF provenance was recorded.
 - Figures, TikZ node text, captions, and source notes: translated
 - List of abbreviations and generated list headings: localized to English
 - Bibliography: exact key parity; English localization applied to project notes
-- v1.0.0 release-validation addendum: bilingual and non-self-referential
-- Historical Ruff-resolution failure and corrected v1.0.0 `tools/.venv`
+- v1.0.0 candidate-validation addendum: bilingual and non-self-referential
+- Historical Ruff-resolution failure and corrected v1.0.0 candidate `tools/.venv`
   contract: explicitly separated in both languages and beginner explanations
 - Analyzer build/runtime contract: synchronized for the exact rustc 1.97.1
   commit, Syn 2.0.119, proc-macro2 1.0.107, `wasm32-wasip1`, Wasmtime 47.0.1,
@@ -75,7 +76,7 @@ source digest is rejected.
 
 ## Build and artifact validation
 
-The four editions were rebuilt from the repository root on 23 August 2026 with
+The four editions were rebuilt from the repository root on 24 August 2026 with
 Tectonic 0.17.0, Biber 2.17, and staged TeX Gyre Heros fonts:
 
 ```sh
@@ -101,18 +102,18 @@ and PDF-generation sequence for every document.
 The reviewed PDFs and SHA-256 values are:
 
 - [German beginner edition](pdf/template-projects-case-study-de-beginner.pdf):
-  `0b6fc6b3e5f13d98af38420d5c944376092b4d24976b4ffbc805fced2aa34ce6`
+  `82b475b38a3d71ab4df18d1f7a44574856a2c836a65961e470cc06ff83e29a7d`
 - [German scientific edition](pdf/template-projects-case-study-de-scientific.pdf):
-  `5f0b9ea0ab3f988e66dc160a2023377f517aa106001ac241357dafb7419d5517`
+  `e1b8368834d2b6b65176d20000680f49ac456103e178b368ba4f8f806e1d8a5a`
 - [English beginner edition](pdf/template-projects-case-study-en-beginner.pdf):
-  `c82eeba5d1a6bdf7aea40a73c2f1bfed0161270a4e262163474486946918d04a`
+  `5dd368eabaaac34fb9b72b8e1a14cf969562db41241d36fbfe4bf3c9b7419d0e`
 - [English scientific edition](pdf/template-projects-case-study-en-scientific.pdf):
-  `4a1e4d20168be3b192fcbac121d5d28679a219c599908cddc52dad76d29a0429`
+  `c84f89dd54d1b6e49e5f5474f24ee3326d270fae3f32d8100a46585a4850857f`
 
 The German source-tree digest is
-`f8e9f88b97b87b7e6b71681fb4dd8954d6ebd701165be03f1d4ecf6470557e31`;
+`6bf452a92e787fc637463f00c61c85a80fcf725bf4e379d99021ee36fd846cf3`;
 the English source-tree digest is
-`065d31b66fecf9e8da5e2fb9f8e8d58e2d9f9ba4176879c43d929c24f95b43df`.
+`e97801035be260d209122339012998e54c958c05dd48cd946a85c8bff88241b8`.
 The machine-readable mapping in [provenance.json](pdf/provenance.json) binds
 these source digests to each PDF checksum. Editing either language after the
 recorded build now makes `--verify` fail even when an older PDF still matches
@@ -151,10 +152,10 @@ The English changes preserve the German edition's distinction among intended
 policy, observed implementation, executed evidence, inference, and limitation.
 In particular, the historical Ruff-resolution, exception-validation, CQ001,
 native-library, documentation, and CI findings remain attributed to baseline
-`461fc751`. The installation chapter now also records that the release state
+`461fc751`. The installation chapter now also records that the candidate state
 always provides the dedicated `tools/.venv`; this correction does not rewrite
 the historical profile failures as passes. The v1.0.0 addendum separately
-records the release criteria that close those gaps.
+records the candidate criteria that close those gaps.
 
 ## Related documents
 

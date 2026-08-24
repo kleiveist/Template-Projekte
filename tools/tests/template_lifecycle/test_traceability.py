@@ -78,10 +78,14 @@ TRACEABILITY: dict[str, tuple[str, ...]] = {
     "LC-019": (
         "tools/tests/template_lifecycle/test_cli.py::test_every_lifecycle_subcommand_has_help",
         "tools/tests/template_lifecycle/test_report.py::test_report_writes_five_required_files_with_pre_apply_diff",
+        "tools/tests/test_docs_index.py::test_navigation_check_accepts_complete_indices_and_backlinks",
+        "tools/tests/test_readme_onboarding.py::test_all_local_readme_links_resolve",
     ),
     "LC-020": (
         "tools/tests/test_ci_workflows.py::test_core_ci_uses_supported_runtimes_and_public_tooling",
         "tools/tests/test_ci_workflows.py::test_profile_matrix_generates_and_tests_every_profile",
+        "tools/tests/test_ci_workflows.py::test_release_validation_is_explicit_and_never_publishes",
+        "tools/tests/test_container_release.py::test_release_check_accepts_canonical_master_template_identity",
     ),
 }
 

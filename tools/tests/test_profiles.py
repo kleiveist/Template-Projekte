@@ -371,7 +371,7 @@ def test_generated_profile_serialization_escapes_metadata() -> None:
     assert parsed["description"] == "First line\nSecond line"
 
 
-def test_scaffold_removes_master_only_readme_blocks(tmp_path: Path) -> None:
+def test_scaffold_removes_master_only_readme_content(tmp_path: Path) -> None:
     target = tmp_path / "generated"
     target.mkdir()
     (target / "README.md").write_text(
@@ -380,17 +380,23 @@ def test_scaffold_removes_master_only_readme_blocks(tmp_path: Path) -> None:
         "<!-- MASTER-ONLY START -->\n"
         "[Master case study](case-study/README.md)\n"
         "<!-- MASTER-ONLY END -->\n\n"
-        "Visible after.\n",
+        "Visible after.\n\n"
+        "- [Conduct](CODE_OF_CONDUCT.md)\n"
+        "- [Contributing](CONTRIBUTING.md)\n"
+        "- [License](LICENSE)\n",
         encoding="utf-8",
     )
 
-    generator._remove_master_only_readme_blocks(target)
+    generator._remove_master_only_readme_content(target)
 
     generated_readme = (target / "README.md").read_text(encoding="utf-8")
     assert "Visible before." in generated_readme
     assert "Visible after." in generated_readme
     assert "MASTER-ONLY" not in generated_readme
     assert "case-study/README.md" not in generated_readme
+    assert "CODE_OF_CONDUCT.md" not in generated_readme
+    assert "CONTRIBUTING.md" not in generated_readme
+    assert "LICENSE" in generated_readme
 
 
 def test_master_readme_case_study_links_are_removed_from_scaffold(tmp_path: Path) -> None:

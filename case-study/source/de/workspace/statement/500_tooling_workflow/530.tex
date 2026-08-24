@@ -9,7 +9,7 @@ das Frontend-Tooling aus; npm verwaltet dessen Pakete, und \texttt{npm ci}
 installiert die im Lockfile festgelegten Stände. Python führt Backend und
 Tooling aus; eine virtuelle Umgebung (\emph{venv}) trennt deren Pakete vom
 übrigen System, während \texttt{uv} oder ersatzweise \texttt{pip} sie
-installiert. Im v1.0.0-Freigabestand richtet \texttt{install} für jedes Profil
+installiert. Im v1.0.0-Kandidatenstand richtet \texttt{install} für jedes Profil
 eine eigene \path{tools/.venv} mit Qualitätswerkzeugen wie Ruff ein; eine
 zusätzliche \path{backend/.venv} enthält nur die Abhängigkeiten der Anwendung.
 Git verwaltet Quellcodeänderungen und wird zum Klonen des

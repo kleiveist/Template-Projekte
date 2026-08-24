@@ -19,27 +19,28 @@ of the policy can be suppressed through exceptions. External checks and
 product-specific release and security tasks remain open. The result therefore
 guarantees neither clean code nor a finished, cross-platform-verified product.
 
-\subsubsection*{Release validation addendum for v1.0.0}
+\subsubsection*{Release-candidate validation addendum for v1.0.0}
 \begingroup
 \ifbeginnerstatements\fontsize{9pt}{10.8pt}\selectfont\fi
 This addendum, dated 23~August~2026, preserves \texttt{461fc751} as the
 historical observation baseline; the commit-bound matrices and open items
 remain historical snapshots and do not anticipate later release results. For version
-1.0.0, the disclosed governance gaps are release criteria: a
+1.0.0, the disclosed governance gaps are candidate criteria: a
 \texttt{CQ001 ERROR} above 900 LOC can no longer be suppressed,
 absolute exception paths and paths outside the scan are rejected, the
 dedicated tooling environment provides Ruff, and structural parity plus
 source/PDF provenance are checked automatically. All public quality, test, and
-build entry points must pass on the release state.
+build entry points must pass on the candidate state.
 
-For scope and control-flow metrics in Rust, the release state uses an analyzer
+For scope and control-flow metrics in Rust, the candidate state uses an analyzer
 artifact for \texttt{wasm32-wasip1}. It was built with rustc~1.97.1 and
 Syn~2.0.119. Wasmtime~47.0.1 executes it with resource limits. The source
 state, Cargo lockfile, artifact, and ABI provenance are validated before
 analysis. This later evidence does not alter the historical findings.
 
-The final commit hash is absent to avoid self-reference. The annotated \texttt{v1.0.0} tag and its
-GitHub Release bind publication to the release state. Post-commit GitHub
-Actions results remain external evidence and are not declared passed in
-advance.
+The final commit hash is absent to avoid self-reference. No \texttt{v1.0.0}
+tag or GitHub Release is published at validation time. After successful
+exact-HEAD validation, GitHub Actions results and the final operator report
+must identify the exact candidate externally; a future tag and publication
+must bind to that same state.
 \endgroup

@@ -9,7 +9,7 @@ tooling; npm manages its packages, and \texttt{npm ci} installs the versions
 specified in the lockfile. Python runs the backend and tooling; a virtual
 environment (\emph{venv}) separates their packages from the rest of the
 system, while \texttt{uv}, or \texttt{pip} as a fallback, installs them. In
-the v1.0.0 release state, \texttt{install} creates a dedicated
+the v1.0.0 candidate state, \texttt{install} creates a dedicated
 \path{tools/.venv} with quality tools such as Ruff for every profile; an
 additional \path{backend/.venv} contains only application dependencies. Git
 manages source-code changes and is required to clone the repository. Rust is

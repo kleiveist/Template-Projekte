@@ -3,26 +3,26 @@
     "template-projects-case-study-de-beginner.pdf": {
       "edition": "beginner",
       "language": "de",
-      "pdf_sha256": "0b6fc6b3e5f13d98af38420d5c944376092b4d24976b4ffbc805fced2aa34ce6",
-      "source_sha256": "f8e9f88b97b87b7e6b71681fb4dd8954d6ebd701165be03f1d4ecf6470557e31"
+      "pdf_sha256": "82b475b38a3d71ab4df18d1f7a44574856a2c836a65961e470cc06ff83e29a7d",
+      "source_sha256": "6bf452a92e787fc637463f00c61c85a80fcf725bf4e379d99021ee36fd846cf3"
     },
     "template-projects-case-study-de-scientific.pdf": {
       "edition": "scientific",
       "language": "de",
-      "pdf_sha256": "5f0b9ea0ab3f988e66dc160a2023377f517aa106001ac241357dafb7419d5517",
-      "source_sha256": "f8e9f88b97b87b7e6b71681fb4dd8954d6ebd701165be03f1d4ecf6470557e31"
+      "pdf_sha256": "e1b8368834d2b6b65176d20000680f49ac456103e178b368ba4f8f806e1d8a5a",
+      "source_sha256": "6bf452a92e787fc637463f00c61c85a80fcf725bf4e379d99021ee36fd846cf3"
     },
     "template-projects-case-study-en-beginner.pdf": {
       "edition": "beginner",
       "language": "en",
-      "pdf_sha256": "c82eeba5d1a6bdf7aea40a73c2f1bfed0161270a4e262163474486946918d04a",
-      "source_sha256": "065d31b66fecf9e8da5e2fb9f8e8d58e2d9f9ba4176879c43d929c24f95b43df"
+      "pdf_sha256": "5dd368eabaaac34fb9b72b8e1a14cf969562db41241d36fbfe4bf3c9b7419d0e",
+      "source_sha256": "e97801035be260d209122339012998e54c958c05dd48cd946a85c8bff88241b8"
     },
     "template-projects-case-study-en-scientific.pdf": {
       "edition": "scientific",
       "language": "en",
-      "pdf_sha256": "4a1e4d20168be3b192fcbac121d5d28679a219c599908cddc52dad76d29a0429",
-      "source_sha256": "065d31b66fecf9e8da5e2fb9f8e8d58e2d9f9ba4176879c43d929c24f95b43df"
+      "pdf_sha256": "c84f89dd54d1b6e49e5f5474f24ee3326d270fae3f32d8100a46585a4850857f",
+      "source_sha256": "e97801035be260d209122339012998e54c958c05dd48cd946a85c8bff88241b8"
     }
   },
   "schema_version": 1

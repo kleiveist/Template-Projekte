@@ -7,11 +7,14 @@ This repository is the master template for applications built with Vite and Type
 
 | Field | Value |
 | --- | --- |
-| Version / release tag | `1.0.0` / annotated tag `v1.0.0` |
-| Baseline commit | `461fc7519e0db638330904a7496c488e8a0d18bc` |
-| Documentation review | 2026-08-23 |
+| Template version | `1.0.0` |
+| Validation status | Available pre-commit checks executed and host blockers recorded; clean-candidate and exact-HEAD GitHub validation pending |
+| Lifecycle status | `NOT READY FOR SUNODM PILOT` until LC-020 has exact-HEAD evidence |
+| Published release tag | None |
+| Historical architecture baseline | `461fc7519e0db638330904a7496c488e8a0d18bc` |
+| Documentation review | 2026-08-24 |
 
-The version metadata alone is not a release claim. `v1.0.0` is the released version only when the annotated tag points to one final commit for which the local quality, test, profile, PostgreSQL, desktop, and documentation checks and all required GitHub Actions runs succeeded. Core CI exposes six jobs, including the read-only `Core / Documentation Check`; every required run references that same final commit. The exact final commit belongs in the tag, release evidence, and release manifest rather than in a file that would change that commit again.
+The version metadata and a successful validation are not publication claims. No `v1.0.0` tag or GitHub Release currently exists. A future annotated tag may identify the released version only after it points to the exact candidate for which the local quality, test, profile, PostgreSQL, desktop, documentation, and Release Validation checks succeeded. The exact validated migration baseline belongs in Git and the final operator report rather than in a file that would change that commit again.
 <!-- MASTER-ONLY END -->
 
 ## Start here
@@ -367,13 +370,19 @@ The README answers “How do I start?” The linked guides answer “How does it
 
 English is the only documentation language for this repository and projects derived from it. A new or changed feature is complete only when its code, tests, acceptance evidence, and affected documentation are updated together.
 
+<!-- MASTER-ONLY START -->
 ## Community and contributing
 
 Contributions to this master template are welcome. Read the [contribution guide](CONTRIBUTING.md) and follow the [Code of Conduct](CODE_OF_CONDUCT.md). Use the provided public GitHub Issue forms for reproducible bugs and well-scoped feature requests.
 
-Do not report security vulnerabilities in a public issue. Follow the private reporting instructions in the [Security Policy](.github/SECURITY.md). This repository is licensed under the [MIT License](LICENSE).
+Do not report security vulnerabilities in a public issue. Follow the private reporting instructions in the [Security Policy](.github/SECURITY.md).
 
-Projects derived from this template must review and replace their repository description, license and copyright owner, security and Code-of-Conduct contacts, and community links before inviting contributors or releasing the product.
+These community policies, contacts, Issue Forms, and pull-request template are master-only governance and are intentionally not scaffolded into products.
+<!-- MASTER-ONLY END -->
+
+## License and derived-project governance
+
+This repository is licensed under the [MIT License](LICENSE), which is copied into every generated profile and recorded in its deterministic lifecycle baseline. Maintainers of a derived project must review the inherited license and copyright owner, then create product-owned security, Code-of-Conduct, contribution, and community governance before inviting contributors or publishing the product.
 
 ## Documentation index
 
@@ -381,6 +390,8 @@ Projects derived from this template must review and replace their repository des
 
 ## 📄 Files
 - 📝 [Coding Agent Governance](AGENTS.md)
+- 📝 [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md)
+- 📝 [Contributing](CONTRIBUTING.md)
 
 # DOCS
 - 📚 [Docs Home](docs/index.md)

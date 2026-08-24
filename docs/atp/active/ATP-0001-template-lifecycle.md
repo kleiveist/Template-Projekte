@@ -8,10 +8,10 @@
 | Status | active |
 | Owner | Project team |
 | Created | 2026-08-23 |
-| Executed | 2026-08-23 |
+| Executed | 2026-08-23; finalization rerun 2026-08-24 |
 | Requirement | [Lifecycle acceptance](../../dev/template-lifecycle-acceptance.md) |
-| Tested commit/build | `0736f1ffe993e83ce69c019b8888bf2b9f669ef1` plus the intentionally uncommitted lifecycle working tree; generated-profile snapshot `40d10782d53a8931926cf42395d774c0796b87f0` |
-| Environment | Linux x86_64; Python 3.13.15 host; Node.js 24.19.0; Rust 1.97.1; Docker and native WebKitGTK development packages unavailable |
+| Tested commit/build | Previous execution: `0736f1ffe993e83ce69c019b8888bf2b9f669ef1` plus its recorded working tree. Finalization: candidate derived from clean `f70d30959c856e8170e6699eff2c101d1c077be0`; exact candidate SHA belongs in Git and the external operator report. |
+| Environment | Linux x86_64; Python 3.13.9; Node.js 26.2.0; Rust 1.92.0; Tectonic 0.17.0; Biber 2.17; Docker, WebKitGTK 4.1, appindicator, a live PostgreSQL service, and authenticated GitHub access unavailable |
 
 ## Objective
 
@@ -50,8 +50,9 @@ Accept a reusable, deterministic, and rollback-safe template lifecycle foundatio
 - [x] Required Python, Node.js, Rust, Docker, and platform dependencies are identified for each executed step.
 - [x] The tested commit and complete working-tree state are recorded.
 - [x] Focused tests use only disposable local Git repositories and no network.
-- [ ] A disposable PostgreSQL service is available for database matrix evidence.
+- [ ] A disposable PostgreSQL service is available for local database matrix evidence; exact-HEAD CI is the required fallback.
 - [x] Test fixtures contain no secrets or production user data.
+- [ ] An authenticated GitHub push and workflow-dispatch path is available for exact-HEAD evidence.
 
 ## Test data
 
@@ -85,8 +86,8 @@ Accept a reusable, deterministic, and rollback-safe template lifecycle foundatio
 | `LC-016` | Generate and verify all five profiles. | Every profile has valid clean-source lifecycle metadata. | Five profiles and three valid PostgreSQL variants passed status/verify with final drift `0/0/0`. | PASS | Local generated-profile matrix and CI guards |
 | `LC-017` | Disable network and run status/verify. | Both commands complete locally. | Network-denial fixtures and every generated profile passed. | PASS | Status/source tests and local matrix |
 | `LC-018` | Exercise Git, path, symlink, and secret negative cases. | Every unsafe operation is rejected without disclosure. | Git race, traversal, external links, caches, credentials, reports, and dirty trees were rejected or redacted. | PASS | Security-focused lifecycle tests |
-| `LC-019` | Exercise CLI help, JSON, reports, and documentation. | Interfaces and schemas are complete and valid. | CLI/report suites passed; documentation index/check passed. | PASS | Focused suite and docs commands |
-| `LC-020` | Run existing quality, CI, release, and platform gates. | No existing guard is weakened or bypassed. | All non-native checks passed; native Tauri, Docker, live PostgreSQL, and clean-tree release evidence remain unavailable. | BLOCKED | Quality/all-suite/container/release outputs |
+| `LC-019` | Exercise CLI help, JSON, reports, and documentation. | Interfaces and schemas are complete and valid. | CLI/report/readme suites passed; PyGitIndex regenerated navigation and `docs check` validated 31 pages. | PASS | Tool suite, focused ownership tests, and docs commands |
+| `LC-020` | Run existing quality, CI, release, and platform gates. | No existing guard is weakened or bypassed. | Local Quality, tooling, documentation, version, web, case-study, and desktop dry-run gates passed. Native Tauri linking, Docker, and live PostgreSQL remain unavailable locally, and the final GitHub workflows cannot be pushed or dispatched without credentials. | BLOCKED | Local gate outputs and public Actions metadata audit |
 
 ## Automated checks
 
@@ -109,36 +110,38 @@ Generated-project, PostgreSQL, and native desktop matrix results must reference 
 
 | Check | Exit | Result |
 | --- | ---: | --- |
-| Focused lifecycle, CLI, CI, and documentation tests | 0 | 186 passed |
-| `python tools/control.py test --suite tools` | 0 | 788 collected and passed |
-| `python tools/control.py quality` | 1 | 184 files, 0 policy errors; every non-native adapter passed; Rust compiler and Clippy blocked by missing WebKitGTK packages |
-| `python tools/control.py test --suite all` | 1 | Tools, schema, API, database, and frontend passed; PostgreSQL and E2E skipped by configuration; two native Tauri checks blocked by WebKitGTK |
-| `python tools/control.py docs index` and `docs check` | 0 | Index generated; 31 pages checked |
-| `python tools/control.py doctor` and `config doctor` | 0 | Valid; general doctor warned that Docker is unavailable |
+| Focused ownership, lifecycle, profile, traceability, onboarding, and documentation tests | 0 | 62 passed in the focused rerun |
+| `python tools/control.py test --suite tools` | 0 | 789 passed, 1 skipped in the complete tooling and case-study suite |
+| `python tools/control.py quality` | 0 | 185 files, 0 errors, 0 suppressed findings; all enabled adapters passed |
+| `python tools/control.py test --suite all` | 1 | Tools, schema, API, database, and frontend passed; PostgreSQL and E2E skipped; native Tauri test linking failed for missing WebKitGTK/JavaScriptCoreGTK |
+| `python tools/control.py docs index` and `docs check` | 0 | Index regenerated; 31 pages checked |
+| `python tools/control.py doctor` and `config doctor` | 0 | Configuration valid with the explicit CI-style `DATABASE_URL`; general doctor warned that Docker is unavailable |
 | `python tools/control.py version check` | 0 | All seven product-version mirrors agree at `1.0.0` |
 | `python tools/control.py build web` | 0 | Frontend build and release zip created in ignored output paths |
 | `python tools/control.py build desktop --dry-run --no-clean` | 0 | Linux command and bundle plan validated without an artifact build |
 | `python tools/control.py container validate` | 1 | All five container inputs exist; Docker executable unavailable |
-| `python tools/control.py tauri doctor` | 1 | WebKitGTK and appindicator packages unavailable; additional AppImage tools warned |
-| `python tools/control.py release check` | 1 | Version, identity, and Tauri security checks passed; intentionally dirty tree rejected |
+| `python tools/control.py tauri doctor` | 1 | WebKitGTK 4.1 and appindicator unavailable; additional AppImage tools warned |
+| `python case-study/build.py --verify` and case-study tests | 0 | Four rebuilt PDFs match checksums and bilingual source provenance; 12 tests passed |
+| Root `template status` / `template verify` | 0 / 1 | Status correctly identifies the master template; verify correctly rejects it because lifecycle state exists only in generated products. Generated profiles are the applicable verification targets. |
+| `python tools/control.py release check` | NOT RUN | Must run on the clean candidate commit; the exact result belongs in the final operator report. |
 | `git diff --check` | 0 | No whitespace errors |
 
-The generated matrix used one clean local snapshot for five base profiles and the three valid PostgreSQL variants. Every init, status, JSON assertion, verify, install, post-quality zero-drift check, and applicable web or desktop dry-run passed. Web profile quality and complete suites passed. Desktop quality and complete suites reached only the native Rust checks before the same host-package block. Live PostgreSQL integration remained skipped because `DATABASE_URL_TEST` and a service were unavailable.
+The previous generated matrix used one clean local snapshot for five base profiles and the three valid PostgreSQL variants. The 2026-08-24 finalization reran generator/lifecycle regression tests and proved that `LICENSE` is copied and present in deterministic baselines while master-only community governance is omitted without dangling README links. The clean-candidate profile matrix must be repeated after the candidate commit; locally unavailable native and service evidence may be supplied only by successful exact-HEAD CI.
 
 ## Deviations
 
 | ID | Description | Severity | Owner | Follow-up | Status |
 | --- | --- | --- | --- | --- | --- |
-| DEV-001 | Native Rust compiler, Clippy, Tauri tests, and Tauri doctor cannot complete without `webkit2gtk-4.1` and `javascriptcoregtk-4.1`; appindicator is also absent. | high | Environment owner | Install the documented Linux desktop development packages and rerun root plus desktop-profile gates. | open |
-| DEV-002 | Docker is unavailable, so container validation cannot execute Docker/Compose probes. | medium | Environment owner | Provide Docker and rerun root plus cloud-profile container checks. | open |
-| DEV-003 | No disposable PostgreSQL service or `DATABASE_URL_TEST` is available. | medium | Environment owner | Start the pinned PostgreSQL 16.15 Alpine service and rerun PostgreSQL integration suites. | open |
-| DEV-004 | Release check correctly rejects the intentionally uncommitted implementation tree. | medium | Maintainer | Review and commit through the authorized workflow, then rerun `release check`; do not create a tag or release in this ATP. | open |
+| DEV-001 | Native Tauri tests and Tauri doctor cannot complete without WebKitGTK 4.1, JavaScriptCoreGTK 4.1, and appindicator. | high | Environment owner | Use the existing native Desktop CI matrix on the exact candidate SHA or install the documented local packages. | open |
+| DEV-002 | Docker is unavailable, so local container validation cannot execute Docker/Compose probes. | medium | Environment owner | Use exact-HEAD Core and Release Validation container jobs or provide Docker locally. | open |
+| DEV-003 | No disposable PostgreSQL service or `DATABASE_URL_TEST` is available. | medium | Environment owner | Use exact-HEAD PostgreSQL Integration or start the pinned PostgreSQL 16.15 Alpine service locally. | open |
+| DEV-004 | `gh`, GitHub tokens, and Git HTTPS credentials are unavailable; the candidate cannot be pushed and required workflows cannot be dispatched. | high | Repository owner | Connect an authenticated GitHub capability, push the candidate without rewriting history, dispatch Release Validation, and verify every workflow has the same `headSha`. | open |
 
 ## Result
 
 - Overall result: `BLOCKED`
-- Summary: Lifecycle functionality and generated-profile metadata passed; external native, container, database-service, and clean-tree release evidence is incomplete.
-- Residual risks: Native desktop compilation, live PostgreSQL integration, Docker validation, and the final clean-tree release gate remain open.
+- Summary: Lifecycle functionality, ownership regression tests, documentation, versioning, quality, web build, and case-study evidence passed; exact-HEAD native, container, database, and Release Validation evidence is unavailable.
+- Residual risks: The candidate is local-only and required same-SHA GitHub workflows have not run.
 - Pilot readiness: `NOT READY FOR SUNODM PILOT`
 
 ## Sign-off

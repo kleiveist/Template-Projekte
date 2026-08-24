@@ -55,6 +55,7 @@ def test_every_profile_gets_valid_deterministic_lifecycle_metadata(profile: str,
     assert first_state.source.commit == second_state.source.commit
     assert first_manifest == second_manifest
     assert first_state.baseline.digest == first_manifest.digest
+    assert "LICENSE" in first_manifest.by_path()
     assert ".template/state.toml" not in first_manifest.by_path()
 
 

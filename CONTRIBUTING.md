@@ -86,4 +86,4 @@ By submitting a contribution, you agree that it may be distributed under this re
 
 ## Derived projects
 
-Before a generated project accepts contributions or is released, its maintainers must review and replace the inherited repository description, license and copyright owner, security and Code-of-Conduct contacts, and community links. They must also define their own product support and security scope.
+Before a generated project accepts contributions or is published, its maintainers must review the inherited repository description, license, and copyright owner. They must create product-owned contribution, security, Code-of-Conduct, and community governance and define their own support and security scope.

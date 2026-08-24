@@ -63,11 +63,13 @@ def test_case_study_release_addendum_is_bilingual_and_non_self_referential() -> 
     german = (CASE_STUDY_DIR / "source" / "de" / relative).read_text(encoding="utf-8")
     english = (CASE_STUDY_DIR / "source" / "en" / relative).read_text(encoding="utf-8")
 
-    assert "Freigabenachtrag v1.0.0" in german
-    assert "Release validation addendum for v1.0.0" in english
+    assert "Validierungsnachtrag zum Freigabekandidaten v1.0.0" in german
+    assert "Release-candidate validation addendum for v1.0.0" in english
     assert "461fc751" in german and "461fc751" in english
-    assert "annotierte Tag \\texttt{v1.0.0}" in german
-    assert "annotated \\texttt{v1.0.0} tag" in english
+    assert "weder ein Tag \\texttt{v1.0.0}" in german
+    assert "No \\texttt{v1.0.0}" in english
+    assert "GitHub" in german and "Release veröffentlicht" in german
+    assert "GitHub Release" in english
     assert "\\texttt{CQ001 ERROR} oberhalb von 900 LOC" in german
     assert "\\texttt{CQ001 ERROR} above 900 LOC" in english
     assert "historische Momentaufnahmen" in german
@@ -131,15 +133,15 @@ def test_case_study_release_tooling_runtime_contract_is_current() -> None:
 
     expectations = {
         "de": (
-            "Im v1.0.0-Freigabestand ist die Abweichung behoben",
+            "Im v1.0.0-Kandidatenstand ist die Abweichung behoben",
             "für jedes Profil",
-            "Im v1.0.0-Freigabestand sind die historischen",
+            "Im v1.0.0-Kandidatenstand sind die historischen",
             "Ruff in generierten Backendprofilen konsistent auffindbar zu",
         ),
         "en": (
-            "In the v1.0.0 release state, the discrepancy is corrected",
+            "In the v1.0.0 candidate state, the discrepancy is corrected",
             "for every profile",
-            "In the v1.0.0 release state, the historical",
+            "In the v1.0.0 candidate state, the historical",
             "Ruff should be made consistently discoverable",
         ),
     }

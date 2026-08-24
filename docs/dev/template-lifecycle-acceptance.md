@@ -5,9 +5,9 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Executed — blocked by host prerequisites |
+| Status | Executed — LC-020 blocked by exact-HEAD GitHub access |
 | Owner | Project team |
-| Last review | 2026-08-23 |
+| Last review | 2026-08-24 |
 | Audience | Developers, reviewers, and acceptance owners |
 | Related ATP | [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md) |
 
@@ -62,8 +62,8 @@ Only an executed check with its real result can move an item from `NOT RUN`. A c
 | `LC-016` | All five profiles contain valid lifecycle metadata. | Five-entry CI matrix with status and verify | PASS | Five profiles and three PostgreSQL variants passed status, JSON provenance assertions, and verify with zero drift. |
 | `LC-017` | Status and verify work without network access. | Offline subprocess tests and generated CI execution | PASS | Network-denial tests and all local generated-profile checks passed. |
 | `LC-018` | Git, path, symlink, and secret boundaries are enforced. | Local Git fixtures and negative security tests | PASS | Git race, path traversal, external symlink, protected runtime, secret redaction, and dirty-tree tests passed. |
-| `LC-019` | CLI, documentation, and reports are complete. | CLI help/JSON tests, docs check, and report schema tests | PASS | CLI/report tests passed and the generated documentation index/check completed successfully. |
-| `LC-020` | Existing quality, CI, and release gates remain intact. | Quality, complete tests, workflow guards, builds, and release check | BLOCKED | Non-native checks passed, but native Rust/Tauri checks lack WebKitGTK; Docker and a live PostgreSQL service are unavailable, and the required uncommitted tree blocks release check. |
+| `LC-019` | CLI, documentation, and reports are complete. | CLI help/JSON tests, docs check, and report schema tests | PASS | CLI/report/readme tests passed; PyGitIndex regeneration completed and `docs check` validated 31 pages. |
+| `LC-020` | Existing quality, CI, and release gates remain intact. | Quality, complete tests, workflow guards, builds, and release check | BLOCKED | Local Quality, tooling, documentation, version, web, case-study, and desktop dry-run gates passed. Native Tauri linking, Docker, and live PostgreSQL remain unavailable locally; no credential can push or dispatch the required workflows on the exact candidate commit. |
 
 ## Required automated coverage
 
@@ -95,20 +95,31 @@ git diff --check
 
 The five generated profiles additionally run lifecycle status and verify, quality, and the complete applicable suite. Desktop profiles run Tauri diagnostics and the desktop dry-run. Backend profiles run configuration diagnostics. Valid PostgreSQL combinations run against the existing isolated service matrix.
 
-`release check` is executed and recorded even when an intentionally dirty implementation tree prevents success. A dirty-tree failure is release-state evidence, not a lifecycle functional failure, and must not be reported as a passing release gate.
+`release check` is executed on the clean candidate commit and recorded in the external operator report. A dirty-tree failure before that commit is release-state evidence, not a lifecycle functional failure, and must not be reported as a passing release gate.
+
+## Previous blockers and current disposition
+
+| Previous blocker | Current disposition |
+| --- | --- |
+| WebKitGTK, JavaScriptCoreGTK, and appindicator were unavailable locally. | Still unavailable locally on 2026-08-24. Quality and the desktop dry-run pass, but `tauri doctor` and native Rust tests fail closed. Exact-HEAD Desktop CI is required to resolve this blocker. |
+| Docker was unavailable locally. | Still unavailable; `container validate` verifies all five inputs and then fails because the Docker executable is absent. Exact-HEAD Core and Release Validation container jobs are required. |
+| No disposable PostgreSQL service or `DATABASE_URL_TEST` was available. | Still unavailable locally. The PostgreSQL suite remains an explicit skip, not passing evidence. Exact-HEAD PostgreSQL Integration is required. |
+| The lifecycle implementation was intentionally uncommitted, so `release check` rejected the dirty tree. | The repository began this finalization clean at `f70d30959c856e8170e6699eff2c101d1c077be0`. The finalization changes require a coherent candidate commit, followed by a clean-tree release check. |
+| GitHub and Desktop CI evidence existed only for earlier commits. | Public metadata was audited, but earlier green runs are not final evidence. `gh`, a GitHub token, and an HTTPS Git credential are all unavailable, so the final commit cannot be pushed or dispatched from this environment. |
 
 ## Decision rule
 
 The lifecycle foundation is `READY FOR SUNODM PILOT` only when all `LC-001` through `LC-020` requirements have passing evidence and no unresolved safety or rollback defect remains. Otherwise the decision is `NOT READY FOR SUNODM PILOT`, with every blocker listed in ATP-0001 and the final implementation report.
 
-Current decision: `NOT READY FOR SUNODM PILOT`. Native Tauri quality/tests require `webkit2gtk-4.1` and `javascriptcoregtk-4.1`; container validation requires Docker; the live PostgreSQL integration requires `DATABASE_URL_TEST`; and the release gate requires the intentionally uncommitted implementation tree to be committed by an authorized maintainer.
+Current decision: `NOT READY FOR SUNODM PILOT`. LC-020 cannot pass until Core CI, Profile Matrix, PostgreSQL Integration, Desktop CI, and Release Validation all complete successfully on the exact candidate commit. This environment has no credential with which to push that commit or dispatch Release Validation.
 
 ## Risks and limitations
 
 - Local source resolution is the only supported source mechanism in version 1.
 - No concrete product migration is included.
-- Native Linux Tauri, container, and live PostgreSQL evidence remains blocked by missing host services or packages.
-- The release gate remains blocked by the intentionally dirty implementation tree; its version, identity, and security subchecks passed before the clean-tree check failed.
+- Native Linux Tauri, container, and live PostgreSQL evidence remains blocked locally by missing host services or packages.
+- Public Actions metadata is readable, but authenticated push, log download, and workflow dispatch are unavailable.
+- The final candidate SHA is intentionally recorded only in Git and the external operator report, not embedded here.
 
 ## Related documents
 

@@ -152,7 +152,11 @@ The generated project receives:
 - a generated `project-profile.toml` manifest; and
 - tracked `.template/state.toml` provenance and a deterministic `.template/baseline.json` scaffold manifest.
 
-The shared core deliberately includes the governance and release surface: `AGENTS.md`, `VERSION`, `config/`, `docs/`, `shared/`, and `tools/`. Consequently every derived project carries the same code-quality policy, architecture checks, command entry point, and version contract. Feature selection removes disabled runtime implementations; it does not remove the controls used to verify the resulting project.
+The shared core deliberately includes the governance and release surface: `AGENTS.md`, `LICENSE`, `VERSION`, `config/`, `docs/`, `shared/`, and `tools/`. Consequently every derived project carries the same code-quality policy, architecture checks, command entry point, version contract, and explicit MIT license obligations. `LICENSE` is template-managed content and is recorded in the generated lifecycle baseline.
+
+Community governance is product-owned. The master repository's `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `.github/SECURITY.md`, Issue Forms, pull-request template, and workflows are master-only because they contain repository-specific policy, contacts, and automation. They are not scaffolded. Generation removes their master-only README section and their automatically generated root-index entries so a product never receives broken links to absent policy files. Product maintainers create and own their corresponding governance before opening the project to contributors or publishing it.
+
+Feature selection removes disabled runtime implementations; it does not remove the controls used to verify the resulting project.
 
 When `--name` is supplied, the generator also derives or validates the project slug and updates package, backend, Compose, Tauri, and Cargo identity metadata. A customized Tauri project requires an explicit reverse-domain `--identifier`. This avoids shipping known template identities accidentally.
 

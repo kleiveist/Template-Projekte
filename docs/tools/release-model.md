@@ -7,9 +7,11 @@
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
-| Last review | 2026-08-23 |
+| Last review | 2026-08-24 |
 | Audience | Release operators and desktop developers |
 | Related ATP | [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md) |
+| Current template version | `1.0.0` |
+| Current publication state | No tag and no GitHub Release |
 
 ## Purpose
 
@@ -45,7 +47,7 @@ flowchart LR
 
 The baseline automates CI verification, unsigned artifacts, and the release gate. Signing, publishing, and deployment remain explicit product integrations. Normal CI never deploys, uses signing secrets, or creates a public release.
 
-For the template's `1.0.0` release, `461fc7519e0db638330904a7496c488e8a0d18bc` is the baseline and comparison commit, not an automatic tag target. Any release-preparation change creates a later candidate. The annotated tag `v1.0.0` may point only to the final candidate for which every required local and remote check succeeded.
+For the template's `1.0.0` candidate, `461fc7519e0db638330904a7496c488e8a0d18bc` is the historical architecture baseline and comparison commit, not the validated migration baseline or an automatic tag target. Any release-preparation change creates a later candidate. No release tag currently exists. The annotated tag `v1.0.0` may be created only for the final candidate on which every required local and remote check succeeded.
 
 ## Desktop verification matrix
 
@@ -144,7 +146,7 @@ gh run list \
 
 Use `workflow_dispatch` on the candidate ref when a required workflow was not triggered automatically, and watch each resulting run with `gh run watch <RUN_ID> --exit-status`. A fix creates a new candidate SHA and invalidates the earlier candidate as the common release proof; rerun every required gate affected by the new commit.
 
-Do not write `FINAL_CANDIDATE_SHA` into a file that is part of that same candidate commit. Record the exact final SHA in the annotated tag, optional GitHub release notes, `.report/release-v1.0.0/release-manifest.json`, and the final operator report.
+Do not write `FINAL_CANDIDATE_SHA` into a file that is part of that same candidate commit. Record the exact final SHA in GitHub Actions evidence and the final operator report. A future annotated tag, optional GitHub Release, and external release manifest must refer to the same SHA.
 
 ## Workflow-run classification and retention
 
