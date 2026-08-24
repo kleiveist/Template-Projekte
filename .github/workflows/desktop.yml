@@ -126,11 +126,13 @@ jobs:
         with:
           name: desktop-${{ matrix.target }}-unsigned
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 14
           path: |
             src-tauri/target/release/bundle/**
             src-tauri/target/x86_64-pc-windows-msvc/release/bundle/**
-            .dist/desktop/**
+            .dist/desktop/linux/linux-bundles.json
+            .dist/desktop/linux/SHA256SUMS
       - name: Verify repository files are unchanged
         shell: bash
         run: git diff --exit-code

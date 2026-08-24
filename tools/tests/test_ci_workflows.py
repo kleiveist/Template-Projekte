@@ -317,9 +317,12 @@ def test_desktop_ci_verifies_linux_candidates_before_aggregate_upload() -> None:
     assert "uses: actions/upload-artifact@v7" in upload_step
     assert "name: desktop-${{ matrix.target }}-unsigned" in upload_step
     assert "if-no-files-found: error" in upload_step
+    assert "include-hidden-files: true" in upload_step
     assert "src-tauri/target/release/bundle/**" in upload_step
     assert "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/**" in upload_step
-    assert ".dist/desktop/**" in upload_step
+    assert ".dist/desktop/linux/linux-bundles.json" in upload_step
+    assert ".dist/desktop/linux/SHA256SUMS" in upload_step
+    assert ".dist/desktop/**" not in upload_step
 
 
 def test_desktop_ci_preserves_macos_and_windows_build_contracts() -> None:
