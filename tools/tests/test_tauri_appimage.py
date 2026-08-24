@@ -9,7 +9,7 @@ import pytest
 from tools import control
 from tools.profiles import runtime as profile_runtime
 from tools.tauri import common, paths
-from tools.tauri.build import appimage, installappimage, windows_portable
+from tools.tauri.build import appimage, installappimage, linux, windows_portable
 from tools.tauri.linux import install as linux_install
 
 pytestmark = pytest.mark.skipif(
@@ -72,6 +72,7 @@ def test_tauri_linux_build_accepts_explicit_bundle_selection(monkeypatch) -> Non
         lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0),
     )
     monkeypatch.setattr(common, "frontend_dependencies_ready", lambda: True)
+    monkeypatch.setattr(linux, "_verify_outputs", lambda requested, **_kwargs: 0)
 
     code = control.main(["tauri", "build", "--target", "linux", "--bundles", "appimage"])
 
@@ -93,6 +94,7 @@ def test_tauri_linux_build_default_includes_appimage_preflight(monkeypatch) -> N
         "run_command",
         lambda command, **kwargs: calls.append(command) or common.CommandResult(command, paths.ROOT, 0),
     )
+    monkeypatch.setattr(linux, "_verify_outputs", lambda requested, **_kwargs: 0)
 
     code = control.main(["tauri", "build", "--target", "linux"])
 
@@ -114,6 +116,7 @@ def test_tauri_linux_build_uses_appimage_fallback_when_linuxdeploy_fails(monkeyp
     monkeypatch.setattr(common, "run_command", fake_run_command)
     monkeypatch.setattr(appimage, "package_existing_appdir", lambda dry_run=False: fallback.append(dry_run) or 0)
     monkeypatch.setattr(common, "print_build_artifacts", lambda: None)
+    monkeypatch.setattr(linux, "_verify_outputs", lambda requested, **_kwargs: 0)
 
     code = control.main(["tauri", "build", "--target", "linux"])
 
@@ -141,6 +144,7 @@ def test_tauri_linux_build_uses_appimage_fallback_when_before_build_succeeded_th
     )
     monkeypatch.setattr(appimage, "package_existing_appdir", lambda dry_run=False: fallback.append(dry_run) or 0)
     monkeypatch.setattr(common, "print_build_artifacts", lambda: None)
+    monkeypatch.setattr(linux, "_verify_outputs", lambda requested, **_kwargs: 0)
 
     code = control.main(["tauri", "build", "--target", "linux"])
 
@@ -190,6 +194,7 @@ def test_tauri_linux_build_accepts_fresh_appimage_when_linuxdeploy_returns_failu
     )
     monkeypatch.setattr(appimage, "package_existing_appdir", lambda dry_run=False: fallback.append(dry_run) or 0)
     monkeypatch.setattr(common, "print_build_artifacts", lambda: None)
+    monkeypatch.setattr(linux, "_verify_outputs", lambda requested, **_kwargs: 0)
 
     code = control.main(["tauri", "build", "--target", "linux", "--bundles", "appimage"])
 

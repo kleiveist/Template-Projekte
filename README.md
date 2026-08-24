@@ -8,13 +8,15 @@ This repository is the master template for applications built with Vite and Type
 | Field | Value |
 | --- | --- |
 | Template version | `1.0.0` |
-| Validation status | Automatic gates passed on the predecessor candidate; the final evidence commit needs same-SHA reruns, and Release Validation dispatch lacks API authentication |
+| Validation status | The predecessor passed all five workflows with DEB-only Linux release validation; the expanded Linux matrix requires new same-SHA evidence |
 | Lifecycle status | `NOT READY FOR SUNODM PILOT` until LC-020 has all five workflows on the final exact HEAD |
 | Published release tag | None |
 | Historical architecture baseline | `461fc7519e0db638330904a7496c488e8a0d18bc` |
 | Documentation review | 2026-08-24 |
 
 The version metadata and a successful validation are not publication claims. No `v1.0.0` tag or GitHub Release currently exists. A future annotated tag may identify the released version only after it points to the exact candidate for which the local quality, test, profile, PostgreSQL, desktop, documentation, and Release Validation checks succeeded. The exact validated migration baseline belongs in Git and the final operator report rather than in a file that would change that commit again.
+
+Normal Desktop CI defaults to an unsigned DEB on Linux. Release Validation requires unsigned DEB, RPM, and AppImage verification candidates for Linux x86_64 and retains the packages, deterministic manifest, and SHA-256 checksums in the `desktop-linux-unsigned` workflow artifact. These candidates are not signed or published and do not claim runtime compatibility with every Linux distribution.
 <!-- MASTER-ONLY END -->
 
 ## Start here

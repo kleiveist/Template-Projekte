@@ -5,7 +5,7 @@ import argparse
 from tools import logger
 from tools.profiles import runtime as profile_runtime
 from tools.tauri import build, copy, doctor, install, run, test
-from tools.tauri.build import installappimage
+from tools.tauri.build import artifacts, installappimage
 from tools.tauri import paths
 
 
@@ -24,7 +24,11 @@ def configure_build_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--runner", help=argparse.SUPPRESS)
     parser.add_argument("--no-bundle", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--dry-run", action="store_true", help="show the build plan without changing files")
-    parser.add_argument("--no-clean", action="store_true", help="keep previous Tauri build output")
+    parser.add_argument(
+        "--no-clean",
+        action="store_true",
+        help="keep prior multi-bundle Linux outputs but require requested files to be refreshed",
+    )
     parser.add_argument(
         "--bundles",
         help="Linux bundle list, for example deb,rpm or appimage (default: deb,rpm,appimage)",
@@ -163,6 +167,32 @@ Use '<command> --help' before an unfamiliar or destructive operation.
         "  python tools/control.py tauri copy --target-dir ./release"
     )
 
+    _configure_verify_artifacts_parser(tauri_subparsers)
+
+
+def _configure_verify_artifacts_parser(
+    tauri_subparsers: argparse._SubParsersAction,
+) -> None:
+    parser = tauri_subparsers.add_parser(
+        "verify-artifacts",
+        help="verify Linux desktop bundle evidence",
+        description="Verify nonempty Linux bundles and write a deterministic manifest and checksums.",
+        formatter_class=TauriHelpFormatter,
+    )
+    parser.add_argument("--target", default="linux", choices=("linux",))
+    parser.add_argument(
+        "--bundles",
+        default="deb",
+        help="comma-separated Linux bundle list (default: deb)",
+    )
+    parser.add_argument(
+        "--summary-file",
+        help="append a Markdown verification table to this file",
+    )
+    parser.epilog = (
+        "example:\n  python tools/control.py tauri verify-artifacts --target linux --bundles deb,rpm,appimage"
+    )
+
 
 def main(args: argparse.Namespace) -> int:
     profile = profile_runtime.active_profile(paths.ROOT)
@@ -196,6 +226,7 @@ def main(args: argparse.Namespace) -> int:
         "install-appimage": installappimage.main,
         "test": test.main,
         "copy": copy.main,
+        "verify-artifacts": artifacts.main,
     }
     handler = handlers.get(getattr(args, "tauri_command", None))
     if handler is None:

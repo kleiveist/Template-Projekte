@@ -6,7 +6,7 @@
 | Field | Value |
 | --- | --- |
 | Version | `1.0.0` |
-| Status | Predecessor candidate passed automatic validation; final same-SHA reruns, Release Validation dispatch, and publication pending |
+| Status | The predecessor passed DEB-only Release Validation; expanded Linux same-SHA validation and publication remain pending |
 | Published release tag | None |
 | Intended future tag | `v1.0.0` |
 | Historical architecture baseline | `461fc7519e0db638330904a7496c488e8a0d18bc` |
@@ -27,6 +27,12 @@ The exact candidate, once validated, is deliberately not embedded in a file that
 - `full-platform`: browser, backend, cloud, and desktop surfaces together.
 
 PostgreSQL remains an optional capability for the three backend-enabled profiles. `web-only + postgres` and `desktop-local + postgres` are rejected before generation. The valid PostgreSQL matrix exercises a real connection, Alembic migrations, database and API tests, and the central quality gate.
+
+## Linux release candidate packaging
+
+Normal Desktop CI continues to build an unsigned DEB on Linux by default. Release Validation now requires unsigned DEB, RPM, and AppImage verification candidates for Linux x86_64 and retains them with a deterministic manifest and SHA-256 checksums in `desktop-linux-unsigned`. DEB targets Debian- and Ubuntu-based systems, RPM targets RPM-based distributions, and AppImage provides a portable bundle intended to reduce distribution-specific installation requirements.
+
+These candidates are built against the Ubuntu runner and its glibc baseline. They are not signed or published, do not guarantee runtime compatibility with every Linux distribution, and do not add ARM, Flatpak, or Snap support.
 
 ## Code quality and architecture governance
 

@@ -153,11 +153,11 @@ Application startup never runs migrations. CI invokes `db upgrade` explicitly.
 
 ### Desktop CI
 
-`.github/workflows/desktop.yml` uses a native matrix over Ubuntu, macOS, and Windows. Every runner installs the dedicated tooling environment, executes Doctor's real Wasmtime analyzer probe against the checked-in WASI artifact, and verifies the analyzer's explicit UTF-8 subprocess transport under a non-UTF-8 text-stdio setting. Desktop jobs do not rebuild that artifact. They then run the locked Tauri checks, build a technically available native package, and upload a short-lived artifact named `desktop-<target>-unsigned`. Linux verifies a Debian package. No job reads signing or notarization secrets.
+`.github/workflows/desktop.yml` uses a native matrix over Ubuntu, macOS, and Windows. Every runner installs the dedicated tooling environment, executes Doctor's real Wasmtime analyzer probe against the checked-in WASI artifact, and verifies the analyzer's explicit UTF-8 subprocess transport under a non-UTF-8 text-stdio setting. Desktop jobs do not rebuild that artifact. They then run the locked Tauri checks, build technically available native packages through `python tools/control.py build desktop`, and upload a short-lived artifact named `desktop-<target>-unsigned`. Normal Linux runs default to an unsigned DEB; the reusable and manually dispatched workflow accepts an explicit validated Linux bundle list. No job reads signing or notarization secrets.
 
 | Runner | Target | Required evidence |
 | --- | --- | --- |
-| `ubuntu-latest` | Linux | Tauri Doctor, locked Rust checks/tests, unsigned DEB, uploaded artifact |
+| `ubuntu-latest` | Linux | Tauri Doctor, locked Rust checks/tests, unsigned DEB by default, uploaded artifact |
 | `macos-latest` | macOS | Tauri Doctor, locked Rust checks/tests, native unsigned bundles, uploaded artifact |
 | `windows-latest` | Windows | Tauri Doctor, locked Rust checks/tests, native unsigned bundles, uploaded artifact |
 
@@ -165,7 +165,9 @@ The artifacts establish build compatibility. They are not production releases an
 
 ### Release Validation
 
-`.github/workflows/release.yml` accepts `workflow_dispatch` and tags matching `v*.*.*`. It rebuilds and verifies the pinned WASI analyzer, runs the full validation suite, builds the web candidate, executes `release check`, and calls the same unsigned desktop workflow. It has read-only repository permission and no publication or deployment job. Product repositories add protected signing and publication jobs only after this gate.
+`.github/workflows/release.yml` accepts `workflow_dispatch` and tags matching `v*.*.*`. It rebuilds and verifies the pinned WASI analyzer, runs the full validation suite, builds the web candidate, executes `release check`, and calls the same unsigned desktop workflow with `linux_bundles: deb,rpm,appimage`. The Linux job removes prior generated bundle outputs, requires a fresh nonempty DEB, RPM, and AppImage, and writes `.dist/desktop/linux/linux-bundles.json` plus `.dist/desktop/linux/SHA256SUMS`. The aggregate `desktop-linux-unsigned` artifact contains all three packages and both evidence files, and the job summary lists their sizes and SHA-256 digests.
+
+These Linux packages are unsigned x86_64 verification candidates. They inherit the Ubuntu runner and glibc baseline and therefore do not prove runtime compatibility with every Linux distribution. ARM packages, Flatpak, and Snap are not part of this workflow. The workflow has read-only repository permission and no publication or deployment job; product repositories add protected signing and publication jobs only after this gate.
 
 ### Portable Rust syntax analyzer
 

@@ -51,13 +51,21 @@ For the template's `1.0.0` candidate, `461fc7519e0db638330904a7496c488e8a0d18bc`
 
 ## Desktop verification matrix
 
-`.github/workflows/desktop.yml` runs natively on `windows-latest`, `macos-latest`, and `ubuntu-latest`. Each job installs the platform prerequisites, runs locked Cargo checks, invokes the existing `control.py build desktop` path, and uploads short-lived unsigned artifacts.
+`.github/workflows/desktop.yml` runs natively on `windows-latest`, `macos-latest`, and `ubuntu-latest`. Each job installs the platform prerequisites, runs locked Cargo checks, invokes the existing `control.py build desktop` path, and uploads short-lived unsigned artifacts. Pushes, pull requests, and workflow invocations without an explicit Linux bundle input build only `deb`; a manual or reusable invocation may provide a validated explicit list. Release Validation always supplies `deb,rpm,appimage` and must not fall back to the normal DEB-only default.
 
-These files prove technical buildability. They are not signed production releases. Linux currently verifies a Debian package. Tauri creates the technically available default bundle formats on Windows and macOS.
+| Linux format | Intended verification purpose |
+| --- | --- |
+| DEB | Candidate for Debian- and Ubuntu-based systems |
+| RPM | Candidate for RPM-based distributions |
+| AppImage | Portable candidate intended to reduce distribution-specific installation requirements |
+
+A real Linux build removes only the generated Linux bundle output directories before invoking Tauri. It then requires at least one fresh, regular, nonempty file for every requested format. The deterministic `.dist/desktop/linux/linux-bundles.json` manifest records repository-relative paths, sizes, and SHA-256 digests; `.dist/desktop/linux/SHA256SUMS` records the same package checksums. Release Validation uploads these evidence files together with the `.deb`, `.rpm`, and `.AppImage` files in the aggregate `desktop-linux-unsigned` artifact.
+
+All Linux outputs are unsigned x86_64 verification candidates built against the current Ubuntu runner and its glibc baseline. They are not published production packages, and a successful build does not guarantee runtime compatibility with every Linux distribution. ARM64, ARMv7, Flatpak, and Snap are outside this matrix; Flatpak and Snap require separate future distribution integrations. Tauri continues to create the technically available default bundle formats on Windows and macOS.
 
 ## Release triggers
 
-`.github/workflows/release.yml` runs only through `workflow_dispatch` or a tag matching `v*.*.*`. It runs the quality gate, the read-only semantic documentation check and its focused tests, the complete project tests, web and container builds, and `release check`; it then calls the unsigned desktop workflow. It has read-only repository permission and contains no publication job.
+`.github/workflows/release.yml` runs only through `workflow_dispatch` or a tag matching `v*.*.*`. It runs the quality gate, the read-only semantic documentation check and its focused tests, the complete project tests, web and container builds, and `release check`; it then calls the unsigned desktop workflow with the explicit Linux bundle contract `deb,rpm,appimage`. It has read-only repository permission and contains no publication job.
 
 A product repository may add protected signing and publication jobs only after the validation job. Recommended activation conditions are:
 

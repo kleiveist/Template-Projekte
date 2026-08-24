@@ -32,6 +32,16 @@ def test_tauri_parser_recognizes_subcommands() -> None:
         ["tauri", "test", "--all"],
         ["tauri", "test", "--cargo"],
         ["tauri", "copy", "--dry-run", "--target-dir", ".dist/desktop"],
+        [
+            "tauri",
+            "verify-artifacts",
+            "--target",
+            "linux",
+            "--bundles",
+            "deb,rpm,appimage",
+            "--summary-file",
+            "summary.md",
+        ],
     ]
 
     for argv in cases:

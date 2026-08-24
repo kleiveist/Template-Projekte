@@ -55,6 +55,8 @@ def test_debian_family_packages_match_supported_release_names(
     assert expected_fuse in packages
     assert {"libwebkit2gtk-4.1-dev", "libgtk-3-dev", "libayatana-appindicator3-dev", "librsvg2-dev"} <= set(packages)
     assert {"build-essential", "libxdo-dev", "patchelf"} <= set(packages)
+    assert {"file", "patchelf", "squashfs-tools", "desktop-file-utils", expected_fuse} <= set(packages)
+    assert {"rpm", "rpmbuild"}.isdisjoint(packages)
 
 
 def test_debian_family_install_updates_metadata_and_is_noninteractive(monkeypatch) -> None:

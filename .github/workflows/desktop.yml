@@ -6,7 +6,19 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      linux_bundles:
+        description: Comma-separated unsigned Linux bundle targets
+        required: false
+        default: deb
+        type: string
   workflow_call:
+    inputs:
+      linux_bundles:
+        description: Comma-separated unsigned Linux bundle targets
+        required: false
+        default: deb
+        type: string
 
 permissions:
   contents: read
@@ -95,9 +107,20 @@ jobs:
       - name: Build unsigned native package
         if: matrix.target != 'linux'
         run: python tools/control.py build desktop --target ${{ matrix.target }}
-      - name: Build unsigned Linux package
+      - name: Build unsigned Linux packages
         if: matrix.target == 'linux'
-        run: python tools/control.py build desktop --target linux --bundles ${{ matrix.bundles }}
+        env:
+          LINUX_BUNDLES: ${{ inputs.linux_bundles || matrix.bundles }}
+        run: python tools/control.py build desktop --target linux --bundles "$LINUX_BUNDLES"
+      - name: Verify unsigned Linux packages
+        if: matrix.target == 'linux'
+        env:
+          LINUX_BUNDLES: ${{ inputs.linux_bundles || matrix.bundles }}
+        run: |
+          python tools/control.py tauri verify-artifacts \
+            --target linux \
+            --bundles "$LINUX_BUNDLES" \
+            --summary-file "$GITHUB_STEP_SUMMARY"
       - name: Upload unsigned verification artifacts
         uses: actions/upload-artifact@v7
         with:

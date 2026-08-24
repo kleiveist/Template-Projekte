@@ -77,3 +77,5 @@ jobs:
     name: Release / Desktop Candidates
     needs: validate
     uses: ./.github/workflows/desktop.yml
+    with:
+      linux_bundles: "deb,rpm,appimage"

@@ -324,6 +324,7 @@ Run Tauri diagnostics and a dry-run before the first native build:
 python tools/control.py tauri doctor
 python tools/control.py build desktop --dry-run --no-clean
 python tools/control.py build desktop
+python tools/control.py build desktop --target linux --bundles deb,rpm,appimage
 ```
 
 Platform strategies and bundle options are documented by:
@@ -333,7 +334,9 @@ python tools/control.py build desktop --help
 python tools/control.py tauri build --help
 ```
 
-The Tauri map also provides prerequisite setup, development mode, local AppImage installation, validation, and artifact collection.
+Linux bundle selectors are limited to `deb`, `rpm`, and `appimage`. The tooling normalizes case and whitespace, removes duplicates in a stable order, and rejects empty or unknown values. A successful real Linux build automatically verifies every requested format and writes `.dist/desktop/linux/linux-bundles.json` and `.dist/desktop/linux/SHA256SUMS`. Normal Desktop CI requests only `deb`; Release Validation explicitly requests `deb,rpm,appimage`.
+
+The Tauri map also provides prerequisite setup, development mode, local AppImage installation, explicit artifact verification, and artifact collection. The generated Linux files are unsigned x86_64 verification candidates, not published packages or evidence of compatibility with every Linux distribution. See the [Release Model](release-model.md) for format purposes, runner and glibc limitations, and excluded distribution integrations.
 
 Desktop build and `tauri` commands require the active profile to enable `tauri`. Otherwise they fail with a clear profile-based message.
 

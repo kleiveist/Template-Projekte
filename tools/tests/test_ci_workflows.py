@@ -50,6 +50,24 @@ def _step_named(content: str, name: str) -> str:
     return matches[0]
 
 
+def _block_named(content: str, name: str, *, indent: int) -> str:
+    lines = content.splitlines(keepends=True)
+    header = f"{' ' * indent}{name}:"
+    matches = [index for index, line in enumerate(lines) if line.rstrip("\r\n") == header]
+    assert len(matches) == 1
+
+    start = matches[0]
+    end = start + 1
+    while end < len(lines):
+        line = lines[end]
+        if line.strip():
+            line_indent = len(line) - len(line.lstrip())
+            if line_indent <= indent:
+                break
+        end += 1
+    return "".join(lines[start:end])
+
+
 @pytest.mark.parametrize(("name", "expected_setup_count"), NODE_WORKFLOW_SETUP_COUNTS.items())
 def test_every_node_workflow_pins_node_24(name: str, expected_setup_count: int) -> None:
     content = _workflow(name)
@@ -250,6 +268,81 @@ def test_desktop_ci_builds_unsigned_native_artifacts_on_each_platform() -> None:
     assert "deploy" not in content.lower()
 
 
+def test_desktop_ci_declares_typed_linux_bundle_inputs_with_deb_defaults() -> None:
+    content = _workflow("desktop.yml")
+    expected_input = (
+        "      linux_bundles:\n"
+        "        description: Comma-separated unsigned Linux bundle targets\n"
+        "        required: false\n"
+        "        default: deb\n"
+        "        type: string\n"
+    )
+
+    for event_name in ("workflow_dispatch", "workflow_call"):
+        event = _block_named(content, event_name, indent=2)
+        assert event.count("linux_bundles:") == 1
+        assert expected_input in event
+
+    assert (
+        "          - label: Linux\n            os: ubuntu-latest\n            target: linux\n            bundles: deb\n"
+    ) in content
+
+
+def test_desktop_ci_resolves_linux_bundle_input_without_shell_interpolation() -> None:
+    content = _workflow("desktop.yml")
+    build_step = _step_named(content, "Build unsigned Linux packages")
+    verify_step = _step_named(content, "Verify unsigned Linux packages")
+    resolution = "LINUX_BUNDLES: ${{ inputs.linux_bundles || matrix.bundles }}"
+
+    for step in (build_step, verify_step):
+        assert "if: matrix.target == 'linux'" in step
+        assert resolution in step
+
+    assert 'run: python tools/control.py build desktop --target linux --bundles "$LINUX_BUNDLES"' in build_step
+    assert "${{ inputs.linux_bundles" not in next(
+        line for line in build_step.splitlines() if line.strip().startswith("run:")
+    )
+    assert "python tools/control.py tauri verify-artifacts" in verify_step
+    assert '--bundles "$LINUX_BUNDLES"' in verify_step
+    assert '--summary-file "$GITHUB_STEP_SUMMARY"' in verify_step
+
+
+def test_desktop_ci_verifies_linux_candidates_before_aggregate_upload() -> None:
+    content = _workflow("desktop.yml")
+    build_step = _step_named(content, "Build unsigned Linux packages")
+    verify_step = _step_named(content, "Verify unsigned Linux packages")
+    upload_step = _step_named(content, "Upload unsigned verification artifacts")
+
+    assert content.index(build_step) < content.index(verify_step) < content.index(upload_step)
+    assert "uses: actions/upload-artifact@v7" in upload_step
+    assert "name: desktop-${{ matrix.target }}-unsigned" in upload_step
+    assert "if-no-files-found: error" in upload_step
+    assert "src-tauri/target/release/bundle/**" in upload_step
+    assert "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/**" in upload_step
+    assert ".dist/desktop/**" in upload_step
+
+
+def test_desktop_ci_preserves_macos_and_windows_build_contracts() -> None:
+    content = _workflow("desktop.yml")
+    native_step = _step_named(content, "Build unsigned native package")
+    upload_step = _step_named(content, "Upload unsigned verification artifacts")
+
+    assert (
+        "          - label: macOS\n            os: macos-latest\n            target: macos\n            bundles: all\n"
+    ) in content
+    assert (
+        "          - label: Windows\n"
+        "            os: windows-latest\n"
+        "            target: windows\n"
+        "            bundles: all\n"
+    ) in content
+    assert "if: matrix.target != 'linux'" in native_step
+    assert "run: python tools/control.py build desktop --target ${{ matrix.target }}" in native_step
+    assert "name: desktop-${{ matrix.target }}-unsigned" in upload_step
+    assert "desktop-macos-unsigned" not in content
+    assert "desktop-windows-unsigned" not in content
+
+
 def test_release_validation_is_explicit_and_never_publishes() -> None:
     content = _workflow("release.yml")
 
@@ -273,3 +366,17 @@ def test_release_validation_is_explicit_and_never_publishes() -> None:
     assert "publish" not in content.lower()
     assert "deploy" not in content.lower()
     assert content.index("python tools/control.py quality") < content.index("python tools/control.py test --suite all")
+
+
+def test_release_validation_hands_off_exact_linux_bundle_contract() -> None:
+    content = _workflow("release.yml")
+    desktop_job = _block_named(content, "desktop-candidates", indent=2)
+
+    assert "needs: validate" in desktop_job
+    assert "uses: ./.github/workflows/desktop.yml" in desktop_job
+    assert 'with:\n      linux_bundles: "deb,rpm,appimage"\n' in desktop_job
+    assert desktop_job.count("linux_bundles:") == 1
+    assert "linux_bundles: all" not in desktop_job
+    assert "secrets:" not in desktop_job
+    assert "publish" not in content.lower()
+    assert "deploy" not in content.lower()
