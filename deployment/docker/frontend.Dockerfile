@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM node:24.19.0-alpine3.24 AS build
+FROM node:26.7.0-alpine3.24 AS build
 
 WORKDIR /build/frontend
 COPY frontend/package.json frontend/package-lock.json ./
