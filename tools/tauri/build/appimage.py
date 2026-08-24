@@ -216,11 +216,17 @@ def _appimage_prerequisite_problems() -> list[str]:
 def _libfuse2_available() -> bool:
     if _library_file_exists("libfuse.so.2*"):
         return True
-    ok, output = common.command_output(["ldconfig", "-p"])
-    if ok and "libfuse.so.2" in output:
+    if _command_output_contains(["ldconfig", "-p"], "libfuse.so.2"):
         return True
-    ok, output = common.command_output(["flatpak-spawn", "--host", "ldconfig", "-p"])
-    return ok and "libfuse.so.2" in output
+    return _command_output_contains(
+        ["flatpak-spawn", "--host", "ldconfig", "-p"],
+        "libfuse.so.2",
+    )
+
+
+def _command_output_contains(command: list[str], expected: str) -> bool:
+    result = common.run_command(command)
+    return result.returncode == 0 and expected in f"{result.stdout}\n{result.stderr}"
 
 
 def _command_available(binary: str) -> bool:
@@ -237,7 +243,14 @@ def _host_file_exists(relative_path: str) -> bool:
 
 
 def _library_file_exists(pattern: str) -> bool:
-    roots = [
+    return any(
+        root.exists() and (any(root.glob(pattern)) or any(root.glob(f"*/{pattern}")))
+        for root in _library_search_roots()
+    )
+
+
+def _library_search_roots() -> tuple[Path, ...]:
+    return (
         Path("/usr/lib"),
         Path("/usr/lib64"),
         Path("/lib"),
@@ -246,8 +259,7 @@ def _library_file_exists(pattern: str) -> bool:
         Path("/run/host/usr/lib64"),
         Path("/run/host/lib"),
         Path("/run/host/lib64"),
-    ]
-    return any(root.exists() and any(root.glob(pattern)) for root in roots)
+    )
 
 
 def install_latest(*, dry_run: bool = False) -> int:

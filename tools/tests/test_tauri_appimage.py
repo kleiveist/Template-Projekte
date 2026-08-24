@@ -465,8 +465,12 @@ def test_tauri_appimage_command_detection_checks_host_paths(monkeypatch) -> None
 
 
 def test_tauri_appimage_libfuse_detection_checks_host_paths(monkeypatch) -> None:
-    monkeypatch.setattr(common, "command_output", lambda command: (True, ""))
     monkeypatch.setattr(appimage, "_library_file_exists", lambda pattern: pattern == "libfuse.so.2*")
+    monkeypatch.setattr(
+        common,
+        "run_command",
+        lambda command: (_ for _ in ()).throw(AssertionError("should not shell out")),
+    )
 
     assert appimage._libfuse2_available() is True
 
@@ -476,13 +480,58 @@ def test_tauri_appimage_libfuse_detection_accepts_versioned_library(monkeypatch,
     lib_dir.mkdir(parents=True)
     (lib_dir / "libfuse.so.2.9.9").write_text("", encoding="utf-8")
 
-    monkeypatch.setattr(
-        appimage,
-        "Path",
-        lambda value: lib_dir if value == "/usr/lib" else Path(value),
-    )
+    monkeypatch.setattr(appimage, "_library_search_roots", lambda: (lib_dir,))
 
     assert appimage._library_file_exists("libfuse.so.2*") is True
+
+
+def test_tauri_appimage_libfuse_detection_accepts_ubuntu_multiarch_library(monkeypatch, tmp_path) -> None:
+    lib_root = tmp_path / "usr" / "lib"
+    multiarch_dir = lib_root / "x86_64-linux-gnu"
+    multiarch_dir.mkdir(parents=True)
+    (multiarch_dir / "libfuse.so.2.9.9").write_text("", encoding="utf-8")
+
+    monkeypatch.setattr(appimage, "_library_search_roots", lambda: (lib_root,))
+
+    assert appimage._library_file_exists("libfuse.so.2*") is True
+
+
+def test_tauri_appimage_libfuse_detection_reads_complete_ldconfig_output(monkeypatch) -> None:
+    monkeypatch.setattr(appimage, "_library_file_exists", lambda _pattern: False)
+    monkeypatch.setattr(
+        common,
+        "run_command",
+        lambda command: common.CommandResult(
+            command=command,
+            cwd=Path.cwd(),
+            returncode=0,
+            stdout="library cache header\nlibfuse.so.2 (libc6,x86-64) => /lib/x86_64-linux-gnu/libfuse.so.2",
+        ),
+    )
+
+    assert appimage._libfuse2_available() is True
+
+
+def test_tauri_appimage_libfuse_detection_rejects_unrelated_ldconfig_output(monkeypatch) -> None:
+    commands: list[list[str]] = []
+    monkeypatch.setattr(appimage, "_library_file_exists", lambda _pattern: False)
+
+    def fake_run(command: list[str]) -> common.CommandResult:
+        commands.append(command)
+        return common.CommandResult(
+            command=command,
+            cwd=Path.cwd(),
+            returncode=0,
+            stdout="library cache header\nlibfuse3.so.3 => /lib/x86_64-linux-gnu/libfuse3.so.3",
+        )
+
+    monkeypatch.setattr(common, "run_command", fake_run)
+
+    assert appimage._libfuse2_available() is False
+    assert commands == [
+        ["ldconfig", "-p"],
+        ["flatpak-spawn", "--host", "ldconfig", "-p"],
+    ]
 
 
 def test_tauri_detects_arch_like_host_from_os_release(tmp_path) -> None:
