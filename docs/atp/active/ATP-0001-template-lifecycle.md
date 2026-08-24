@@ -110,8 +110,8 @@ Generated-project, PostgreSQL, and native desktop matrix results must reference 
 
 | Check | Exit | Result |
 | --- | ---: | --- |
-| Focused ownership, lifecycle, profile, traceability, onboarding, and documentation tests | 0 | 62 passed in the focused rerun |
-| `python tools/control.py test --suite tools` | 0 | 789 passed, 1 skipped in the complete tooling and case-study suite |
+| Focused ownership, lifecycle, profile, traceability, onboarding, and documentation tests | 0 | 63 passed in the focused rerun |
+| `python tools/control.py test --suite tools` | 0 | 790 passed, 1 skipped in the complete tooling and case-study suite |
 | `python tools/control.py quality` | 0 | 185 files, 0 errors, 0 suppressed findings; all enabled adapters passed |
 | `python tools/control.py test --suite all` | 1 | Tools, schema, API, database, and frontend passed; PostgreSQL and E2E skipped; native Tauri test linking failed for missing WebKitGTK/JavaScriptCoreGTK |
 | `python tools/control.py docs index` and `docs check` | 0 | Index regenerated; 31 pages checked |
@@ -126,7 +126,7 @@ Generated-project, PostgreSQL, and native desktop matrix results must reference 
 | `python tools/control.py release check` | NOT RUN | Must run on the clean candidate commit; the exact result belongs in the final operator report. |
 | `git diff --check` | 0 | No whitespace errors |
 
-The previous generated matrix used one clean local snapshot for five base profiles and the three valid PostgreSQL variants. The 2026-08-24 finalization reran generator/lifecycle regression tests and proved that `LICENSE` is copied and present in deterministic baselines while master-only community governance is omitted without dangling README links. The clean-candidate profile matrix must be repeated after the candidate commit; locally unavailable native and service evidence may be supplied only by successful exact-HEAD CI.
+The previous generated matrix used one clean local snapshot for five base profiles and the three valid PostgreSQL variants. The 2026-08-24 finalization reran generator/lifecycle regression tests and proved that `LICENSE` is copied and present in deterministic baselines while master-only community governance is omitted without dangling README links. An initial clean candidate exposed that a master-only community-link test still opened the intentionally omitted pull-request template inside generated products; the follow-up makes that test skip only when the complete master community package is absent and adds a generated-context regression test. The clean-candidate profile matrix must be repeated after the follow-up candidate commit; locally unavailable native and service evidence may be supplied only by successful exact-HEAD CI.
 
 ## Deviations
 
