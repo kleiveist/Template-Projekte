@@ -5,12 +5,14 @@ import re
 import signal
 import subprocess
 from pathlib import Path
+from typing import cast
 
 import pytest
 
 from tools import control
 from tools.profiles import runtime as profile_runtime
-from tools.tauri import common, doctor, paths, run, test as tauri_test
+from tools.tauri import common, doctor, paths, run
+from tools.tauri import test as tauri_test
 from tools.tauri.linux import install_arch
 
 pytestmark = pytest.mark.skipif(
@@ -27,7 +29,15 @@ def test_tauri_parser_recognizes_subcommands() -> None:
         ["tauri", "install", "--dry-run"],
         ["tauri", "install-appimage", "--dry-run"],
         ["tauri", "run", "--foreground", "--no-follow", "--frontend-port", "5174"],
-        ["tauri", "build", "--target", "windows-portable", "--dry-run", "--bundles", "deb,rpm"],
+        [
+            "tauri",
+            "build",
+            "--target",
+            "windows-portable",
+            "--dry-run",
+            "--bundles",
+            "deb,rpm",
+        ],
         ["tauri", "build", "--appimage", "--dry-run", "--skip-appimage-preflight"],
         ["tauri", "test", "--all"],
         ["tauri", "test", "--cargo"],
@@ -91,7 +101,11 @@ def test_existing_aliases_do_not_collide_with_tauri() -> None:
     assert control._normalize_argv(["--install"]) == ["install"]
     assert control._normalize_argv(["--run"]) == ["run"]
     assert control._normalize_argv(["--stop"]) == ["stop"]
-    assert control._normalize_argv(["--test", "--suite", "frontend"]) == ["test", "--suite", "frontend"]
+    assert control._normalize_argv(["--test", "--suite", "frontend"]) == [
+        "test",
+        "--suite",
+        "frontend",
+    ]
 
 
 def test_tauri_doctor_json_is_parseable(monkeypatch, capsys) -> None:
@@ -142,7 +156,11 @@ def test_tauri_npm_install_uses_package_lock(monkeypatch) -> None:
 def test_tauri_cargo_checks_use_locked_dependencies(monkeypatch) -> None:
     commands: list[list[str]] = []
 
-    monkeypatch.setattr(tauri_test.shutil, "which", lambda name: "/usr/bin/cargo" if name == "cargo" else None)
+    monkeypatch.setattr(
+        tauri_test.shutil,
+        "which",
+        lambda name: "/usr/bin/cargo" if name == "cargo" else None,
+    )
     monkeypatch.setattr(
         common,
         "run_command",
@@ -226,7 +244,8 @@ def test_tauri_windows_portable_dry_run_uses_cargo_xwin_on_linux(monkeypatch) ->
 
     monkeypatch.setattr(common, "host_os", lambda: "linux")
     monkeypatch.setattr(
-        "tools.tauri.build.windows_portable.shutil.which", lambda name, path=None: "cargo" if name == "cargo" else None
+        "tools.tauri.build.windows_portable.shutil.which",
+        lambda name, path=None: "cargo" if name == "cargo" else None,
     )
     monkeypatch.setattr(
         common,
@@ -256,7 +275,8 @@ def test_tauri_raw_windows_portable_flags_map_to_portable_target(monkeypatch) ->
 
     monkeypatch.setattr(common, "host_os", lambda: "linux")
     monkeypatch.setattr(
-        "tools.tauri.build.windows_portable.shutil.which", lambda name, path=None: "cargo" if name == "cargo" else None
+        "tools.tauri.build.windows_portable.shutil.which",
+        lambda name, path=None: "cargo" if name == "cargo" else None,
     )
     monkeypatch.setattr(
         common,
@@ -290,7 +310,9 @@ def test_tauri_raw_windows_portable_flags_map_to_portable_target(monkeypatch) ->
     assert calls[2][0][-1:] == ["--no-bundle"]
 
 
-def test_tauri_windows_portable_installs_cargo_xwin_for_real_linux_build(monkeypatch) -> None:
+def test_tauri_windows_portable_installs_cargo_xwin_for_real_linux_build(
+    monkeypatch,
+) -> None:
     calls: list[tuple[list[str], bool]] = []
     installed = False
     llvm_installed = False
@@ -318,13 +340,19 @@ def test_tauri_windows_portable_installs_cargo_xwin_for_real_linux_build(monkeyp
     monkeypatch.setattr(common, "host_os", lambda: "linux")
     monkeypatch.setattr("tools.tauri.build.windows_portable.shutil.which", fake_which)
     monkeypatch.setattr(common, "run_command", fake_run_command)
-    monkeypatch.setattr("tools.tauri.build.windows_portable._zip_portable_binary", lambda dry_run=False: 0)
+    monkeypatch.setattr(
+        "tools.tauri.build.windows_portable._zip_portable_binary",
+        lambda dry_run=False: 0,
+    )
 
     code = control.main(["tauri", "build", "--target", "windows-portable"])
 
     assert code == 0
     assert calls[0] == (["/usr/bin/cargo", "install", "cargo-xwin"], False)
-    assert calls[1] == (["/usr/bin/rustup", "component", "add", "llvm-tools-preview"], False)
+    assert calls[1] == (
+        ["/usr/bin/rustup", "component", "add", "llvm-tools-preview"],
+        False,
+    )
     assert "--runner" in calls[2][0]
     assert calls[2][0][calls[2][0].index("--runner") + 1] == "/home/test/.cargo/bin/cargo-xwin"
     assert calls[2][0][-1:] == ["--no-bundle"]
@@ -464,7 +492,9 @@ def test_tauri_run_foreground_uses_current_terminal(monkeypatch) -> None:
 
     monkeypatch.setattr(common, "tauri_cli_command", lambda *args: ["tauri", *args])
     monkeypatch.setattr(
-        run, "_run_detached", lambda command: (_ for _ in ()).throw(AssertionError("should not detach"))
+        run,
+        "_run_detached",
+        lambda command: (_ for _ in ()).throw(AssertionError("should not detach")),
     )
 
     def fake_run_command(command: list[str], **kwargs) -> common.CommandResult:
@@ -512,6 +542,32 @@ def test_tauri_follow_ctrl_c_stops_process_group(monkeypatch, tmp_path) -> None:
 
     assert code == 0
     assert killed == [(4321, signal.SIGTERM)]
+
+
+@pytest.mark.parametrize(
+    ("returncode", "expected_message"),
+    [
+        (0, "Tauri dev process exited"),
+        (17, "Tauri dev process exited with code 17"),
+    ],
+)
+def test_tauri_follow_reports_process_exit(returncode, expected_message, monkeypatch, tmp_path, capsys) -> None:
+    log_path = tmp_path / "tauri.log"
+    log_path.write_text("ready\n", encoding="utf-8")
+    messages: list[str] = []
+
+    class FakeProcess:
+        def poll(self) -> int:
+            return returncode
+
+    monkeypatch.setattr(run.logger, "ok", messages.append)
+    monkeypatch.setattr(run.logger, "fail", messages.append)
+
+    code = run._follow_log(log_path, cast(subprocess.Popen, FakeProcess()))
+
+    assert code == returncode
+    assert capsys.readouterr().out == "ready\n"
+    assert messages == [expected_message]
 
 
 def test_tauri_package_has_no_bare_imports_or_legacy_tokens() -> None:

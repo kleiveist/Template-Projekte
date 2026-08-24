@@ -24,7 +24,9 @@ IGNORED_NAMES = {
     "coverage",
     "dist",
     "node_modules",
+    "playwright-report",
     "target",
+    "test-results",
 }
 REQUIRED_SCAFFOLD_ARTIFACTS = (Path("tools/quality/rust_analyzer/dist/rust_quality_analyzer.wasm"),)
 MASTER_ONLY_ROOT_PAGES = ("CODE_OF_CONDUCT.md", "CONTRIBUTING.md")

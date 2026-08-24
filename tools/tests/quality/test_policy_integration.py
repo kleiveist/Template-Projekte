@@ -89,6 +89,7 @@ def test_quality_help_is_public_and_describes_focused_checks(capsys) -> None:
     assert "Run the repository quality gate" in output
     assert "focused check to run" in output
     assert "architecture" in output
+    assert "--release" in output
 
 
 def test_unknown_quality_subcommand_returns_argparse_error(capsys) -> None:

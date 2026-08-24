@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 import tomllib
@@ -440,7 +441,27 @@ def test_scaffold_copies_the_pinned_rust_analyzer_runtime(tmp_path: Path) -> Non
     assert "/tools/quality/rust_analyzer/Cargo.lock text eol=lf" in attributes
     assert "/tools/quality/rust_analyzer/src/** text eol=lf" in attributes
     assert "/tools/quality/rust_analyzer/dist/*.wasm binary" in attributes
-    assert generator._ignore_transient_content("unrelated", ["dist"]) == ["dist"]
+    assert generator._ignore_transient_content(
+        "frontend",
+        ["dist", "playwright-report", "src", "test-results"],
+    ) == ["dist", "playwright-report", "test-results"]
+
+
+def test_scaffold_copy_excludes_playwright_runtime_outputs(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    (source / "src").mkdir(parents=True)
+    (source / "src/main.ts").write_text("export {};\n", encoding="utf-8")
+    (source / "playwright-report").mkdir()
+    (source / "playwright-report/index.html").write_text("transient\n", encoding="utf-8")
+    (source / "test-results").mkdir()
+    (source / "test-results/.last-run.json").write_text("{}\n", encoding="utf-8")
+
+    destination = tmp_path / "destination"
+    shutil.copytree(source, destination, ignore=generator._ignore_transient_content)
+
+    assert (destination / "src/main.ts").is_file()
+    assert not (destination / "playwright-report").exists()
+    assert not (destination / "test-results").exists()
 
 
 def test_missing_required_scaffold_artifact_fails_before_writing(

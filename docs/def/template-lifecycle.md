@@ -9,7 +9,7 @@
 | Owner | Project team |
 | Last review | 2026-08-23 |
 | Audience | Template maintainers and product maintainers |
-| Related ATP | [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md) |
+| Related ATP | [ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md) |
 
 ## Purpose
 
@@ -305,4 +305,4 @@ The active acceptance protocol records which broader profile, database, desktop,
 - [Release model](../tools/release-model.md)
 - [Continuous integration](../tools/ci.md)
 - [Lifecycle acceptance](../dev/template-lifecycle-acceptance.md)
-- [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md)
+- [ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md)

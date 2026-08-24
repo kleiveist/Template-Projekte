@@ -11,6 +11,7 @@
 - 📝 [Runtime configuration](configuration.md)
 - 📝 [Database feature](database-feature.md)
 - 📝 [Deployment architecture](deployment-architecture.md)
+- 📝 [Observability decision framework](observability.md)
 - 📝 [Provider-neutral persistence architecture](persistence-architecture.md)
 - 📝 [Project profiles](project-profiles.md)
 - 📝 [Template lifecycle](template-lifecycle.md)

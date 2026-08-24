@@ -55,6 +55,10 @@ OLD_COMMIT = "a" * 40
 NEW_COMMIT = "b" * 40
 
 
+def test_playwright_outputs_are_runtime_only() -> None:
+    assert {"playwright-report", "test-results"} <= apply_module.RUNTIME_DIRECTORIES
+
+
 @dataclass(frozen=True, slots=True)
 class RepositoryFixture:
     root: Path

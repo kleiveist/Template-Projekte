@@ -2,7 +2,8 @@
 
 | Field | Value |
 | --- | --- |
-| Status | PASS |
+| Status | Archived |
+| Result | PASS |
 | Owner | Project team |
 | Last review | 2026-08-24 |
 | Audience | Case-study maintainers and reviewers |
@@ -12,10 +13,10 @@
 This record captures the structural, substantive, build, artifact-freshness,
 and targeted layout validation of the bilingual v1.0.0 case-study edition. The
 historical governance analysis remains tied to technical baseline
-`461fc7519e0db638330904a7496c488e8a0d18bc`; after successful exact-HEAD
-validation, the exact candidate will be recorded in GitHub Actions evidence
-and the final operator report rather than embedded in its own source. No
-release tag is published.
+`461fc7519e0db638330904a7496c488e8a0d18bc`. The dated case-study addendum
+intentionally preserves its pre-publication snapshot. Subsequent exact-HEAD
+GitHub Actions evidence identified `a09c0b9998881e3dbbbd6292fdd22715b402bee8`,
+which is now published under the immutable annotated tag `v1.0.0`.
 
 ## Result
 

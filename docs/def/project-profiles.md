@@ -9,7 +9,7 @@
 | Owner | Project team |
 | Last review | 2026-08-23 |
 | Audience | Developers and architects |
-| Related ATP | [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md) |
+| Related ATP | [ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md) |
 
 ## Purpose
 

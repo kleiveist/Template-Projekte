@@ -4,9 +4,13 @@ import argparse
 from pathlib import Path
 
 from tools.quality.architecture import architecture_result
-from tools.quality.config import DEFAULT_CONFIG_PATH, QualityConfigError, load_quality_config
+from tools.quality.config import (
+    DEFAULT_CONFIG_PATH,
+    QualityConfigError,
+    load_quality_config,
+)
 from tools.quality.exceptions import apply_exceptions, validate_exceptions
-from tools.quality.model import CheckResult
+from tools.quality.model import CheckResult, Severity
 from tools.quality.reporter import print_report
 from tools.quality.rust import rust_metrics_result
 from tools.quality.scanner import SourceScanError, scan_repository, size_result
@@ -22,7 +26,11 @@ from tools.quality.tooling import (
     run_typescript_check,
     run_typescript_metrics,
 )
-from tools.quality.typescript import TypeScriptAnalysis, add_class_findings, analyze_typescript
+from tools.quality.typescript import (
+    TypeScriptAnalysis,
+    add_class_findings,
+    analyze_typescript,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 ACTIONS = ("check", "size", "complexity", "architecture", "lint", "format")
@@ -49,6 +57,11 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
         choices=("text", "json"),
         default="text",
         help="report format (default: text)",
+    )
+    parser.add_argument(
+        "--release",
+        action="store_true",
+        help="fail when an unsuppressed strong warning remains in a release candidate",
     )
 
 
@@ -124,7 +137,32 @@ def _run(args: argparse.Namespace, root: Path) -> list[CheckResult]:
     results.extend(_lint_results(args.quality_command, root, metrics, config, valid_exceptions))
     results.extend(_format_results(args.quality_command, root, metrics))
     apply_exceptions(results, valid_exceptions)
+    if getattr(args, "release", False):
+        results.append(_release_warning_policy(results))
     return results
+
+
+def _release_warning_policy(results: list[CheckResult]) -> CheckResult:
+    strong_warnings = [
+        finding
+        for result in results
+        for finding in result.findings
+        if finding.severity is Severity.STRONG_WARNING and not finding.suppressed
+    ]
+    if not strong_warnings:
+        return CheckResult(
+            "Release warning policy",
+            detail="No unsuppressed strong warnings remain in the release candidate.",
+        )
+    paths = sorted({finding.path for finding in strong_warnings})
+    return CheckResult(
+        "Release warning policy",
+        passed=False,
+        detail=(
+            f"{len(strong_warnings)} unsuppressed strong warning(s) remain in "
+            f"{', '.join(paths)}. Resolve them or add a narrow, expiring policy exception."
+        ),
+    )
 
 
 def main(args: argparse.Namespace) -> int:

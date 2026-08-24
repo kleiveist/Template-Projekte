@@ -7,9 +7,9 @@
 | --- | --- |
 | Status | Active |
 | Owner | Project team |
-| Last review | 2026-08-23 |
+| Last review | 2026-08-24 |
 | Audience | Contributors and release operators |
-| Related ATP | [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md) |
+| Related ATP | [ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md) |
 
 ## Purpose
 
@@ -36,7 +36,7 @@ python tools/control.py quality
 python tools/control.py run
 ```
 
-`doctor` checks runtimes, dependencies, the active profile, effective configuration, and configured ports. `install` prepares enabled frontend and backend dependencies without creating or changing `.env`. Frontend installation uses `npm ci` when `package-lock.json` exists. The command always prepares a dedicated `tools/.venv` containing Pytest, JSON Schema validation, Ruff, and Wasmtime 47.0.1 for shared tests and quality checks; it never reuses the backend runtime for that tooling contract. The tracked Syn 2.0.119 Rust analyzer runs as a checksum-verified WASI module, so Rust-free profiles do not need a native Rust toolchain merely to enforce the shared scanner. `doctor` exercises that real analyzer path rather than checking only that a Python package can be imported. Playwright is installed only when E2E tests are configured. `quality` runs the complete policy and language-tool gate for enabled components. `run` starts the enabled local services. In foreground mode, `Ctrl+C` stops those processes.
+`doctor` checks runtimes, dependencies, the active profile, effective configuration, and configured ports. `install` prepares enabled frontend and backend dependencies without creating or changing `.env`. Frontend installation uses `npm ci` when `package-lock.json` exists. The command always prepares a dedicated `tools/.venv` containing Pytest, JSON Schema validation, Ruff, and Wasmtime 47.0.1 for shared tests and quality checks; it never reuses the backend runtime for that tooling contract. The tracked Syn 2.0.119 Rust analyzer runs as a checksum-verified WASI module, so Rust-free profiles do not need a native Rust toolchain merely to enforce the shared scanner. `doctor` exercises that real analyzer path rather than checking only that a Python package can be imported. The committed frontend baseline configures Playwright, so `install` also prepares Chromium for frontend-enabled projects; CI adds the required Linux browser libraries. `quality` runs the complete policy and language-tool gate for enabled components. `run` starts the enabled local services. In foreground mode, `Ctrl+C` stops those processes.
 
 ## Command map
 
@@ -270,8 +270,8 @@ python tools/control.py test --suite all --report
 | `schema` | Shared JSON Schema and examples |
 | `database` | SQLAlchemy configuration, engine, and session unit tests |
 | `postgres` | PostgreSQL connection test; skipped without an available `DATABASE_URL_TEST` |
-| `frontend` | Vitest tests |
-| `e2e` | Playwright tests when configured |
+| `frontend` | Vitest unit tests with 100% per-file coverage thresholds for governed frontend modules |
+| `e2e` | Playwright Chromium smoke tests over enabled services plus axe accessibility analysis |
 | `tools` | Project CLI and Tauri helper tests |
 | `tauri` | Tauri structure, `cargo check --locked`, and Rust tests |
 | `all` | Every configured suite |
@@ -416,7 +416,7 @@ PyGitIndex is required only for regeneration. `docs index --dry-run` returning z
 6. For navigation drift, run `python tools/control.py docs check`; for regeneration problems, run `python tools/control.py docs index --dry-run --script <path>`.
 7. Rerun only the affected test suite, then run `--suite all` before hand-off.
 
-Missing optional suites are reported as `SKIP` during `test --suite all`. Missing optional accelerators such as `uv` do not reduce the Doctor status. A `FAIL` means the selected workflow did not complete successfully.
+Suites disabled by the active profile are reported as `SKIP` during `test --suite all`. Missing optional accelerators such as `uv` do not reduce the Doctor status. A configured browser suite is required for every frontend-enabled profile; a `FAIL` means the selected workflow did not complete successfully.
 
 ## Verification
 

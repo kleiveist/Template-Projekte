@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { defineConfig } from "vite";
 
-import { enabledFeatures } from "./src/project-profile";
+import { enabledFeatures } from "./src/project-profile.ts";
 
 function parsePort(value: string | undefined, fallback: number): number {
   const port = Number(value ?? fallback);

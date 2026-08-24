@@ -545,7 +545,7 @@ def _add_test_parser(subparsers: argparse._SubParsersAction) -> None:
   database  SQLAlchemy and session unit tests
   postgres  PostgreSQL integration tests (skipped without DATABASE_URL_TEST)
   frontend  Vitest tests
-  e2e       Playwright tests (skipped until configured)
+  e2e       Playwright browser and accessibility tests
   tools     restored Python tooling tests
   tauri     Tauri structure, cargo check, and Rust tests
   all       every configured suite
@@ -572,6 +572,7 @@ def _add_quality_parser(subparsers: argparse._SubParsersAction) -> None:
   python tools/control.py quality size
   python tools/control.py quality architecture
   python tools/control.py quality lint
+  python tools/control.py quality --release
   python tools/control.py quality --format json""",
     )
 

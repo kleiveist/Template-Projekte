@@ -44,6 +44,8 @@ RUNTIME_DIRECTORIES = {
     "target",
     "dist",
     "coverage",
+    "playwright-report",
+    "test-results",
     ".generated",
     ".dist",
     ".report",

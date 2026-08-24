@@ -7,7 +7,7 @@ import pytest
 
 from tools.quality import control
 from tools.quality.config import QualityConfigError
-from tools.quality.model import CheckResult, Finding, RULES, Severity
+from tools.quality.model import RULES, CheckResult, Finding, Severity
 from tools.quality.reporter import print_report
 
 
@@ -80,8 +80,27 @@ def test_failed_external_tool_fails_the_gate(monkeypatch, capsys) -> None:
     assert "QUALITY TOOL ERROR" in capsys.readouterr().out
 
 
+def test_release_policy_fails_on_unsuppressed_strong_warning() -> None:
+    result = control._release_warning_policy([CheckResult("Size", findings=[_finding(Severity.STRONG_WARNING)])])
+
+    assert result.status == "FAIL"
+    assert "1 unsuppressed strong warning" in result.detail
+    assert "example.py" in result.detail
+
+
+def test_release_policy_accepts_suppressed_strong_warning() -> None:
+    finding = _finding(Severity.STRONG_WARNING).suppress("Reviewed exception until 2026-09-01")
+
+    result = control._release_warning_policy([CheckResult("Size", findings=[finding])])
+
+    assert result.status == "PASS"
+
+
 def test_json_report_contains_stable_rule_ids_and_summary(capsys) -> None:
-    print_report([CheckResult("Size", findings=[_finding(Severity.ERROR)], files_checked=1)], "json")
+    print_report(
+        [CheckResult("Size", findings=[_finding(Severity.ERROR)], files_checked=1)],
+        "json",
+    )
 
     payload = json.loads(capsys.readouterr().out)
     assert payload["summary"]["status"] == "FAIL"

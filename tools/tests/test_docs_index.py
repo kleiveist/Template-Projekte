@@ -28,7 +28,9 @@ def _page(title: str, backlink: str, index: str | None = None) -> str:
     return text
 
 
-def test_generated_empty_labels_are_translated_but_authored_text_is_preserved(tmp_path) -> None:
+def test_generated_empty_labels_are_translated_but_authored_text_is_preserved(
+    tmp_path,
+) -> None:
     root = tmp_path / "project"
     docs = root / "docs"
     docs.mkdir(parents=True)
@@ -90,7 +92,11 @@ def test_index_dry_run_does_not_normalize_files(monkeypatch, tmp_path) -> None:
         lambda command, cwd, check: subprocess.CompletedProcess(command, 0),
     )
     normalized: list[Path] = []
-    monkeypatch.setattr(docs_index, "normalize_generated_english", lambda path: normalized.append(path) or 0)
+    monkeypatch.setattr(
+        docs_index,
+        "normalize_generated_english",
+        lambda path: normalized.append(path) or 0,
+    )
 
     assert docs_index.main(_args(script, dry_run=True)) == 0
     assert normalized == []
@@ -121,6 +127,48 @@ def test_navigation_check_accepts_complete_indices_and_backlinks(monkeypatch, tm
     assert docs_index.check(argparse.Namespace(docs_dir="docs")) == 0
 
 
+def test_navigation_check_accepts_url_encoded_unicode_targets(monkeypatch, tmp_path) -> None:
+    root = tmp_path / "project"
+    docs = root / "docs"
+    docs.mkdir(parents=True)
+    page_name = "release–process.md"
+    encoded_name = "release%E2%80%93process.md"
+    (root / "README.md").write_text(
+        f"# Project\n{docs_index.INDEX_START}\n"
+        f"[Docs](docs/index.md)\n[Release](docs/{encoded_name})\n"
+        f"{docs_index.INDEX_END}\n",
+        encoding="utf-8",
+    )
+    (docs / "index.md").write_text(
+        _page("Docs", "../README.md", f"[Release]({encoded_name})"),
+        encoding="utf-8",
+    )
+    (docs / page_name).write_text(_page("Release", "index.md"), encoding="utf-8")
+    monkeypatch.setattr(docs_index, "ROOT", root)
+
+    assert docs_index.check(argparse.Namespace(docs_dir="docs")) == 0
+
+
+def test_navigation_check_reports_invalid_url_encoded_targets(monkeypatch, tmp_path) -> None:
+    root = tmp_path / "project"
+    docs = root / "docs"
+    docs.mkdir(parents=True)
+    (root / "README.md").write_text(
+        f"# Project\n{docs_index.INDEX_START}\n[Docs](docs/index.md)\n[Invalid](docs/%00.md)\n{docs_index.INDEX_END}\n",
+        encoding="utf-8",
+    )
+    (docs / "index.md").write_text(
+        _page("Docs", "../README.md", "[Invalid](%00.md)"),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(docs_index, "ROOT", root)
+    messages: list[str] = []
+    monkeypatch.setattr(docs_index.logger, "fail", messages.append)
+
+    assert docs_index.check(argparse.Namespace(docs_dir="docs")) == 1
+    assert "generated link target is invalid: %00.md" in "\n".join(messages)
+
+
 def test_navigation_check_accepts_child_pages_in_a_nested_section_index(monkeypatch, tmp_path) -> None:
     root = tmp_path / "project"
     docs = root / "docs"
@@ -138,7 +186,11 @@ def test_navigation_check_accepts_child_pages_in_a_nested_section_index(monkeypa
         encoding="utf-8",
     )
     (section / "section.md").write_text(
-        _page("Section", "../index.md", "[Active](active/active.md)\n[ATP](active/ATP-0001.md)"),
+        _page(
+            "Section",
+            "../index.md",
+            "[Active](active/active.md)\n[ATP](active/ATP-0001.md)",
+        ),
         encoding="utf-8",
     )
     (child / "active.md").write_text(_page("Active", "../section.md", "[ATP](ATP-0001.md)"), encoding="utf-8")

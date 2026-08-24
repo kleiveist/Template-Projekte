@@ -9,7 +9,7 @@
 | Owner | Project team |
 | Last review | 2026-08-23 |
 | Audience | Template maintainers and migration authors |
-| Related ATP | [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md) |
+| Related ATP | [ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md) |
 
 ## Purpose
 
@@ -178,4 +178,4 @@ python tools/control.py docs check
 - [Database feature](../def/database-feature.md)
 - [Tooling Guide](tooling.md)
 - [Lifecycle acceptance](../dev/template-lifecycle-acceptance.md)
-- [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md)
+- [ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md)

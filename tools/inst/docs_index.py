@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import unquote
 
 from tools import logger
 
@@ -99,7 +100,7 @@ def _generated_block(path: Path, start: str, end: str, issues: list[str]) -> str
 
 
 def _resolve_markdown_target(path: Path, target: str, project_root: Path) -> Path | None:
-    clean_target = target.split("#", maxsplit=1)[0].split("?", maxsplit=1)[0]
+    clean_target = unquote(target.split("#", maxsplit=1)[0].split("?", maxsplit=1)[0])
     if not clean_target or "://" in clean_target or clean_target.startswith(("mailto:", "#")):
         return None
     candidate = (path.parent / clean_target).resolve()
@@ -113,7 +114,11 @@ def _resolve_markdown_target(path: Path, target: str, project_root: Path) -> Pat
 def _block_targets(path: Path, block: str, project_root: Path, issues: list[str]) -> list[Path]:
     targets: list[Path] = []
     for raw_target in MARKDOWN_LINK.findall(block):
-        target = _resolve_markdown_target(path, raw_target, project_root)
+        try:
+            target = _resolve_markdown_target(path, raw_target, project_root)
+        except (OSError, ValueError):
+            issues.append(f"{path}: generated link target is invalid: {raw_target}")
+            continue
         if target is None:
             continue
         try:

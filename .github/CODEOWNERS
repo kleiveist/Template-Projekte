@@ -1,0 +1,9 @@
+# Repository-wide fallback ownership.
+* @kleiveist
+
+# Security-sensitive master-repository policy and automation.
+/.github/ @kleiveist
+/config/ @kleiveist
+/deployment/ @kleiveist
+/src-tauri/ @kleiveist
+/tools/ @kleiveist

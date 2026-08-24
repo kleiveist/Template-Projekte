@@ -5,27 +5,28 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Candidate validation blocked by final exact-HEAD reruns and unavailable Release Validation dispatch; not published |
+| Status | Archived |
+| Decision | PASS — validated and published |
 | Owner | Project team |
 | Last review | 2026-08-24 |
 | Audience | Maintainers, reviewers, and release operators |
 | Version | `1.0.0` |
-| Published release tag | None |
-| Intended future tag | `v1.0.0` |
+| Published release tag | [`v1.0.0`](https://github.com/kleiveist/Template-Projekte/releases/tag/v1.0.0) |
+| Validated release commit | `a09c0b9998881e3dbbbd6292fdd22715b402bee8` |
 | Historical architecture baseline | `461fc7519e0db638330904a7496c488e8a0d18bc` |
-| Related ATP | N/A — repository-wide release acceptance |
+| Related ATP | [ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md) |
 
 ## Purpose and authoritative identity
 
-This protocol defines the technical and documentary validation of the reusable web, cloud, and desktop template candidate at version 1.0.0. The historical baseline above is a comparison point, not the release target or validated migration baseline. While no tag exists, the authoritative validated candidate is the common `headSha` of the successful required GitHub Actions runs and the final operator report. If a tag is later published, its commit is resolved with:
+This protocol defines the technical and documentary validation of the reusable web, cloud, and desktop template release at version 1.0.0. The historical baseline above is a comparison point, not the release target or validated migration baseline. The authoritative released identity is the commit peeled from the annotated tag:
 
 ```sh
 git rev-parse 'v1.0.0^{}'
 ```
 
-The exact final SHA is deliberately not embedded in a file that participates in that commit. It is recorded in Git, GitHub Actions evidence, and the final operator report. A future annotated tag, GitHub Release, or external release manifest must identify that same SHA.
+The command resolves to `a09c0b9998881e3dbbbd6292fdd22715b402bee8`. The annotated tag, GitHub Release, required GitHub Actions runs, and completed ATP identify that same SHA. This post-release documentation record does not move or replace the immutable tag.
 
-Candidate validation is `PASS` only when every technical condition in [Validation and publication decisions](#validation-and-publication-decisions) is true for one common commit. Publication is a separate decision: while the tag is absent, lightweight, points elsewhere, or lacks complete same-SHA evidence, version 1.0.0 remains `NOT PUBLISHED`; no earlier green run may substitute for either decision.
+Candidate validation is `PASS` only when every technical condition in [Validation and publication decisions](#validation-and-publication-decisions) is true for one common commit. Publication is a separate decision: a tag that is absent, lightweight, points elsewhere, or lacks complete same-SHA evidence remains `NOT PUBLISHED`; no earlier green run may substitute for either decision. Version 1.0.0 satisfies both decisions.
 
 ## Scope
 
@@ -43,7 +44,7 @@ It does not certify a generated product's business rules, production credentials
 
 ## Required validation environments
 
-This table defines the pinned or hosted environments required by the acceptance protocol. It is not a claim that every row has executed on the current candidate. The actual local environment, unavailable prerequisites, and executed results are recorded in [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md); unavailable local native, container, and database paths require successful exact-HEAD workflow evidence.
+This table defines the pinned or hosted environments required by the acceptance protocol. The actual local environment, unavailable prerequisites, and executed results are recorded in [ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md); unavailable local native, container, and database paths were supplied by successful exact-HEAD workflow evidence.
 
 | Area | Required environment or evidence source |
 | --- | --- |
@@ -97,7 +98,7 @@ The analyzer artifact and provenance must be copied byte-for-byte into every gen
 The operator executes these public paths on the same working tree. Every locally applicable path must succeed; an unavailable native, container, or service prerequisite is recorded as `BLOCKED` and must be supplied by the corresponding exact-HEAD workflow rather than reported as a local pass:
 
 ```sh
-python tools/control.py install --skip-playwright
+python tools/control.py install
 python tools/control.py doctor
 python tools/control.py config doctor
 python tools/control.py quality
@@ -163,18 +164,18 @@ Remote acceptance is commit-bound. For the candidate commit identified by the fi
 - all three unsigned Desktop CI jobs on Linux, macOS, and Windows; and
 - Release Validation, including its reusable desktop candidates.
 
-The exact run IDs, URLs, events, and full common SHA belong in external run evidence and the final operator report rather than this self-participating file. A successful run on an older SHA or a skipped required job does not validate the candidate. After publication, a failed tag-triggered job makes the release result `NOT RELEASED`.
+The exact run IDs, URLs, events, and full common SHA are recorded in the completed ATP. A successful run on an older SHA or a skipped required job does not validate the candidate. After publication, a failed tag-triggered job would make the release result `NOT RELEASED`; the `v1.0.0` tag-triggered run completed successfully.
 
 ## Historical workflow-run disposition
 
 The public snapshot recorded on 2026-08-23 contained 41 runs: 39 failures and two successes. Every failure was inspected and classified before cleanup. Thirty-seven runs exposed historical project or workflow defects and were retained as category A evidence. Core run `31127208973` was retained as category B infrastructure evidence because its runner failed internally and that snapshot contained no later complete Core success. PostgreSQL run `31127208974` was classified as the sole category C cleanup candidate because run `31128760336` was its later successful replacement. No category D run was identified.
 
-This dated inventory is retained as historical disposition, not as current candidate evidence. No run is deleted during candidate preparation: API-authenticated cleanup is unavailable, Release Validation is incomplete, and cleanup is unnecessary for validation. A future deletion of run `31127208974` remains optional and may occur only after all final same-SHA workflows are green and its commit, cause, replacement, and deletion result are recorded externally. All other failed runs, both historical successes, final-candidate runs, tag runs, release evidence, and required artifacts are retained. Logs and Git history are never edited or rewritten.
+This dated inventory is retained as historical disposition, not as current candidate evidence. No run was deleted during candidate preparation: API-authenticated cleanup was unavailable, Release Validation was then incomplete, and cleanup was unnecessary for validation. A future deletion of run `31127208974` remains optional and may occur only after all final same-SHA workflows are green and its commit, cause, replacement, and deletion result are recorded externally. All other failed runs, both historical successes, final-candidate runs, tag runs, release evidence, and required artifacts are retained. Logs and Git history are never edited or rewritten.
 
 ## Known limitations
 
 - The template produces unsigned verification packages. Signing, notarization, publication, and updater activation remain product-specific.
-- Playwright remains an explicit optional skip until a generated product supplies concrete end-to-end requirements and tests.
+- The immutable `v1.0.0` baseline did not include browser automation. Post-release `main` now supplies blocking Chromium smoke and axe accessibility tests; publishing them requires a subsequent release. Product-specific journeys and visual-regression coverage remain product-owned extensions.
 - Local Docker image assembly is not claimed where the operator lacks daemon permission; same-SHA GitHub container jobs are mandatory release evidence.
 - The template supplies infrastructure boundaries but intentionally no authentication, authorization, business model, provider deployment, or production data migration.
 
@@ -193,9 +194,9 @@ The version 1.0.0 candidate is technically validated only if all of the followin
 
 When these conditions hold, the technical decision is **PASS — VALIDATED RELEASE CANDIDATE**. This is sufficient for a commit-pinned migration baseline but is not publication.
 
-Version 1.0.0 is published only if the additional publication conditions also hold: `v1.0.0` is an annotated, non-forced tag whose peeled commit equals the validated common SHA; the pushed tag and every tag-triggered workflow pass; and any GitHub Release or external release manifest identifies the same tag and commit. Until then, the publication decision remains **NOT PUBLISHED**.
+Version 1.0.0 is published only if the additional publication conditions also hold: `v1.0.0` is an annotated, non-forced tag whose peeled commit equals the validated common SHA; the pushed tag and every tag-triggered workflow pass; and any GitHub Release or external release manifest identifies the same tag and commit. All publication conditions hold for `v1.0.0`.
 
-Current technical decision: **BLOCKED**. Local applicable gates and clean-tree `release check` passed. Core, Profile, PostgreSQL, and Desktop workflows passed on the predecessor candidate, but the evidence update created a later local commit and invalidated those runs as final same-SHA proof. This environment cannot push that final commit, has neither `gh` nor a GitHub API token, and received HTTP 401 from unauthenticated Release Validation dispatch. Current publication decision: **NOT PUBLISHED**.
+Current technical decision: **PASS — VALIDATED RELEASE CANDIDATE**. Local applicable gates and clean-tree `release check` passed. Core CI, Desktop CI, PostgreSQL Integration, Profile Matrix, and tag-triggered Release Validation all succeeded on `a09c0b9998881e3dbbbd6292fdd22715b402bee8`. Current publication decision: **PUBLISHED AS `v1.0.0`**.
 
 ## Related documents
 
@@ -211,3 +212,4 @@ Current technical decision: **BLOCKED**. Local applicable gates and clean-tree `
 | Date | Change | Author |
 | --- | --- | --- |
 | 2026-08-23 | Replaced the historical case-study acceptance with the commit-bound v1.0.0 release protocol. | Project team |
+| 2026-08-24 | Recorded successful exact-SHA workflow evidence and the published v1.0.0 decision. | Project team |

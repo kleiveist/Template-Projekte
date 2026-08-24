@@ -181,5 +181,6 @@ Docker is required only for the container commands.
 - [Framework architecture](architecture.md)
 - [Runtime configuration](configuration.md)
 - [Database feature](database-feature.md)
+- [Observability decision framework](observability.md)
 - [Container operations](../tools/container-builds.md)
 - [Release model](../tools/release-model.md)

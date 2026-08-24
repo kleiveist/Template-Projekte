@@ -9,7 +9,7 @@
 | Owner | Project team |
 | Last review | 2026-08-23 |
 | Audience | Developers and architects |
-| Related ATP | [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md) |
+| Related ATP | [ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md) |
 
 ## Purpose
 
@@ -415,6 +415,7 @@ python tools/control.py build desktop
 - [Runtime configuration](configuration.md)
 - [Code-quality policy](code-quality.md)
 - [Deployment architecture](deployment-architecture.md)
+- [Observability decision framework](observability.md)
 - [Documentation standard](../README.md)
 - [ATP workflow](../atp/README.md)
 - [Tooling guide](../tools/tooling.md)

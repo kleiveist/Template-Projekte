@@ -7,6 +7,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOWS = ROOT / ".github" / "workflows"
+DEPENDABOT = ROOT / ".github" / "dependabot.yml"
+CODEOWNERS = ROOT / ".github" / "CODEOWNERS"
 NODE_WORKFLOW_SETUP_COUNTS = {
     "ci.yml": 2,
     "profiles.yml": 1,
@@ -33,13 +35,30 @@ def _workflow(name: str) -> str:
 
 
 def _action_versions(content: str, action: str) -> list[str]:
-    pattern = re.compile(rf"(?m)^\s*uses:\s*{re.escape(action)}@([^\s#]+)\s*$")
+    pattern = re.compile(rf"(?m)^\s*uses:\s*{re.escape(action)}@([^\s#]+)(?:\s+#\s+v[^\s]+)?\s*$")
     return pattern.findall(content)
+
+
+def _action_release_versions(content: str, action: str) -> list[str]:
+    pattern = re.compile(rf"(?m)^\s*uses:\s*{re.escape(action)}@[0-9a-f]{{40}}\s+#\s+(v\d+(?:\.\d+)*)\s*$")
+    return pattern.findall(content)
+
+
+def _assert_action_major(content: str, action: str, major: str, *, count: int | None = None) -> None:
+    pins = _action_versions(content, action)
+    releases = _action_release_versions(content, action)
+    if count is not None:
+        assert len(pins) == count
+    else:
+        assert pins
+    assert len(releases) == len(pins)
+    assert all(re.fullmatch(r"[0-9a-f]{40}", pin) for pin in pins)
+    assert all(release == major or release.startswith(f"{major}.") for release in releases)
 
 
 def _steps_using(content: str, action: str) -> list[str]:
     steps = re.findall(r"(?ms)^      - .*?(?=^      - |\Z)", content)
-    action_pattern = re.compile(rf"(?m)^        uses:\s*{re.escape(action)}@[^\s#]+\s*$")
+    action_pattern = re.compile(rf"(?m)^        uses:\s*{re.escape(action)}@[^\s#]+(?:\s+#\s+v[^\s]+)?\s*$")
     return [step for step in steps if action_pattern.search(step)]
 
 
@@ -71,10 +90,9 @@ def _block_named(content: str, name: str, *, indent: int) -> str:
 @pytest.mark.parametrize(("name", "expected_setup_count"), NODE_WORKFLOW_SETUP_COUNTS.items())
 def test_every_node_workflow_pins_node_24(name: str, expected_setup_count: int) -> None:
     content = _workflow(name)
-    action_versions = _action_versions(content, "actions/setup-node")
     setup_steps = _steps_using(content, "actions/setup-node")
 
-    assert action_versions == ["v7"] * expected_setup_count
+    _assert_action_major(content, "actions/setup-node", "v7", count=expected_setup_count)
     assert len(setup_steps) == expected_setup_count
     for step in setup_steps:
         node_versions = re.findall(r"(?m)^          node-version:\s*([^\s#]+)\s*$", step)
@@ -83,8 +101,25 @@ def test_every_node_workflow_pins_node_24(name: str, expected_setup_count: int) 
 
 def test_every_artifact_upload_uses_v7() -> None:
     for name, expected_upload_count in ARTIFACT_UPLOAD_COUNTS.items():
-        action_versions = _action_versions(_workflow(name), "actions/upload-artifact")
-        assert action_versions == ["v7"] * expected_upload_count
+        _assert_action_major(
+            _workflow(name),
+            "actions/upload-artifact",
+            "v7",
+            count=expected_upload_count,
+        )
+
+
+def test_every_external_action_is_pinned_to_an_immutable_commit() -> None:
+    external_action = re.compile(r"uses:\s*([^@\s]+)@([0-9a-f]{40})\s+#\s+(v\d+(?:\.\d+)*)")
+    for workflow in sorted(WORKFLOWS.glob("*.yml")):
+        for line_number, line in enumerate(workflow.read_text(encoding="utf-8").splitlines(), start=1):
+            stripped = line.strip()
+            if not stripped.startswith("uses:") or stripped.startswith("uses: ./"):
+                continue
+            match = external_action.fullmatch(stripped)
+            assert match is not None, (
+                f"{workflow}:{line_number} must pin the action to a full SHA with a version comment"
+            )
 
 
 def test_ci_workflows_have_safe_common_policy() -> None:
@@ -102,6 +137,67 @@ def test_ci_workflows_have_safe_common_policy() -> None:
         assert "deploy" not in content.lower()
         assert "gh release" not in content.lower()
         assert "python tools/control.py release check" not in content
+
+
+def test_security_workflow_has_least_privilege_scanners() -> None:
+    content = _workflow("security.yml")
+    dependency_review = _block_named(content, "dependency-review", indent=2)
+    codeql = _block_named(content, "codeql", indent=2)
+
+    assert "pull_request:" in content
+    assert "push:" in content
+    assert "schedule:" in content
+    assert "workflow_dispatch:" in content
+    assert "permissions:\n  contents: read" in content
+    assert "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in content
+    assert "continue-on-error" not in content
+    assert "secrets." not in content
+
+    assert "if: github.event_name == 'pull_request'" in dependency_review
+    assert "fail-on-severity: high" in dependency_review
+    assert "fail-on-scopes: development, runtime, unknown" in dependency_review
+    _assert_action_major(dependency_review, "actions/dependency-review-action", "v5", count=1)
+
+    assert "security-events: write" in codeql
+    assert "fail-fast: false" in codeql
+    for language in ("javascript-typescript", "python", "rust"):
+        assert f"- {language}" in codeql
+    assert "build-mode: none" in codeql
+    assert "queries: security-extended" in codeql
+    _assert_action_major(codeql, "github/codeql-action/init", "v4", count=1)
+    _assert_action_major(codeql, "github/codeql-action/analyze", "v4", count=1)
+
+
+def test_dependabot_covers_every_versioned_dependency_ecosystem() -> None:
+    content = DEPENDABOT.read_text(encoding="utf-8")
+
+    assert content.startswith("version: 2\n")
+    assert content.count("package-ecosystem: github-actions") == 1
+    assert content.count("package-ecosystem: npm") == 1
+    assert content.count("package-ecosystem: pip") == 2
+    assert content.count("package-ecosystem: cargo") == 2
+    assert content.splitlines().count("  - package-ecosystem: docker") == 1
+    assert content.splitlines().count("  - package-ecosystem: docker-compose") == 1
+    for directory in (
+        'directory: "/"',
+        'directory: "/frontend"',
+        'directory: "/backend"',
+        'directory: "/tools"',
+        'directory: "/src-tauri"',
+        'directory: "/tools/quality/rust_analyzer"',
+        'directory: "/deployment"',
+        'directory: "/deployment/docker"',
+    ):
+        assert content.count(directory) == 1
+    assert content.count("interval: weekly") == 8
+
+
+def test_codeowners_assigns_security_sensitive_master_paths() -> None:
+    content = CODEOWNERS.read_text(encoding="utf-8")
+
+    assert "* @kleiveist" in content
+    for path in ("/.github/", "/config/", "/deployment/", "/src-tauri/", "/tools/"):
+        assert f"{path} @kleiveist" in content
 
 
 def test_core_ci_uses_supported_runtimes_and_public_tooling() -> None:
@@ -132,28 +228,44 @@ def test_core_ci_uses_supported_runtimes_and_public_tooling() -> None:
     assert "python tools/control.py test --suite schema" in content
     assert "python tools/control.py test --suite api" in content
     assert "python tools/control.py test --suite database" in content
-    assert "python tools/control.py test --suite frontend" in content
-    assert "python tools/control.py build web" in content
     assert "python tools/control.py container validate" in content
     assert "python tools/control.py build container" in content
     assert "python tools/control.py version check" in content
     assert "cache: pip" in content
     assert "cache: npm" in content
-    assert "actions/checkout@v7" in content
-    assert "actions/setup-python@v7" in content
-    assert "actions/setup-node@v7" in content
-    assert "actions/cache@v6" in content
+    _assert_action_major(content, "actions/checkout", "v7")
+    _assert_action_major(content, "actions/setup-python", "v7")
+    _assert_action_major(content, "actions/setup-node", "v7")
+    _assert_action_major(content, "actions/cache", "v6")
     assert "\nenv:\n  DATABASE_URL:" not in content
     assert content.index("python tools/control.py quality") < content.index(
         "python tools/control.py test --suite tools"
     )
+
+
+def test_core_ci_blocks_on_frontend_browser_accessibility_and_budget_checks() -> None:
+    content = _workflow("ci.yml")
+    frontend_job = _block_named(content, "frontend", indent=2)
+    browser_install = _step_named(frontend_job, "Install Playwright Chromium and system dependencies")
+    browser_test = _step_named(frontend_job, "Run browser smoke and accessibility tests")
+
+    assert "name: Core / Frontend, Browser & Web Build" in frontend_job
+    assert "python tools/control.py install --skip-frontend --skip-tooling --skip-playwright" in frontend_job
+    assert "python tools/control.py test --suite frontend" in frontend_job
+    assert "working-directory: frontend" in browser_install
+    assert "npx playwright install --with-deps chromium" in browser_install
+    assert "python tools/control.py test --suite e2e" in browser_test
+    assert "DATABASE_URL: postgresql+psycopg://" in browser_test
+    assert "python tools/control.py build web" in frontend_job
     assert content.index("python tools/control.py quality") < content.index("python tools/control.py build web")
+    assert frontend_job.index(browser_install) < frontend_job.index(browser_test)
 
 
 def test_profile_matrix_generates_and_tests_every_profile() -> None:
     content = _workflow("profiles.yml")
     cargo_cache_step = _step_named(content, "Cache Cargo dependencies")
     lifecycle_step = _step_named(content, "Verify generated template lifecycle")
+    browser_install = _step_named(content, "Install generated Playwright Chromium and system dependencies")
 
     assert "fail-fast: false" in content
     for profile_id in (
@@ -174,6 +286,8 @@ def test_profile_matrix_generates_and_tests_every_profile() -> None:
     assert "python tools/control.py doctor" in content
     assert "python tools/control.py config doctor" in content
     assert "python tools/control.py install --skip-playwright" in content
+    assert "working-directory: .generated/ci-${{ matrix.profile }}/frontend" in browser_install
+    assert "npx playwright install --with-deps chromium" in browser_install
     assert "python tools/control.py test --suite all" in content
     assert "python tools/control.py build web" in content
     assert "python tools/control.py container validate" in content
@@ -181,21 +295,26 @@ def test_profile_matrix_generates_and_tests_every_profile() -> None:
     assert "python tools/control.py build desktop --dry-run --no-clean" in content
     assert "python tools/control.py quality" in content
     assert ("rustup toolchain install 1.97.1 --profile minimal --component rustfmt,clippy") in content
-    assert "actions/checkout@v7" in content
-    assert "actions/setup-python@v7" in content
-    assert "actions/setup-node@v7" in content
-    assert "actions/cache@v6" in content
+    _assert_action_major(content, "actions/checkout", "v7")
+    _assert_action_major(content, "actions/setup-python", "v7")
+    _assert_action_major(content, "actions/setup-node", "v7")
+    _assert_action_major(content, "actions/cache", "v6")
     assert ".generated/ci-${{ matrix.profile }}/src-tauri/target" in cargo_cache_step
     assert content.index("name: Generate profile project") < content.index("name: Cache Cargo dependencies")
     assert content.index("name: Generate profile project") < content.index("name: Verify generated template lifecycle")
     assert content.index("name: Verify generated template lifecycle") < content.index("name: Cache Cargo dependencies")
     assert content.index("python tools/control.py quality") < content.index("python tools/control.py test --suite all")
+    assert content.index(browser_install) < content.index("python tools/control.py test --suite all")
 
 
 def test_postgres_ci_uses_isolated_service_health_check_and_migration() -> None:
     content = _workflow("postgres.yml")
     generated_content = content.split("  generated-postgres:", maxsplit=1)[1]
     lifecycle_step = _step_named(generated_content, "Verify generated template lifecycle")
+    browser_install = _step_named(
+        generated_content,
+        "Install generated Playwright Chromium and system dependencies",
+    )
 
     assert content.count("image: postgres:16.15-alpine3.24") == 2
     assert "POSTGRES_PASSWORD: test-password" in content
@@ -217,18 +336,23 @@ def test_postgres_ci_uses_isolated_service_health_check_and_migration() -> None:
     for profile_id in ("web-cloud", "desktop-cloud", "full-platform"):
         assert f"profile: {profile_id}" in content
     assert "python tools/control.py container validate" in content
+    assert "working-directory: .generated/ci-${{ matrix.profile }}-postgres/frontend" in browser_install
+    assert "npx playwright install --with-deps chromium" in browser_install
     assert "python tools/control.py quality" in generated_content
     assert "python tools/control.py config doctor" in generated_content
     assert "python tools/control.py tauri doctor" in generated_content
     assert "python tools/control.py build desktop --dry-run --no-clean" in generated_content
     assert ("rustup toolchain install 1.97.1 --profile minimal --component rustfmt,clippy") in generated_content
-    assert "actions/checkout@v7" in content
-    assert "actions/setup-python@v7" in content
-    assert "actions/setup-node@v7" in content
+    _assert_action_major(content, "actions/checkout", "v7")
+    _assert_action_major(content, "actions/setup-python", "v7")
+    _assert_action_major(content, "actions/setup-node", "v7")
     assert generated_content.index("name: Generate PostgreSQL profile project") < generated_content.index(
         "name: Verify generated template lifecycle"
     )
     assert generated_content.index("python tools/control.py quality") < generated_content.index(
+        "python tools/control.py test --suite all"
+    )
+    assert generated_content.index(browser_install) < generated_content.index(
         "python tools/control.py test --suite all"
     )
 
@@ -261,7 +385,7 @@ def test_desktop_ci_builds_unsigned_native_artifacts_on_each_platform() -> None:
     assert "tools\\.venv\\Scripts\\python.exe -m pytest -q tools/tests/test_process.py" in content
     assert "python tools/control.py test --suite tauri" in content
     assert "python tools/control.py build desktop" in content
-    assert "actions/upload-artifact@v7" in content
+    _assert_action_major(content, "actions/upload-artifact", "v7", count=1)
     assert "unsigned" in content.lower()
     assert "secrets." not in content
     assert "publish" not in content.lower()
@@ -314,7 +438,7 @@ def test_desktop_ci_verifies_linux_candidates_before_aggregate_upload() -> None:
     upload_step = _step_named(content, "Upload unsigned verification artifacts")
 
     assert content.index(build_step) < content.index(verify_step) < content.index(upload_step)
-    assert "uses: actions/upload-artifact@v7" in upload_step
+    _assert_action_major(upload_step, "actions/upload-artifact", "v7", count=1)
     assert "name: desktop-${{ matrix.target }}-unsigned" in upload_step
     assert "if-no-files-found: error" in upload_step
     assert "include-hidden-files: true" in upload_step
@@ -348,13 +472,15 @@ def test_desktop_ci_preserves_macos_and_windows_build_contracts() -> None:
 
 def test_release_validation_is_explicit_and_never_publishes() -> None:
     content = _workflow("release.yml")
+    browser_install = _step_named(content, "Install Playwright Chromium and system dependencies")
+    full_test = _step_named(content, "Run release-independent tests")
 
     assert "workflow_dispatch:" in content
     assert '"v*.*.*"' in content
     assert "timeout-minutes: 60" in content
     assert "branches:" not in content
     assert "python tools/control.py release check" in content
-    assert "python tools/control.py quality" in content
+    assert "python tools/control.py quality --release" in content
     assert "tools/.venv/bin/python -m pytest -q tools/tests/test_docs_index.py" in content
     assert (
         "rustup toolchain install 1.97.1 --profile minimal --component rustfmt,clippy --target wasm32-wasip1"
@@ -362,6 +488,10 @@ def test_release_validation_is_explicit_and_never_publishes() -> None:
     assert "python tools/quality/rust_analyzer/build.py --check" in content
     assert "python tools/control.py build web" in content
     assert "python tools/control.py build container" in content
+    assert "working-directory: frontend" in browser_install
+    assert "npx playwright install --with-deps chromium" in browser_install
+    assert "DATABASE_URL: postgresql+psycopg://" in full_test
+    assert "python tools/control.py test --suite all" in full_test
     assert "uses: ./.github/workflows/desktop.yml" in content
     assert "permissions:\n  contents: read" in content
     assert "secrets." not in content
@@ -369,6 +499,31 @@ def test_release_validation_is_explicit_and_never_publishes() -> None:
     assert "publish" not in content.lower()
     assert "deploy" not in content.lower()
     assert content.index("python tools/control.py quality") < content.index("python tools/control.py test --suite all")
+    assert content.index(browser_install) < content.index(full_test)
+
+
+def test_release_validation_generates_and_attests_sbom_evidence() -> None:
+    content = _workflow("release.yml")
+    validate_job = _block_named(content, "validate", indent=2)
+    sbom_step = _step_named(content, "Generate SPDX dependency SBOM")
+    provenance_step = _step_named(content, "Attest web candidate build provenance")
+    sbom_attestation_step = _step_named(content, "Attest web candidate SBOM")
+    upload_step = _step_named(content, "Upload web candidate")
+
+    assert "attestations: write" in validate_job
+    assert "contents: read" in validate_job
+    assert "id-token: write" in validate_job
+    _assert_action_major(sbom_step, "anchore/sbom-action", "v0", count=1)
+    assert "format: spdx-json" in sbom_step
+    assert "upload-artifact: false" in sbom_step
+    assert "upload-release-assets: false" in sbom_step
+    _assert_action_major(provenance_step, "actions/attest", "v4", count=1)
+    _assert_action_major(sbom_attestation_step, "actions/attest", "v4", count=1)
+    assert "subject-path: .dist/web/*.zip" in provenance_step
+    assert "subject-path: .dist/web/*.zip" in sbom_attestation_step
+    assert "sbom-path: .dist/sbom/template-project-${{ github.sha }}.spdx.json" in sbom_attestation_step
+    assert ".dist/sbom/*.spdx.json" in upload_step
+    assert content.index(sbom_step) < content.index(provenance_step) < content.index(upload_step)
 
 
 def test_release_validation_hands_off_exact_linux_bundle_contract() -> None:

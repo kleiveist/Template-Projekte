@@ -5,7 +5,8 @@
 
 | Field | Value |
 | --- | --- |
-| Status | planned |
+| Status | Draft |
+| ATP state | Planned |
 | Owner | <person or team> |
 | Created | YYYY-MM-DD |
 | Executed | Not yet executed |

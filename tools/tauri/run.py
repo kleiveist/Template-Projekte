@@ -7,9 +7,15 @@ import signal
 import subprocess
 import time
 from pathlib import Path
+from typing import TextIO
 
 from tools import logger
-from tools.config import ConfigLoadError, is_server_only_name, resolve_configuration, validate_configuration
+from tools.config import (
+    ConfigLoadError,
+    is_server_only_name,
+    resolve_configuration,
+    validate_configuration,
+)
 from tools.profiles import runtime as profile_runtime
 from tools.tauri import common, paths
 
@@ -123,33 +129,49 @@ def _follow_log(log_path: Path, process: subprocess.Popen) -> int:
     logger.info("Streaming Tauri log. Press Ctrl+C to stop Tauri.")
     try:
         with log_path.open("r", encoding="utf-8", errors="replace") as handle:
-            while True:
-                line = handle.readline()
-                if line:
-                    print(line, end="", flush=True)
-                    continue
-
-                returncode = process.poll()
-                if returncode is not None:
-                    rest = handle.read()
-                    if rest:
-                        print(rest, end="", flush=True)
-                    if returncode == 0:
-                        logger.ok("Tauri dev process exited")
-                        return 0
-                    logger.fail(f"Tauri dev process exited with code {returncode}")
-                    return int(returncode)
-
-                time.sleep(0.2)
+            return _stream_log(handle, process)
     except KeyboardInterrupt:
-        print()
-        stopped = _terminate_process_group(process)
-        _clear_state()
-        if stopped:
-            logger.ok(f"Tauri dev stopped pid={process.pid}")
-        else:
-            logger.fail(f"Tauri dev did not stop cleanly pid={process.pid}")
+        return _stop_interrupted_process(process)
+
+
+def _stream_log(handle: TextIO, process: subprocess.Popen) -> int:
+    while True:
+        line = handle.readline()
+        if line:
+            print(line, end="", flush=True)
+            continue
+
+        returncode = process.poll()
+        if returncode is None:
+            time.sleep(0.2)
+            continue
+
+        _print_remaining_log(handle)
+        return _report_process_exit(int(returncode))
+
+
+def _print_remaining_log(handle: TextIO) -> None:
+    rest = handle.read()
+    if rest:
+        print(rest, end="", flush=True)
+
+
+def _report_process_exit(returncode: int) -> int:
+    if returncode == 0:
+        logger.ok("Tauri dev process exited")
         return 0
+    logger.fail(f"Tauri dev process exited with code {returncode}")
+    return returncode
+
+
+def _stop_interrupted_process(process: subprocess.Popen) -> int:
+    print()
+    stopped = _terminate_process_group(process)
+    _clear_state()
+    if stopped:
+        logger.ok(f"Tauri dev stopped pid={process.pid}")
+    else:
+        logger.fail(f"Tauri dev did not stop cleanly pid={process.pid}")
     return 0
 
 

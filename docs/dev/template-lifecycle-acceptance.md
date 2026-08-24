@@ -5,11 +5,12 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Executed — LC-020 blocked by final exact-HEAD reruns and Release Validation dispatch |
+| Status | Active |
+| Acceptance | PASS — all LC-001 through LC-020 requirements passed |
 | Owner | Project team |
 | Last review | 2026-08-24 |
 | Audience | Developers, reviewers, and acceptance owners |
-| Related ATP | [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md) |
+| Related ATP | [ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md) |
 
 ## Purpose
 
@@ -38,7 +39,7 @@ This document maps the reusable template lifecycle requirements to executed auto
 
 ## Evidence policy
 
-Only an executed check with its real result can move an item from `NOT RUN`. A code path, test definition, or workflow step is not by itself passing evidence. Use only `PASS`, `FAIL`, `BLOCKED`, or `NOT RUN` in this matrix. Record exact commands, exit codes, test counts, and report paths in [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md).
+Only an executed check with its real result can move an item from `NOT RUN`. A code path, test definition, or workflow step is not by itself passing evidence. Use only `PASS`, `FAIL`, `BLOCKED`, or `NOT RUN` in this matrix. Record exact commands, exit codes, test counts, and report paths in [ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md).
 
 ## Acceptance matrix
 
@@ -63,7 +64,7 @@ Only an executed check with its real result can move an item from `NOT RUN`. A c
 | `LC-017` | Status and verify work without network access. | Offline subprocess tests and generated CI execution | PASS | Network-denial tests and all local generated-profile checks passed. |
 | `LC-018` | Git, path, symlink, and secret boundaries are enforced. | Local Git fixtures and negative security tests | PASS | Git race, path traversal, external symlink, protected runtime, secret redaction, and dirty-tree tests passed. |
 | `LC-019` | CLI, documentation, and reports are complete. | CLI help/JSON tests, docs check, and report schema tests | PASS | CLI/report/readme tests passed; PyGitIndex regeneration completed and `docs check` validated 31 pages. |
-| `LC-020` | Existing quality, CI, and release gates remain intact. | Quality, complete tests, workflow guards, builds, and release check | BLOCKED | Local applicable gates and clean-tree `release check` passed. Core CI, Profile Matrix, PostgreSQL Integration, and Desktop CI passed on the predecessor candidate, but the final evidence commit could not be synchronized for same-SHA reruns; Release Validation also lacks an authenticated dispatch path. |
+| `LC-020` | Existing quality, CI, and release gates remain intact. | Quality, complete tests, workflow guards, builds, and release check | PASS | Local applicable gates and clean-tree `release check` passed. Core CI `32718326180`, Desktop CI `32718326136`, PostgreSQL Integration `32718326135`, Profile Matrix `32718326078`, and Release Validation `32731628645` all passed on release commit `a09c0b9`. |
 
 ## Required automated coverage
 
@@ -101,25 +102,25 @@ The five generated profiles additionally run lifecycle status and verify, qualit
 
 | Previous blocker | Current disposition |
 | --- | --- |
-| WebKitGTK, JavaScriptCoreGTK, and appindicator were unavailable locally. | Still unavailable locally on 2026-08-24. Quality and the desktop dry-run pass, while local native Rust tests fail closed. Desktop CI passed on the predecessor candidate and must rerun on final HEAD. |
-| Docker was unavailable locally. | Still unavailable; `container validate` verifies all five inputs and then fails because the Docker executable is absent. The predecessor Core container job passed; final Core and Release Validation container paths remain unexecuted. |
-| No disposable PostgreSQL service or `DATABASE_URL_TEST` was available. | Still unavailable locally. The local PostgreSQL suite remains an explicit skip; PostgreSQL Integration passed on the predecessor and must rerun on final HEAD. |
+| WebKitGTK, JavaScriptCoreGTK, and appindicator were unavailable locally. | The local limitation remains documented. Exact-SHA Desktop CI and Release Validation supplied successful native Linux, macOS, and Windows evidence. |
+| Docker was unavailable locally. | The local limitation remains documented. Exact-SHA Core CI and Release Validation supplied successful container validation and build evidence. |
+| No disposable PostgreSQL service or `DATABASE_URL_TEST` was available. | The local limitation remains documented. Exact-SHA PostgreSQL Integration supplied successful live-service, migration, API, and profile evidence. |
 | The lifecycle implementation was intentionally uncommitted, so `release check` rejected the dirty tree. | The repository began this finalization clean at `f70d30959c856e8170e6699eff2c101d1c077be0`; the final clean candidate passed `release check`. |
-| GitHub and Desktop CI evidence existed only for earlier commits. | Four automatic workflows passed on the predecessor finalization candidate. The subsequent evidence update created a new commit that cannot be pushed with the available HTTPS or deploy-key credentials; unauthenticated Release Validation dispatch returned HTTP 401. |
+| GitHub and Desktop CI evidence existed only for earlier commits. | Resolved: all four automatic workflows and tag-triggered Release Validation passed on release commit `a09c0b9`; the exact run IDs are recorded in the completed ATP. |
 
 ## Decision rule
 
 The lifecycle foundation is `READY FOR SUNODM PILOT` only when all `LC-001` through `LC-020` requirements have passing evidence and no unresolved safety or rollback defect remains. Otherwise the decision is `NOT READY FOR SUNODM PILOT`, with every blocker listed in ATP-0001 and the final implementation report.
 
-Current decision: `NOT READY FOR SUNODM PILOT`. LC-020 cannot pass until the final evidence commit is synchronized and Core CI, Profile Matrix, PostgreSQL Integration, Desktop CI, and Release Validation all succeed on that exact commit. This environment can neither push the final commit nor authenticate the Release Validation dispatch.
+Current decision: `READY FOR SUNODM PILOT`. LC-001 through LC-020 passed, and the five required workflows succeeded on the exact released commit `a09c0b9998881e3dbbbd6292fdd22715b402bee8`.
 
 ## Risks and limitations
 
 - Local source resolution is the only supported source mechanism in version 1.
 - No concrete product migration is included.
-- Native Linux Tauri, container, and live PostgreSQL execution remains unavailable locally; final exact-HEAD workflows are required to supply that evidence.
-- Public Actions metadata is readable, but final-commit push, authenticated log download, and workflow dispatch are unavailable.
-- The final candidate SHA is intentionally recorded only in Git and the external operator report, not embedded here.
+- Native Linux Tauri, container, and live PostgreSQL execution remained unavailable on the local acceptance host; exact-SHA workflows supplied that evidence.
+- Desktop packages remain unsigned verification artifacts rather than production-signed product installers.
+- The accepted release commit and workflow run IDs are recorded in the completed ATP and remain externally verifiable.
 
 ## Related documents
 
@@ -129,4 +130,4 @@ Current decision: `NOT READY FOR SUNODM PILOT`. LC-020 cannot pass until the fin
 - [Project profiles](../def/project-profiles.md)
 - [Continuous integration](../tools/ci.md)
 - [ATP workflow](../atp/README.md)
-- [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md)
+- [ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md)

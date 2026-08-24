@@ -50,7 +50,7 @@ LOC findings are an early signal and a hard safety boundary. They are not a subs
 | `STRONG_WARNING` | An explicit refactoring candidate close to a hard boundary | None by itself |
 | `ERROR` | A policy violation that must be resolved | Fails the gate |
 
-The command exits with `0` when all checks run successfully and there is no unsuppressed `ERROR`. Warnings and strong warnings remain visible but do not make CI red. At least one unsuppressed `ERROR`, invalid configuration, missing required tool, or failed lint, type, format, compiler, or architecture check produces a non-zero exit code.
+The normal development command exits with `0` when all checks run successfully and there is no unsuppressed `ERROR`. Warnings and strong warnings remain visible but do not make ordinary CI red. Release Validation uses `quality --release`, which also returns non-zero for an unsuppressed `STRONG_WARNING`. A narrow, valid, expiring exception records the required release decision without weakening the hard limits. An unsuppressed `ERROR`, invalid configuration, missing required tool, or failed lint, type, format, compiler, or architecture check always produces a non-zero exit code.
 
 ## Exact measurement boundaries
 
@@ -310,6 +310,7 @@ Bare `quality` is identical to `quality check`. Focused actions support investig
 | `python tools/control.py quality architecture` | Backend, frontend, tooling dependency, and router rules |
 | `python tools/control.py quality lint` | Ruff lint, ESLint, TypeScript compiler, Clippy, and Cargo check for enabled source areas |
 | `python tools/control.py quality format` | Ruff format check, Prettier check, and rustfmt check for enabled source areas |
+| `python tools/control.py quality --release` | Complete gate plus a blocking policy check for unsuppressed strong warnings |
 
 Use machine-readable output for automation or agent processing:
 
@@ -369,9 +370,9 @@ quality gate
 tests and builds
 ```
 
-Profile-matrix CI runs the same quality gate inside every generated project after dependency installation and before its doctor, tests, and build. Generated PostgreSQL profiles do the same. Release validation runs the gate before release-independent tests and artifact builds.
+Profile-matrix CI runs the same quality gate inside every generated project after dependency installation and before its doctor, tests, and build. Generated PostgreSQL profiles do the same. Release Validation runs `python tools/control.py quality --release` before release-independent tests and artifact builds.
 
-`WARNING` and `STRONG_WARNING` findings do not fail these jobs. An unsuppressed `ERROR` or a failed required tool check does. Consequently, a handwritten file with exactly 900 code LOC leaves CI green with a strong warning, while 901 code LOC produces an unsuppressible `CQ001 ERROR` and fails CI. Neither a quality exception nor a workflow-specific ignore list changes that contract.
+`WARNING` and `STRONG_WARNING` findings do not fail ordinary development and profile jobs. Release Validation blocks an unsuppressed `STRONG_WARNING`; every job blocks an unsuppressed `ERROR` or failed required tool check. Consequently, a handwritten file with exactly 900 code LOC leaves ordinary CI green but cannot enter a release without refactoring or a narrow expiring exception, while 901 code LOC produces an unsuppressible `CQ001 ERROR` everywhere. No workflow-specific ignore list changes that contract.
 
 ## Refactoring guidance
 

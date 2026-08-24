@@ -2,7 +2,13 @@
 
 ## Supported versions
 
-This repository has no published release tag or maintained release line. Security reports about the template are assessed against the current `main` development line on a best-effort basis. A project generated from this template must define its own supported versions and security policy.
+| Version | Supported |
+| --- | --- |
+| `1.0.0` | Yes |
+| Current `main` | Best effort |
+| Earlier releases | No |
+
+Security reports about the published template release and the current `main` development line are assessed on a best-effort basis. A project generated from this template must define its own supported versions and security policy; support for the template does not automatically extend to generated products.
 
 ## Report a vulnerability privately
 

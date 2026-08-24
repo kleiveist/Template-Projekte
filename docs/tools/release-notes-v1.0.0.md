@@ -6,17 +6,40 @@
 | Field | Value |
 | --- | --- |
 | Version | `1.0.0` |
-| Status | The predecessor passed DEB-only Release Validation; expanded Linux same-SHA validation and publication remain pending |
-| Published release tag | None |
-| Intended future tag | `v1.0.0` |
+| Status | Archived |
+| Owner | Project team |
+| Last review | 2026-08-24 |
+| Publication | Published — exact-SHA validation passed |
+| Published release tag | [`v1.0.0`](https://github.com/kleiveist/Template-Projekte/releases/tag/v1.0.0) |
+| Validated release commit | `a09c0b9998881e3dbbbd6292fdd22715b402bee8` |
 | Historical architecture baseline | `461fc7519e0db638330904a7496c488e8a0d18bc` |
 | Candidate review | 2026-08-24 |
 
 ## Purpose
 
-Version 1.0.0 is the candidate for the first governed release of the reusable Template-Projekte master. It provides one profile-driven foundation for browser, cloud-backend, and Tauri desktop products. Candidate validation certifies the template and its generation paths as a commit-pinned migration basis; it does not publish a release or claim that an uncustomized derived product is production-ready.
+Version 1.0.0 is the first governed release of the reusable Template-Projekte master. It provides one profile-driven foundation for browser, cloud-backend, and Tauri desktop products. Release validation certifies the template and its generation paths as a commit-pinned migration basis; it does not claim that an uncustomized derived product is production-ready.
 
-The exact candidate, once validated, is deliberately not embedded in a file that participates in that commit. GitHub Actions evidence and the final operator report will record the full SHA after same-commit validation. No tag or GitHub Release currently exists; any future `v1.0.0` tag and publication record must identify that same validated commit.
+The annotated tag and GitHub Release both identify commit `a09c0b9998881e3dbbbd6292fdd22715b402bee8`. Core CI, Desktop CI, PostgreSQL Integration, Profile Matrix, and tag-triggered Release Validation succeeded on that exact SHA. The post-release documentation closure records those external results without changing the released tag or its source archive.
+
+## Published evidence and assets
+
+| Workflow | Run ID | Result |
+| --- | ---: | --- |
+| Core CI | [`32718326180`](https://github.com/kleiveist/Template-Projekte/actions/runs/32718326180) | PASS |
+| Desktop CI | [`32718326136`](https://github.com/kleiveist/Template-Projekte/actions/runs/32718326136) | PASS |
+| PostgreSQL Integration | [`32718326135`](https://github.com/kleiveist/Template-Projekte/actions/runs/32718326135) | PASS |
+| Profile Matrix | [`32718326078`](https://github.com/kleiveist/Template-Projekte/actions/runs/32718326078) | PASS |
+| Release Validation | [`32731628645`](https://github.com/kleiveist/Template-Projekte/actions/runs/32731628645) | PASS |
+
+The GitHub Release contains the generated source archives and these five explicit assets:
+
+- `Template-Projekte-v1.0.0-web.zip`;
+- `Template-Projekte-v1.0.0-linux-unsigned.zip`, containing the DEB, RPM, and AppImage verification formats;
+- `Template-Projekte-v1.0.0-macos-unsigned.zip`;
+- `Template-Projekte-v1.0.0-windows-unsigned.zip`; and
+- `SHA256SUMS.txt`, covering the four platform ZIP files.
+
+The release source archives contain the pre-closure status text that existed at commit `a09c0b9`. This is a documentation erratum, not a moved tag: the immutable release commit remains the validated technical baseline, while the [completed ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md) and current `main` documentation record the later formal closure. A future patch release should include the corrected documentation, SBOM, and attestations in its own immutable source archive.
 
 ## Supported project profiles
 
@@ -32,7 +55,7 @@ PostgreSQL remains an optional capability for the three backend-enabled profiles
 
 Normal Desktop CI continues to build an unsigned DEB on Linux by default. Release Validation now requires unsigned DEB, RPM, and AppImage verification candidates for Linux x86_64 and retains them with a deterministic manifest and SHA-256 checksums in `desktop-linux-unsigned`. DEB targets Debian- and Ubuntu-based systems, RPM targets RPM-based distributions, and AppImage provides a portable bundle intended to reduce distribution-specific installation requirements.
 
-These candidates are built against the Ubuntu runner and its glibc baseline. They are not signed or published, do not guarantee runtime compatibility with every Linux distribution, and do not add ARM, Flatpak, or Snap support.
+These candidates are built against the Ubuntu runner and its glibc baseline. They are published only as unsigned verification builds, do not guarantee runtime compatibility with every Linux distribution, and do not add ARM, Flatpak, or Snap support.
 
 ## Code quality and architecture governance
 

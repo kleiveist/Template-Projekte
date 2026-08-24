@@ -15,6 +15,7 @@ from typing import Any
 from tools import logger
 from tools.config import ConfigLoadError, resolve_configuration, validate_configuration
 from tools.inst import report as report_writer
+from tools.inst import e2e as e2e_runtime
 from tools.inst import stop as service_cleanup
 from tools.process import prepare_command
 from tools.profiles import runtime as profile_runtime
@@ -85,16 +86,29 @@ def _format_command(command: list[str] | None, *, max_chars: int | None = None) 
     return formatted
 
 
-def _run(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+def _run(
+    cmd: list[str],
+    cwd: Path | None = None,
+    env: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
     try:
-        return subprocess.run(prepare_command(cmd), cwd=cwd, text=True, capture_output=True, check=False)
+        return subprocess.run(prepare_command(cmd), cwd=cwd, env=env, text=True, capture_output=True, check=False)
     except OSError as exc:
         return subprocess.CompletedProcess(cmd, 127, stdout="", stderr=str(exc))
 
 
 def _expand_suites(value: str) -> list[str]:
     if value == "all":
-        return ["tools", "schema", "api", "database", "postgres", "frontend", "e2e", "tauri"]
+        return [
+            "tools",
+            "schema",
+            "api",
+            "database",
+            "postgres",
+            "frontend",
+            "e2e",
+            "tauri",
+        ]
     return [value]
 
 
@@ -128,7 +142,9 @@ def _backend_runtime_imports(selected_suites: list[str]) -> str:
     return "import " + ", ".join(dict.fromkeys(modules))
 
 
-def _probe_backend_runtime(selected_suites: list[str]) -> tuple[bool, str, list[str] | None]:
+def _probe_backend_runtime(
+    selected_suites: list[str],
+) -> tuple[bool, str, list[str] | None]:
     backend_python = _backend_python()
     if not backend_python.exists():
         return False, f"backend venv python missing at {backend_python}", None
@@ -138,7 +154,10 @@ def _probe_backend_runtime(selected_suites: list[str]) -> tuple[bool, str, list[
     if completed.returncode == 0:
         return True, "backend runtime imports succeeded", command
 
-    details = _tail_text(((completed.stderr or "") + "\n" + (completed.stdout or "")).strip(), CONSOLE_TAIL_LINES)
+    details = _tail_text(
+        ((completed.stderr or "") + "\n" + (completed.stdout or "")).strip(),
+        CONSOLE_TAIL_LINES,
+    )
     if not details:
         details = f"exit code {completed.returncode}"
     return False, details, command
@@ -402,7 +421,12 @@ def _run_postgres_suite() -> SuiteResult:
 
     tests_dir = ROOT / "backend" / "tests" / "integration"
     if not tests_dir.exists():
-        return SuiteResult("postgres", "FAIL", "backend/tests/integration missing", time.monotonic() - started)
+        return SuiteResult(
+            "postgres",
+            "FAIL",
+            "backend/tests/integration missing",
+            time.monotonic() - started,
+        )
     command = [str(_backend_python()), "-m", "pytest", "-q", str(tests_dir)]
     completed = _run(command, cwd=ROOT)
     return _result_from_completed(
@@ -476,14 +500,30 @@ def _run_e2e_suite() -> SuiteResult:
     started = time.monotonic()
     e2e_tests = ROOT / "frontend" / "tests" / "e2e"
     if not e2e_tests.exists():
-        return SuiteResult("e2e", "SKIP", "Playwright E2E is not configured", time.monotonic() - started)
+        return SuiteResult(
+            "e2e",
+            "SKIP",
+            "Playwright E2E is not configured",
+            time.monotonic() - started,
+        )
 
-    npx = shutil.which("npx")
-    if npx is None:
-        return SuiteResult("e2e", "FAIL", "npx not found", time.monotonic() - started)
+    npm = shutil.which("npm")
+    if npm is None:
+        return SuiteResult("e2e", "FAIL", "npm not found", time.monotonic() - started)
 
-    command = [npx, "playwright", "test"]
-    completed = _run(command, cwd=ROOT / "frontend")
+    try:
+        environment = e2e_runtime.playwright_environment(ROOT)
+    except e2e_runtime.E2EConfigurationError as exc:
+        return SuiteResult(
+            "e2e",
+            "FAIL",
+            "frontend endpoint is unavailable for Playwright",
+            time.monotonic() - started,
+            detail=str(exc),
+        )
+
+    command = [npm, "run", "test:e2e"]
+    completed = _run(command, cwd=ROOT / "frontend", env=environment)
     return _result_from_completed(
         name="e2e",
         completed=completed,
@@ -545,7 +585,7 @@ def _run_e2e_cleanup(started: float) -> SuiteResult | None:
     cleanup_args = argparse.Namespace(
         frontend_port=int(resolved.value("FRONTEND_PORT") or 0),
         backend_port=int(resolved.value("BACKEND_PORT") or 0),
-        tracked_only=False,
+        tracked_only=True,
     )
     cleanup_code = service_cleanup.main(cleanup_args)
     if cleanup_code == 0:
@@ -556,7 +596,7 @@ def _run_e2e_cleanup(started: float) -> SuiteResult | None:
         "FAIL",
         "cleanup failed before e2e service bootstrap",
         time.monotonic() - started,
-        command=["python", "tools/control.py", "stop"],
+        command=["python", "tools/control.py", "stop", "--tracked-only"],
         cwd=str(ROOT),
         exit_code=cleanup_code,
         detail="E2E service startup was skipped because cleanup did not complete successfully.",
@@ -612,15 +652,26 @@ def _start_services_if_needed(selected_suites: list[str], no_start: bool) -> tup
     )
 
 
-def _stop_services_if_started(started: bool) -> None:
+def _stop_services_if_started(started: bool) -> SuiteResult:
+    teardown_started = time.monotonic()
     if not started:
-        return
-    _run([sys.executable, str(ROOT / "tools" / "control.py"), "stop"], cwd=ROOT)
+        return SuiteResult("service-teardown", "SKIP", "not required", 0.0)
+    command = [sys.executable, str(ROOT / "tools" / "control.py"), "stop", "--tracked-only"]
+    completed = _run(command, cwd=ROOT)
+    return _result_from_completed(
+        name="service-teardown",
+        completed=completed,
+        started=teardown_started,
+        command=command,
+        cwd=ROOT,
+        ok_message="services started by test runner were stopped",
+        fail_message="tracked service teardown failed",
+    )
 
 
 def _print_suite_guide() -> None:
     logger.info("Template project test suites")
-    print("")
+    print()
     print("Use an explicit suite command:")
     print("  python tools/control.py test --suite api      # Backend API only")
     print("  python tools/control.py test --suite schema   # Schema validation only")
@@ -631,7 +682,7 @@ def _print_suite_guide() -> None:
     print("  python tools/control.py test --suite tools    # Restored tooling tests")
     print("  python tools/control.py test --suite tauri    # Tauri structure, cargo check, and Rust tests")
     print("  python tools/control.py test --suite all      # Complete configured test run")
-    print("")
+    print()
     print("Useful options:")
     print("  --no-start       Do not start frontend/backend automatically for E2E")
     print("  --report         Write a Markdown report to .report")
@@ -674,7 +725,10 @@ def _print_results(results: list[SuiteResult], bootstrap: SuiteResult) -> str:
 
     logger.info("Test suite summary")
     for item in results:
-        logger.status(item.status, f"suite:{item.name:<7} {item.message} ({item.duration_seconds:.2f}s)")
+        logger.status(
+            item.status,
+            f"suite:{item.name:<7} {item.message} ({item.duration_seconds:.2f}s)",
+        )
         _print_result_details(item)
         if item.status == "FAIL":
             overall = "FAIL"
@@ -787,7 +841,9 @@ def main(args: argparse.Namespace) -> int:
             _run_selected_suite(suite, bootstrap_failed=bootstrap.status == "FAIL") for suite in selected_suites
         )
     finally:
-        _stop_services_if_started(started_by_runner)
+        teardown = _stop_services_if_started(started_by_runner)
+    if teardown.status != "SKIP":
+        results.append(teardown)
 
     overall = _print_results(results, bootstrap)
     report_ok = _write_report_if_requested(

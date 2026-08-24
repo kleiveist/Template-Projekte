@@ -48,6 +48,10 @@ def _write_tree(root: Path) -> None:
     (root / "node_modules/dependency.js").write_text("ignored\n", encoding="utf-8")
     (root / ".ruff_cache").mkdir()
     (root / ".ruff_cache/cache-key").write_text("ignored\n", encoding="utf-8")
+    (root / "playwright-report").mkdir()
+    (root / "playwright-report/index.html").write_text("ignored\n", encoding="utf-8")
+    (root / "test-results").mkdir()
+    (root / "test-results/.last-run.json").write_text("ignored\n", encoding="utf-8")
 
 
 def test_manifest_is_deterministic_sorted_and_content_free(tmp_path: Path) -> None:
@@ -74,6 +78,8 @@ def test_manifest_is_deterministic_sorted_and_content_free(tmp_path: Path) -> No
     assert not any(path.startswith(".template/") for path in paths)
     assert not any(path.startswith("node_modules/") for path in paths)
     assert not any(path.startswith(".ruff_cache/") for path in paths)
+    assert not any(path.startswith("playwright-report/") for path in paths)
+    assert not any(path.startswith("test-results/") for path in paths)
     assert first.by_path()["binary.bin"].kind == "binary"
     assert first.by_path()["run-tool"].executable is True
     assert "Grüße" not in render_manifest(first)

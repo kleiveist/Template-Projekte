@@ -8,15 +8,16 @@ This repository is the master template for applications built with Vite and Type
 | Field | Value |
 | --- | --- |
 | Template version | `1.0.0` |
-| Validation status | The predecessor passed all five workflows with DEB-only Linux release validation; the expanded Linux matrix requires new same-SHA evidence |
-| Lifecycle status | `NOT READY FOR SUNODM PILOT` until LC-020 has all five workflows on the final exact HEAD |
-| Published release tag | None |
+| Validation status | `PASS` — all five required workflows succeeded on release commit `a09c0b9` |
+| Lifecycle status | `READY FOR SUNODM PILOT` |
+| Published release tag | [`v1.0.0`](https://github.com/kleiveist/Template-Projekte/releases/tag/v1.0.0) |
+| Validated release commit | `a09c0b9998881e3dbbbd6292fdd22715b402bee8` |
 | Historical architecture baseline | `461fc7519e0db638330904a7496c488e8a0d18bc` |
 | Documentation review | 2026-08-24 |
 
-The version metadata and a successful validation are not publication claims. No `v1.0.0` tag or GitHub Release currently exists. A future annotated tag may identify the released version only after it points to the exact candidate for which the local quality, test, profile, PostgreSQL, desktop, documentation, and Release Validation checks succeeded. The exact validated migration baseline belongs in Git and the final operator report rather than in a file that would change that commit again.
+The annotated `v1.0.0` tag and its GitHub Release identify the same validated commit. Core CI, Desktop CI, PostgreSQL Integration, Profile Matrix, and tag-triggered Release Validation all completed successfully on that exact SHA. The tag remains immutable; the post-release documentation closure on `main` records the evidence without moving or replacing `v1.0.0`. See the [completed ATP-0001](docs/atp/completed/ATP-0001-template-lifecycle.md) for the exact run IDs and acceptance decision.
 
-Normal Desktop CI defaults to an unsigned DEB on Linux. Release Validation requires unsigned DEB, RPM, and AppImage verification candidates for Linux x86_64 and retains the packages, deterministic manifest, and SHA-256 checksums in the `desktop-linux-unsigned` workflow artifact. These candidates are not signed or published and do not claim runtime compatibility with every Linux distribution.
+Normal Desktop CI defaults to an unsigned DEB on Linux. Release Validation requires unsigned DEB, RPM, and AppImage verification candidates for Linux x86_64 and retains the packages, deterministic manifest, and SHA-256 checksums in the `desktop-linux-unsigned` workflow artifact. Release `v1.0.0` republishes the verified outputs in platform ZIP files solely as unsigned verification builds; they are not production-signed packages and do not claim runtime compatibility with every Linux distribution.
 <!-- MASTER-ONLY END -->
 
 ## Start here
@@ -315,7 +316,7 @@ Use `python tools/control.py run` when developing the master template's referenc
 
 | Area | Technology | Responsibility |
 | --- | --- | --- |
-| Web frontend | Vite 6, TypeScript 5, Vitest | Browser user interface and frontend tests |
+| Web frontend | Vite 8, TypeScript 5, Vitest, Playwright, axe | Browser UI, enforced unit coverage, smoke/accessibility checks, and bundle budgets |
 | Backend | FastAPI, Uvicorn, Pytest | HTTP API and API tests |
 | Optional server-side SQL | SQLAlchemy 2.x, Alembic, PostgreSQL, Psycopg 3 | Server-side persistence and explicit migrations |
 | Desktop | Tauri 2, Rust | Native desktop shell for the web frontend |
@@ -363,6 +364,7 @@ The README answers “How do I start?” The linked guides answer “How does it
 - [Framework architecture](docs/def/architecture.md): component boundaries
 - [Code quality and architecture governance](docs/def/code-quality.md): enforceable limits, rule IDs, exceptions, and the central quality gate
 - [Deployment architecture](docs/def/deployment-architecture.md): production units and health contracts
+- [Observability decision framework](docs/def/observability.md): product SLO, telemetry, privacy, and acceptance decisions
 - [Continuous Integration](docs/tools/ci.md): automated profile and platform checks
 - [Release model](docs/tools/release-model.md): validation and desktop packaging
 - [Documentation Standard](docs/README.md): repository language and authoring rules
@@ -410,6 +412,7 @@ This repository is licensed under the [MIT License](LICENSE), which is copied in
 - 📝 [Runtime configuration](docs/def/configuration.md)
 - 📝 [Database feature](docs/def/database-feature.md)
 - 📝 [Deployment architecture](docs/def/deployment-architecture.md)
+- 📝 [Observability decision framework](docs/def/observability.md)
 - 📝 [Provider-neutral persistence architecture](docs/def/persistence-architecture.md)
 - 📝 [Project profiles](docs/def/project-profiles.md)
 - 📝 [Template lifecycle](docs/def/template-lifecycle.md)

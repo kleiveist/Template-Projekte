@@ -28,7 +28,9 @@ MASTER_ONLY_SKIP_REASON = "master-only community templates are intentionally abs
 MASTER_ONLY_PATHS = (
     "CODE_OF_CONDUCT.md",
     "CONTRIBUTING.md",
+    ".github/CODEOWNERS",
     ".github/SECURITY.md",
+    ".github/dependabot.yml",
     ".github/ISSUE_TEMPLATE",
     ".github/pull_request_template.md",
     ".github/workflows",
@@ -47,7 +49,9 @@ def _scaffold_web_only(target: Path) -> None:
     generator.scaffold_project(plan)
 
 
-def test_scaffold_owns_license_but_not_master_community_governance(tmp_path: Path) -> None:
+def test_scaffold_owns_license_but_not_master_community_governance(
+    tmp_path: Path,
+) -> None:
     target = tmp_path / "web-only"
     _scaffold_web_only(target)
 

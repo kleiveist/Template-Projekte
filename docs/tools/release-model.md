@@ -9,9 +9,10 @@
 | Owner | Project team |
 | Last review | 2026-08-24 |
 | Audience | Release operators and desktop developers |
-| Related ATP | [ATP-0001](../atp/active/ATP-0001-template-lifecycle.md) |
+| Related ATP | [ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md) |
 | Current template version | `1.0.0` |
-| Current publication state | No tag and no GitHub Release |
+| Current publication state | `v1.0.0` published and validated |
+| Validated release commit | `a09c0b9998881e3dbbbd6292fdd22715b402bee8` |
 
 ## Purpose
 
@@ -47,7 +48,7 @@ flowchart LR
 
 The baseline automates CI verification, unsigned artifacts, and the release gate. Signing, publishing, and deployment remain explicit product integrations. Normal CI never deploys, uses signing secrets, or creates a public release.
 
-For the template's `1.0.0` candidate, `461fc7519e0db638330904a7496c488e8a0d18bc` is the historical architecture baseline and comparison commit, not the validated migration baseline or an automatic tag target. Any release-preparation change creates a later candidate. No release tag currently exists. The annotated tag `v1.0.0` may be created only for the final candidate on which every required local and remote check succeeded.
+For template release `1.0.0`, `461fc7519e0db638330904a7496c488e8a0d18bc` is the historical architecture baseline and comparison commit, not the validated migration baseline. The annotated tag `v1.0.0` resolves to `a09c0b9998881e3dbbbd6292fdd22715b402bee8`, the commit on which every required local and remote release check succeeded. The tag and published GitHub Release are immutable; later documentation or implementation changes require a new version instead of moving `v1.0.0`.
 
 ## Desktop verification matrix
 
@@ -65,7 +66,17 @@ All Linux outputs are unsigned x86_64 verification candidates built against the 
 
 ## Release triggers
 
-`.github/workflows/release.yml` runs only through `workflow_dispatch` or a tag matching `v*.*.*`. It runs the quality gate, the read-only semantic documentation check and its focused tests, the complete project tests, web and container builds, and `release check`; it then calls the unsigned desktop workflow with the explicit Linux bundle contract `deb,rpm,appimage`. It has read-only repository permission and contains no publication job.
+`.github/workflows/release.yml` runs only through `workflow_dispatch` or a tag matching `v*.*.*`. It runs the release-strict quality gate, the read-only semantic documentation check and its focused tests, the complete project tests, web and container builds, and `release check`; it then calls the unsigned desktop workflow with the explicit Linux bundle contract `deb,rpm,appimage`. It contains no publication job.
+
+The validation job generates an SPDX JSON software bill of materials from the committed source and dependency manifests before installing build dependencies. After building the web ZIP, it creates both GitHub build-provenance and SBOM attestations for that candidate. The job alone receives `attestations: write` and `id-token: write`; repository contents remain read-only, normal CI receives neither permission, and the SBOM action is forbidden from uploading directly to an existing release. The retained web workflow artifact contains both the ZIP and the SPDX document.
+
+Verify evidence from a completed release run with the GitHub CLI:
+
+```sh
+gh attestation verify <downloaded-web-zip> --repo kleiveist/Template-Projekte
+```
+
+The attested SBOM describes dependencies discoverable from the released source tree. It does not claim that a generated product has the same dependencies after customization. The SBOM and attestation workflow was added after `v1.0.0`; a future patch release must execute it on its own immutable release commit before those controls can be claimed for a published asset.
 
 A product repository may add protected signing and publication jobs only after the validation job. Recommended activation conditions are:
 
@@ -224,7 +235,7 @@ The auto-updater is intentionally absent and therefore disabled. A future integr
 ```sh
 python tools/control.py doctor
 python tools/control.py config doctor
-python tools/control.py quality
+python tools/control.py quality --release
 python tools/control.py version check
 python tools/control.py test --suite all --report
 python tools/control.py build web
@@ -235,7 +246,7 @@ python tools/control.py build desktop --dry-run --no-clean
 python tools/control.py release check
 ```
 
-`docs index` is the intentional PyGitIndex regeneration step; `docs check` is the reproducible read-only release gate. Inspect the navigation diff between them. If regeneration changes tracked files, review and commit those changes, then restart the clean-candidate checks. `docs index --dry-run` is an optional preview and is not a substitute for either step.
+`docs index` is the intentional PyGitIndex regeneration step; `docs check` is the reproducible read-only release gate. `quality --release` additionally rejects every unsuppressed strong warning; a narrow, reviewed, expiring policy exception remains the only documented release override. Inspect the navigation diff between documentation commands. If regeneration changes tracked files, review and commit those changes, then restart the clean-candidate checks. `docs index --dry-run` is an optional preview and is not a substitute for either step.
 
 Also complete the five-profile matrix, the three valid PostgreSQL combinations with real database connections, the two invalid-combination checks, and the native Linux/macOS/Windows workflow matrix. Investigate every warning. A skipped or unexecuted path must remain recorded as such and cannot be promoted to `PASS`.
 
