@@ -8,8 +8,8 @@ This repository is the master template for applications built with Vite and Type
 | Field | Value |
 | --- | --- |
 | Template version | `1.0.0` |
-| Validation status | Available pre-commit checks executed and host blockers recorded; clean-candidate and exact-HEAD GitHub validation pending |
-| Lifecycle status | `NOT READY FOR SUNODM PILOT` until LC-020 has exact-HEAD evidence |
+| Validation status | Core, Profile, PostgreSQL, and Desktop exact-HEAD validation successful; Release Validation dispatch blocked by missing API credentials |
+| Lifecycle status | `NOT READY FOR SUNODM PILOT` until LC-020 includes successful Release Validation |
 | Published release tag | None |
 | Historical architecture baseline | `461fc7519e0db638330904a7496c488e8a0d18bc` |
 | Documentation review | 2026-08-24 |

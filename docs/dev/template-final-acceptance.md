@@ -5,7 +5,7 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Candidate validation blocked by unavailable exact-HEAD GitHub access; not published |
+| Status | Candidate validation blocked by unavailable Release Validation dispatch; not published |
 | Owner | Project team |
 | Last review | 2026-08-24 |
 | Audience | Maintainers, reviewers, and release operators |
@@ -129,7 +129,7 @@ The generator must leave the master unchanged, copy the governance policy and ag
 
 ## Required PostgreSQL matrix
 
-Each valid row must use a real PostgreSQL 16.15 connection, configuration validation, `SELECT 1`, Alembic upgrade/current checks, API and database tests, the complete profile suite, Quality, web build, and container-model validation. Desktop rows also run Tauri checks. The `PASS` cells below are the required acceptance outcome; they do not replace the exact-HEAD PostgreSQL workflow evidence that is currently blocked.
+Each valid row must use a real PostgreSQL 16.15 connection, configuration validation, `SELECT 1`, Alembic upgrade/current checks, API and database tests, the complete profile suite, Quality, web build, and container-model validation. Desktop rows also run Tauri checks. The `PASS` cells below are the required acceptance outcome; actual exact-HEAD PostgreSQL workflow evidence is recorded externally.
 
 | Generated variant | Connection | Migration | API and profile tests | Quality | Result |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -169,7 +169,7 @@ The exact run IDs, URLs, events, and full common SHA belong in external run evid
 
 The public snapshot recorded on 2026-08-23 contained 41 runs: 39 failures and two successes. Every failure was inspected and classified before cleanup. Thirty-seven runs exposed historical project or workflow defects and were retained as category A evidence. Core run `31127208973` was retained as category B infrastructure evidence because its runner failed internally and that snapshot contained no later complete Core success. PostgreSQL run `31127208974` was classified as the sole category C cleanup candidate because run `31128760336` was its later successful replacement. No category D run was identified.
 
-This dated inventory is retained as historical disposition, not as current candidate evidence. No run is deleted during candidate preparation: authenticated access is unavailable, the current exact-HEAD workflow set is incomplete, and cleanup is unnecessary for validation. A future deletion of run `31127208974` remains optional and may occur only after all final same-SHA workflows are green and its commit, cause, replacement, and deletion result are recorded externally. All other failed runs, both historical successes, final-candidate runs, tag runs, release evidence, and required artifacts are retained. Logs and Git history are never edited or rewritten.
+This dated inventory is retained as historical disposition, not as current candidate evidence. No run is deleted during candidate preparation: API-authenticated cleanup is unavailable, Release Validation is incomplete, and cleanup is unnecessary for validation. A future deletion of run `31127208974` remains optional and may occur only after all final same-SHA workflows are green and its commit, cause, replacement, and deletion result are recorded externally. All other failed runs, both historical successes, final-candidate runs, tag runs, release evidence, and required artifacts are retained. Logs and Git history are never edited or rewritten.
 
 ## Known limitations
 
@@ -195,7 +195,7 @@ When these conditions hold, the technical decision is **PASS — VALIDATED RELEA
 
 Version 1.0.0 is published only if the additional publication conditions also hold: `v1.0.0` is an annotated, non-forced tag whose peeled commit equals the validated common SHA; the pushed tag and every tag-triggered workflow pass; and any GitHub Release or external release manifest identifies the same tag and commit. Until then, the publication decision remains **NOT PUBLISHED**.
 
-Current technical decision: **BLOCKED**. Repository finalization changes are prepared and the available pre-commit gates have executed, but this environment has neither `gh`, a GitHub token, nor a Git HTTPS credential. The candidate cannot be pushed and Release Validation cannot be dispatched, so the unavailable native, container, database, and exact-HEAD remote results may not be claimed. Current publication decision: **NOT PUBLISHED**.
+Current technical decision: **BLOCKED**. The candidate is synchronized to `origin/main`; local applicable gates, clean-tree `release check`, and the automatic exact-HEAD Core, Profile, PostgreSQL, and Desktop workflows passed. This environment has neither `gh` nor a GitHub API token, and unauthenticated Release Validation dispatch returned HTTP 401. Release Validation therefore has no run or successful conclusion on the candidate. Current publication decision: **NOT PUBLISHED**.
 
 ## Related documents
 

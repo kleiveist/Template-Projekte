@@ -5,7 +5,7 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Executed — LC-020 blocked by exact-HEAD GitHub access |
+| Status | Executed — LC-020 blocked by Release Validation dispatch |
 | Owner | Project team |
 | Last review | 2026-08-24 |
 | Audience | Developers, reviewers, and acceptance owners |
@@ -63,7 +63,7 @@ Only an executed check with its real result can move an item from `NOT RUN`. A c
 | `LC-017` | Status and verify work without network access. | Offline subprocess tests and generated CI execution | PASS | Network-denial tests and all local generated-profile checks passed. |
 | `LC-018` | Git, path, symlink, and secret boundaries are enforced. | Local Git fixtures and negative security tests | PASS | Git race, path traversal, external symlink, protected runtime, secret redaction, and dirty-tree tests passed. |
 | `LC-019` | CLI, documentation, and reports are complete. | CLI help/JSON tests, docs check, and report schema tests | PASS | CLI/report/readme tests passed; PyGitIndex regeneration completed and `docs check` validated 31 pages. |
-| `LC-020` | Existing quality, CI, and release gates remain intact. | Quality, complete tests, workflow guards, builds, and release check | BLOCKED | Local Quality, tooling, documentation, version, web, case-study, and desktop dry-run gates passed. Native Tauri linking, Docker, and live PostgreSQL remain unavailable locally; no credential can push or dispatch the required workflows on the exact candidate commit. |
+| `LC-020` | Existing quality, CI, and release gates remain intact. | Quality, complete tests, workflow guards, builds, and release check | BLOCKED | Local applicable gates and clean-tree `release check` passed. Automatic exact-HEAD Core CI, Profile Matrix, PostgreSQL Integration, and Desktop CI passed; Release Validation could not be dispatched because no GitHub API credential is available. |
 
 ## Required automated coverage
 
@@ -101,24 +101,24 @@ The five generated profiles additionally run lifecycle status and verify, qualit
 
 | Previous blocker | Current disposition |
 | --- | --- |
-| WebKitGTK, JavaScriptCoreGTK, and appindicator were unavailable locally. | Still unavailable locally on 2026-08-24. Quality and the desktop dry-run pass, but `tauri doctor` and native Rust tests fail closed. Exact-HEAD Desktop CI is required to resolve this blocker. |
-| Docker was unavailable locally. | Still unavailable; `container validate` verifies all five inputs and then fails because the Docker executable is absent. Exact-HEAD Core and Release Validation container jobs are required. |
-| No disposable PostgreSQL service or `DATABASE_URL_TEST` was available. | Still unavailable locally. The PostgreSQL suite remains an explicit skip, not passing evidence. Exact-HEAD PostgreSQL Integration is required. |
-| The lifecycle implementation was intentionally uncommitted, so `release check` rejected the dirty tree. | The repository began this finalization clean at `f70d30959c856e8170e6699eff2c101d1c077be0`. The finalization changes require a coherent candidate commit, followed by a clean-tree release check. |
-| GitHub and Desktop CI evidence existed only for earlier commits. | Public metadata was audited, but earlier green runs are not final evidence. `gh`, a GitHub token, and an HTTPS Git credential are all unavailable, so the final commit cannot be pushed or dispatched from this environment. |
+| WebKitGTK, JavaScriptCoreGTK, and appindicator were unavailable locally. | Still unavailable locally on 2026-08-24. Quality and the desktop dry-run pass, while local native Rust tests fail closed. Exact-HEAD Desktop CI passed on Linux, macOS, and Windows and supplies the native evidence. |
+| Docker was unavailable locally. | Still unavailable; `container validate` verifies all five inputs and then fails because the Docker executable is absent. The exact-HEAD Core container job passed, but the Release Validation container path remains unexecuted. |
+| No disposable PostgreSQL service or `DATABASE_URL_TEST` was available. | Still unavailable locally. The local PostgreSQL suite remains an explicit skip, while exact-HEAD PostgreSQL Integration passed against its pinned service. |
+| The lifecycle implementation was intentionally uncommitted, so `release check` rejected the dirty tree. | The repository began this finalization clean at `f70d30959c856e8170e6699eff2c101d1c077be0`; the final clean candidate passed `release check`. |
+| GitHub and Desktop CI evidence existed only for earlier commits. | Core CI, Profile Matrix, PostgreSQL Integration, and Desktop CI passed on the exact candidate during finalization. `gh`, an API token, and an HTTPS Git credential remain unavailable; unauthenticated Release Validation dispatch returned HTTP 401. |
 
 ## Decision rule
 
 The lifecycle foundation is `READY FOR SUNODM PILOT` only when all `LC-001` through `LC-020` requirements have passing evidence and no unresolved safety or rollback defect remains. Otherwise the decision is `NOT READY FOR SUNODM PILOT`, with every blocker listed in ATP-0001 and the final implementation report.
 
-Current decision: `NOT READY FOR SUNODM PILOT`. LC-020 cannot pass until Core CI, Profile Matrix, PostgreSQL Integration, Desktop CI, and Release Validation all complete successfully on the exact candidate commit. This environment has no credential with which to push that commit or dispatch Release Validation.
+Current decision: `NOT READY FOR SUNODM PILOT`. LC-020 cannot pass until Release Validation also completes successfully on the same candidate commit as the successful automatic workflows. This environment has no API credential with which to dispatch it.
 
 ## Risks and limitations
 
 - Local source resolution is the only supported source mechanism in version 1.
 - No concrete product migration is included.
-- Native Linux Tauri, container, and live PostgreSQL evidence remains blocked locally by missing host services or packages.
-- Public Actions metadata is readable, but authenticated push, log download, and workflow dispatch are unavailable.
+- Native Linux Tauri, container, and live PostgreSQL execution remains unavailable locally; exact-HEAD automatic workflows supply that evidence where applicable.
+- Public Actions metadata is readable, but authenticated log download and workflow dispatch are unavailable.
 - The final candidate SHA is intentionally recorded only in Git and the external operator report, not embedded here.
 
 ## Related documents

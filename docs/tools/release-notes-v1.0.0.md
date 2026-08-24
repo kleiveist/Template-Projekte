@@ -6,7 +6,7 @@
 | Field | Value |
 | --- | --- |
 | Version | `1.0.0` |
-| Status | Candidate changes prepared and available local checks executed; clean-candidate and exact-HEAD validation pending |
+| Status | Automatic exact-HEAD validation successful; Release Validation dispatch and publication pending |
 | Published release tag | None |
 | Intended future tag | `v1.0.0` |
 | Historical architecture baseline | `461fc7519e0db638330904a7496c488e8a0d18bc` |
@@ -16,7 +16,7 @@
 
 Version 1.0.0 is the candidate for the first governed release of the reusable Template-Projekte master. It provides one profile-driven foundation for browser, cloud-backend, and Tauri desktop products. Candidate validation certifies the template and its generation paths as a commit-pinned migration basis; it does not publish a release or claim that an uncustomized derived product is production-ready.
 
-The exact validated candidate commit is deliberately not embedded in a file that participates in that commit. GitHub Actions evidence and the final operator report record the full SHA after same-commit validation. No tag or GitHub Release currently exists; any future `v1.0.0` tag and publication record must identify that same validated commit.
+The exact candidate, once validated, is deliberately not embedded in a file that participates in that commit. GitHub Actions evidence and the final operator report will record the full SHA after same-commit validation. No tag or GitHub Release currently exists; any future `v1.0.0` tag and publication record must identify that same validated commit.
 
 ## Supported project profiles
 
