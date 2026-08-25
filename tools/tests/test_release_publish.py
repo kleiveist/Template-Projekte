@@ -467,6 +467,56 @@ def test_release_bundle_rejects_nonportable_archive_members(tmp_path: Path) -> N
         )
 
 
+def test_release_bundle_accepts_internal_relative_tar_symlinks(tmp_path: Path) -> None:
+    root, sha = _release_repository(tmp_path)
+    identity = _identity(root, sha)
+    inputs = _artifact_inputs(tmp_path, sha)
+    archive_path = inputs / "desktop-linux-unsigned" / "desktop-linux-unsigned.tar.gz"
+    with tarfile.open(archive_path, "w:gz") as archive:
+        payload = b"linux"
+        target = tarfile.TarInfo("nested/candidate-linux.bin")
+        target.size = len(payload)
+        archive.addfile(target, io.BytesIO(payload))
+        member = tarfile.TarInfo("nested/candidate-link.bin")
+        member.type = tarfile.SYMTYPE
+        member.linkname = "candidate-linux.bin"
+        archive.addfile(member)
+
+    release_publish_bundle.build_release_bundle(
+        root,
+        inputs,
+        tmp_path / "release-assets",
+        identity,
+        _workflow_evidence(sha),
+    )
+
+
+@pytest.mark.parametrize("target", ["/etc/passwd", "../../outside", "missing.bin"])
+def test_release_bundle_rejects_unsafe_tar_symlinks(tmp_path: Path, target: str) -> None:
+    root, sha = _release_repository(tmp_path)
+    identity = _identity(root, sha)
+    inputs = _artifact_inputs(tmp_path, sha)
+    archive_path = inputs / "desktop-linux-unsigned" / "desktop-linux-unsigned.tar.gz"
+    with tarfile.open(archive_path, "w:gz") as archive:
+        payload = b"linux"
+        regular = tarfile.TarInfo("nested/candidate-linux.bin")
+        regular.size = len(payload)
+        archive.addfile(regular, io.BytesIO(payload))
+        member = tarfile.TarInfo("nested/candidate-link.bin")
+        member.type = tarfile.SYMTYPE
+        member.linkname = target
+        archive.addfile(member)
+
+    with pytest.raises(release_publish.ReleasePublishError, match="unsafe symbolic link"):
+        release_publish_bundle.build_release_bundle(
+            root,
+            inputs,
+            tmp_path / "release-assets",
+            identity,
+            _workflow_evidence(sha),
+        )
+
+
 def test_prepared_bundle_reverification_rejects_tampering(tmp_path: Path) -> None:
     root, sha = _release_repository(tmp_path)
     identity = _identity(root, sha)

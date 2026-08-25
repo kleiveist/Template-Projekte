@@ -10,7 +10,7 @@
 | Last review | 2026-08-24 |
 | Audience | Release operators and desktop developers |
 | Related ATP | [ATP-0001](../atp/completed/ATP-0001-template-lifecycle.md) |
-| Source version | `1.0.2` |
+| Source version | `1.0.3` |
 | Historical completed acceptance | `v1.0.0` on `a09c0b9998881e3dbbbd6292fdd22715b402bee8` |
 | Excluded immutable tag | `v1.0.1` on `fbbb229db05d85fd01ed5f9b81234fac7ed7f405`; same-SHA Profile Matrix failed and no governed GitHub Release exists |
 | Publication authority | Protected immutable version tag, native immutable GitHub Release, and generated exact-SHA evidence |
@@ -54,7 +54,7 @@ The baseline automates CI verification, unsigned artifacts, the release gate, an
 
 For template release `1.0.0`, `461fc7519e0db638330904a7496c488e8a0d18bc` is the historical architecture baseline and comparison commit, not the validated migration baseline. The annotated tag `v1.0.0` resolves to `a09c0b9998881e3dbbbd6292fdd22715b402bee8`, the commit on which every required local and remote release check succeeded. The tag remains immutable; later documentation or implementation changes require a new version instead of moving `v1.0.0`.
 
-The annotated `v1.0.1` tag is likewise immutable. It was created before the reduced-profile TypeScript regression had a successful replacement matrix and has no GitHub Release. It must not be moved or retroactively published. A governed `v1.0.2` publication is valid only with complete same-SHA evidence and its own successful tag-triggered validation.
+The annotated `v1.0.1` tag is likewise immutable. It was created before the reduced-profile TypeScript regression had a successful replacement matrix and has no GitHub Release. The annotated `v1.0.2` tag later passed its same-SHA and tag-triggered validation, but its publisher failed closed because the Linux prearchive validator rejected required internal AppImage symlinks. It also has no GitHub Release. Neither tag may be moved or retroactively published. A governed `v1.0.3` publication is valid only with complete same-SHA evidence, its own successful tag-triggered validation, and successful exact-SHA publication.
 
 ## Desktop verification matrix
 
@@ -82,7 +82,7 @@ Verify evidence from a completed release run with the GitHub CLI:
 gh attestation verify <downloaded-web-zip> --repo kleiveist/Template-Projekte
 ```
 
-The attested SBOM describes dependencies discoverable from the released source tree. It does not claim that a generated product has the same dependencies after customization. The SBOM and attestation workflow was added after `v1.0.0`; a governed `v1.0.2` publication includes this evidence from its own immutable release commit.
+The attested SBOM describes dependencies discoverable from the released source tree. It does not claim that a generated product has the same dependencies after customization. The SBOM and attestation workflow was added after `v1.0.0`; a governed `v1.0.3` publication includes this evidence from its own immutable release commit.
 
 After a successful tag-triggered Release Validation run completes, `.github/workflows/release-publish.yml` evaluates that run through `workflow_run`. It accepts only a strict annotated version tag that matches `VERSION` and resolves locally and remotely to the validated SHA. Its executing workflow revision must also equal that SHA, so `main` remains frozen until publication finishes. The publisher then requires completed successful `main` push runs for Core CI, Desktop CI, PostgreSQL Integration, Profile Matrix, and Security from their exact workflow paths, plus the exact completed Release Validation run and attempt on the same SHA.
 

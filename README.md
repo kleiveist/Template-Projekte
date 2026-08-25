@@ -7,7 +7,7 @@ This repository is the master template for applications built with Vite and Type
 
 | Field | Value |
 | --- | --- |
-| Source version | `1.0.2` |
+| Source version | `1.0.3` |
 | v1 lifecycle status | `READY FOR SUNODM PILOT` |
 | Historical completed acceptance | [`v1.0.0`](https://github.com/kleiveist/Template-Projekte/releases/tag/v1.0.0) on `a09c0b9998881e3dbbbd6292fdd22715b402bee8` |
 | Publication authority | Protected immutable version tag, native immutable GitHub Release, and generated exact-SHA evidence |
@@ -16,7 +16,7 @@ This repository is the master template for applications built with Vite and Type
 
 The annotated `v1.0.0` tag and its GitHub Release identify the same validated commit. Core CI, Desktop CI, PostgreSQL Integration, Profile Matrix, and tag-triggered Release Validation all completed successfully on that exact SHA. The tag remains immutable; the post-release documentation closure on `main` records the evidence without moving or replacing `v1.0.0`. See the [completed ATP-0001](docs/atp/completed/ATP-0001-template-lifecycle.md) for the exact run IDs and acceptance decision.
 
-The immutable `v1.0.1` tag was created before its reduced-profile regression had successful replacement evidence and has no GitHub Release. It is not moved or retroactively published. Version `1.0.2` is validly published only when Core CI, Desktop CI, PostgreSQL Integration, Profile Matrix, and Security succeed on its exact commit, tag-triggered Release Validation also succeeds, an active non-bypassable `v*` tag ruleset blocks updates and deletion, and the separate publisher creates the evidence-bearing native immutable GitHub Release.
+The immutable `v1.0.1` tag was created before its reduced-profile regression had successful replacement evidence and has no GitHub Release. The immutable `v1.0.2` tag passed same-SHA and tag-triggered validation, but publication correctly failed closed when the publisher rejected required internal AppImage symlinks. Neither tag is moved or retroactively published. Version `1.0.3` is validly published only when Core CI, Desktop CI, PostgreSQL Integration, Profile Matrix, and Security succeed on its exact commit, tag-triggered Release Validation also succeeds, an active non-bypassable `v*` tag ruleset blocks updates and deletion, and the separate publisher creates the evidence-bearing native immutable GitHub Release.
 
 Normal Desktop CI defaults to an unsigned DEB on Linux. Release Validation requires unsigned DEB, RPM, and AppImage verification candidates for Linux x86_64. The completed-tag publisher bundles the tracked source, tested web and desktop artifacts, SPDX SBOM, exact-SHA workflow evidence, and aggregate SHA-256 checksums. Release Validation supplies build-provenance and SBOM attestations for the byte-identical web ZIP; native immutable publication supplies the release attestation for the complete asset set. Desktop artifacts remain unsigned verification builds; they are not production-signed packages and do not claim runtime compatibility with every Linux distribution.
 <!-- MASTER-ONLY END -->

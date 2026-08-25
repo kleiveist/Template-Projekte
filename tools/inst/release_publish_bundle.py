@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import posixpath
 import re
 import shutil
 import subprocess
@@ -138,9 +139,32 @@ def _validate_tar_prearchive(path: Path, platform: str) -> list[tarfile.TarInfo]
     with tarfile.open(path, mode="r:gz") as archive:
         members = archive.getmembers()
     _validate_archive_names([item.name for item in members])
-    if any(not (item.isfile() or item.isdir()) for item in members):
-        raise ReleasePublishError(f"{platform} desktop prearchive contains a link or special member")
+    member_names = {item.name.rstrip("/") for item in members}
+    for member in members:
+        if member.isfile() or member.isdir():
+            continue
+        if member.issym():
+            _validate_tar_symlink(member, member_names, platform)
+            continue
+        raise ReleasePublishError(f"{platform} desktop prearchive contains a hard link or special member")
     return [item for item in members if item.isfile()]
+
+
+def _validate_tar_symlink(member: tarfile.TarInfo, member_names: set[str], platform: str) -> None:
+    target = member.linkname
+    unsafe_target = (
+        not target
+        or target.startswith("/")
+        or "\\" in target
+        or ":" in target
+        or any(ord(character) < 32 or ord(character) == 127 for character in target)
+    )
+    resolved = posixpath.normpath(posixpath.join(posixpath.dirname(member.name), target))
+    escapes_archive = resolved == ".." or resolved.startswith("../")
+    if unsafe_target or escapes_archive or resolved not in member_names:
+        raise ReleasePublishError(
+            f"{platform} desktop prearchive contains an unsafe symbolic link: {member.name!r} -> {target!r}"
+        )
 
 
 def _validate_prearchive(path: Path, platform: str) -> None:
