@@ -6,6 +6,7 @@ import os
 import signal
 import subprocess
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TextIO
 
@@ -17,14 +18,45 @@ from tools.config import (
     validate_configuration,
 )
 from tools.profiles import runtime as profile_runtime
-from tools.tauri import common, paths
+from tools.tauri import cache, common, paths
 
 RUNTIME_DIR = paths.ROOT / "tools" / ".runtime"
 LOG_DIR = RUNTIME_DIR / "logs"
 STATE_FILE = RUNTIME_DIR / "tauri_run_state.json"
 
 
+@dataclass(frozen=True, slots=True)
+class _DevSettings:
+    frontend_host: str
+    frontend_port: int
+    frontend_environment: dict[str, str]
+    secret_environment: set[str]
+
+
 def main(args: argparse.Namespace) -> int:
+    settings = _resolve_dev_settings(args)
+    if settings is None:
+        return 1
+    if not cache.prepare_dev_cache():
+        return 1
+    command = common.tauri_cli_command(
+        "dev",
+        "--config",
+        _dev_config_override(settings.frontend_port, settings.frontend_host),
+    )
+
+    if getattr(args, "foreground", False):
+        return _run_foreground(command, settings.frontend_environment, settings.secret_environment)
+
+    return _run_detached(
+        command,
+        follow=not bool(getattr(args, "no_follow", False)),
+        env=settings.frontend_environment,
+        remove_env=settings.secret_environment,
+    )
+
+
+def _resolve_dev_settings(args: argparse.Namespace) -> _DevSettings | None:
     profile = profile_runtime.active_profile(paths.ROOT)
     try:
         resolved = resolve_configuration(
@@ -37,22 +69,16 @@ def main(args: argparse.Namespace) -> int:
         )
     except ConfigLoadError as exc:
         logger.fail(f"Could not load frontend configuration: {exc}")
-        return 1
+        return None
     relevant = {"FRONTEND_HOST", "FRONTEND_PORT"}
     issues = [issue for issue in validate_configuration(resolved) if issue.name in relevant]
     if issues:
         for issue in issues:
             logger.fail(f"{issue.name}: {issue.message}")
-        return 1
+        return None
     frontend_host = resolved.value("FRONTEND_HOST")
     frontend_port_value = resolved.value("FRONTEND_PORT")
     assert frontend_host is not None and frontend_port_value is not None
-    frontend_port = int(frontend_port_value)
-    command = common.tauri_cli_command(
-        "dev",
-        "--config",
-        _dev_config_override(frontend_port, frontend_host),
-    )
     frontend_names = {
         "FRONTEND_HOST",
         "FRONTEND_PORT",
@@ -64,22 +90,34 @@ def main(args: argparse.Namespace) -> int:
         name: value for name, value in resolved.values.items() if value is not None and name in frontend_names
     }
     secret_environment = {name for name in os.environ if is_server_only_name(name)}
+    return _DevSettings(
+        frontend_host=frontend_host,
+        frontend_port=int(frontend_port_value),
+        frontend_environment=frontend_environment,
+        secret_environment=secret_environment,
+    )
 
-    if getattr(args, "foreground", False):
+
+def _run_foreground(
+    command: list[str],
+    environment: dict[str, str],
+    secret_environment: set[str],
+) -> int:
+    result = common.run_command(
+        command,
+        cwd=paths.ROOT,
+        env=environment,
+        remove_env=secret_environment,
+    )
+    if result.returncode != 0 and _recover_failed_dev_session(result.stdout + "\n" + result.stderr):
+        logger.info("Retrying Tauri development once after cache recovery.")
         result = common.run_command(
             command,
             cwd=paths.ROOT,
-            env=frontend_environment,
+            env=environment,
             remove_env=secret_environment,
         )
-        return common.print_result(result, "Tauri dev session finished", "Tauri dev failed")
-
-    return _run_detached(
-        command,
-        follow=not bool(getattr(args, "no_follow", False)),
-        env=frontend_environment,
-        remove_env=secret_environment,
-    )
+    return common.print_result(result, "Tauri dev session finished", "Tauri dev failed")
 
 
 def _dev_config_override(frontend_port: int, frontend_host: str = "127.0.0.1") -> str:
@@ -100,10 +138,14 @@ def _run_detached(
     follow: bool = True,
     env: dict[str, str] | None = None,
     remove_env: set[str] | None = None,
+    recovery_attempted: bool = False,
 ) -> int:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     log_path = LOG_DIR / "tauri.log"
-    log_file = log_path.open("w", encoding="utf-8")
+    log_mode = "a" if recovery_attempted else "w"
+    log_file = log_path.open(log_mode, encoding="utf-8")
+    if recovery_attempted:
+        log_file.write("\n--- retry after Tauri dev-cache recovery ---\n")
     environment = {name: value for name, value in os.environ.items() if not is_server_only_name(name)}
     for name in remove_env or set():
         environment.pop(name, None)
@@ -122,7 +164,19 @@ def _run_detached(
     if not follow:
         logger.info(f"Follow logs with: tail -f {log_path.relative_to(paths.ROOT)}")
         return 0
-    return _follow_log(log_path, process)
+
+    returncode = _follow_log(log_path, process)
+    if returncode == 0 or recovery_attempted or not _recover_failed_log(log_path):
+        return returncode
+
+    logger.info("Retrying Tauri development once after cache recovery.")
+    return _run_detached(
+        command,
+        follow=True,
+        env=env,
+        remove_env=remove_env,
+        recovery_attempted=True,
+    )
 
 
 def _follow_log(log_path: Path, process: subprocess.Popen) -> int:
@@ -162,6 +216,20 @@ def _report_process_exit(returncode: int) -> int:
         return 0
     logger.fail(f"Tauri dev process exited with code {returncode}")
     return returncode
+
+
+def _recover_failed_log(log_path: Path) -> bool:
+    try:
+        output = log_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+    return _recover_failed_dev_session(output)
+
+
+def _recover_failed_dev_session(output: str) -> bool:
+    if not cache.is_plugin_permission_cache_failure(output):
+        return False
+    return cache.recover_dev_cache("Tauri reported stale generated plugin permissions.")
 
 
 def _stop_interrupted_process(process: subprocess.Popen) -> int:
