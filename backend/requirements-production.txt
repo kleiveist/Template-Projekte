@@ -1,4 +1,4 @@
 # Production runtime dependencies. Keep exact top-level versions for deterministic image inputs.
-fastapi==0.111.0
-pydantic-settings==2.2.1
-uvicorn[standard]==0.30.0
+fastapi==0.141.1
+pydantic-settings==2.15.0
+uvicorn[standard]==0.52.4
