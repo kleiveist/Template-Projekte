@@ -11,7 +11,7 @@ ARG VITE_API_BASE_URL=http://127.0.0.1:8000
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 RUN npm run build
 
-FROM nginxinc/nginx-unprivileged:1.30.4-alpine3.24 AS runtime
+FROM nginxinc/nginx-unprivileged:1.31.4-alpine3.24 AS runtime
 
 COPY deployment/docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /build/frontend/dist /usr/share/nginx/html
